@@ -1,2 +1,4 @@
 # Thor-ROS
-ROS for Thor Robotic Arm 
+ROS2 for [Thor Robotic Arm](https://github.com/angellm/thor)
+
+
