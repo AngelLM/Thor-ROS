@@ -2,7 +2,9 @@
   "name": "Thor-ROS-Humble",
   "dockerFile": "Dockerfile",
   "runArgs": [
-    "--privileged"
+    "--privileged",
+    "--network=host",
+    "--ipc=host"
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
   "workspaceFolder": "/${localWorkspaceFolderBasename}",
