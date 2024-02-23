@@ -1,0 +1,36 @@
+[1.019s] Invoking command in '/Thor-ROS/thor_ws/src/urdf_visualizer': PYTHONPATH=/Thor-ROS/thor_ws/build/urdf_visualizer/prefix_override:/Thor-ROS/thor_ws/install/urdf_visualizer/lib/python3.10/site-packages: /usr/bin/python3 setup.py egg_info --egg-base ../../build/urdf_visualizer build --build-base /Thor-ROS/thor_ws/build/urdf_visualizer/build install --record /Thor-ROS/thor_ws/build/urdf_visualizer/install.log --single-version-externally-managed
+[1.558s] running egg_info
+[1.562s] creating ../../build/urdf_visualizer/urdf_visualizer.egg-info
+[1.566s] writing ../../build/urdf_visualizer/urdf_visualizer.egg-info/PKG-INFO
+[1.574s] writing dependency_links to ../../build/urdf_visualizer/urdf_visualizer.egg-info/dependency_links.txt
+[1.579s] writing entry points to ../../build/urdf_visualizer/urdf_visualizer.egg-info/entry_points.txt
+[1.583s] writing requirements to ../../build/urdf_visualizer/urdf_visualizer.egg-info/requires.txt
+[1.586s] writing top-level names to ../../build/urdf_visualizer/urdf_visualizer.egg-info/top_level.txt
+[1.592s] writing manifest file '../../build/urdf_visualizer/urdf_visualizer.egg-info/SOURCES.txt'
+[1.618s] reading manifest file '../../build/urdf_visualizer/urdf_visualizer.egg-info/SOURCES.txt'
+[1.648s] adding license file 'LICENSE'
+[1.667s] writing manifest file '../../build/urdf_visualizer/urdf_visualizer.egg-info/SOURCES.txt'
+[1.670s] running build
+[1.671s] running build_py
+[1.675s] creating /Thor-ROS/thor_ws/build/urdf_visualizer/build
+[1.677s] creating /Thor-ROS/thor_ws/build/urdf_visualizer/build/lib
+[1.679s] creating /Thor-ROS/thor_ws/build/urdf_visualizer/build/lib/urdf_visualizer
+[1.687s] copying urdf_visualizer/__init__.py -> /Thor-ROS/thor_ws/build/urdf_visualizer/build/lib/urdf_visualizer
+[1.698s] running install
+[1.699s] /usr/lib/python3/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[1.699s]   warnings.warn(
+[1.700s] running install_lib
+[1.717s] creating /Thor-ROS/thor_ws/install/urdf_visualizer/lib/python3.10/site-packages/urdf_visualizer
+[1.731s] copying /Thor-ROS/thor_ws/build/urdf_visualizer/build/lib/urdf_visualizer/__init__.py -> /Thor-ROS/thor_ws/install/urdf_visualizer/lib/python3.10/site-packages/urdf_visualizer
+[1.757s] byte-compiling /Thor-ROS/thor_ws/install/urdf_visualizer/lib/python3.10/site-packages/urdf_visualizer/__init__.py to __init__.cpython-310.pyc
+[1.785s] running install_data
+[1.791s] creating /Thor-ROS/thor_ws/install/urdf_visualizer/share/ament_index
+[1.793s] creating /Thor-ROS/thor_ws/install/urdf_visualizer/share/ament_index/resource_index
+[1.796s] creating /Thor-ROS/thor_ws/install/urdf_visualizer/share/ament_index/resource_index/packages
+[1.805s] copying resource/urdf_visualizer -> /Thor-ROS/thor_ws/install/urdf_visualizer/share/ament_index/resource_index/packages
+[1.824s] copying package.xml -> /Thor-ROS/thor_ws/install/urdf_visualizer/share/urdf_visualizer
+[1.833s] running install_egg_info
+[1.847s] Copying ../../build/urdf_visualizer/urdf_visualizer.egg-info to /Thor-ROS/thor_ws/install/urdf_visualizer/lib/python3.10/site-packages/urdf_visualizer-0.0.0-py3.10.egg-info
+[2.049s] running install_scripts
+[2.117s] writing list of installed files to '/Thor-ROS/thor_ws/build/urdf_visualizer/install.log'
+[2.138s] Invoked command in '/Thor-ROS/thor_ws/src/urdf_visualizer' returned '0': PYTHONPATH=/Thor-ROS/thor_ws/build/urdf_visualizer/prefix_override:/Thor-ROS/thor_ws/install/urdf_visualizer/lib/python3.10/site-packages: /usr/bin/python3 setup.py egg_info --egg-base ../../build/urdf_visualizer build --build-base /Thor-ROS/thor_ws/build/urdf_visualizer/build install --record /Thor-ROS/thor_ws/build/urdf_visualizer/install.log --single-version-externally-managed
