@@ -1,0 +1,49 @@
+[0.000000] (-) TimerEvent: {}
+[0.000943] (urdf_thor) JobQueued: {'identifier': 'urdf_thor', 'dependencies': OrderedDict()}
+[0.001196] (urdf_thor) JobStarted: {'identifier': 'urdf_thor'}
+[0.098625] (-) TimerEvent: {}
+[0.199070] (-) TimerEvent: {}
+[0.299575] (-) TimerEvent: {}
+[0.400012] (-) TimerEvent: {}
+[0.500495] (-) TimerEvent: {}
+[0.601532] (-) TimerEvent: {}
+[0.702064] (-) TimerEvent: {}
+[0.802520] (-) TimerEvent: {}
+[0.902955] (-) TimerEvent: {}
+[0.914567] (urdf_thor) Command: {'cmd': ['/usr/bin/python3', 'setup.py', 'egg_info', '--egg-base', '../../build/urdf_thor', 'build', '--build-base', '/Thor-ROS/ws_thor/build/urdf_thor/build', 'install', '--record', '/Thor-ROS/ws_thor/build/urdf_thor/install.log', '--single-version-externally-managed'], 'cwd': '/Thor-ROS/ws_thor/src/urdf_thor', 'env': {'SUDO_GID': '1000', 'MAIL': '/var/mail/root', 'USER': 'root', 'HOSTNAME': 'docker-desktop', 'HOME': '/root', 'COLORTERM': 'truecolor', 'SUDO_UID': '1000', 'ROS_DISTRO': 'humble', 'LOGNAME': 'root', 'TERM': 'xterm-256color', 'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin', 'DISPLAY': ':1', 'LANG': 'C.UTF-8', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'SUDO_COMMAND': '/usr/bin/colcon build', 'SHELL': '/bin/bash', 'SUDO_USER': 'vscode', 'LC_ALL': 'C.UTF-8', 'PWD': '/Thor-ROS/ws_thor/build/urdf_thor', 'COLCON': '1', 'PYTHONPATH': '/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:'}, 'shell': False}
+[1.003067] (-) TimerEvent: {}
+[1.103557] (-) TimerEvent: {}
+[1.204092] (-) TimerEvent: {}
+[1.304571] (-) TimerEvent: {}
+[1.405007] (-) TimerEvent: {}
+[1.433842] (urdf_thor) StdoutLine: {'line': b'running egg_info\n'}
+[1.437803] (urdf_thor) StdoutLine: {'line': b'writing ../../build/urdf_thor/urdf_thor.egg-info/PKG-INFO\n'}
+[1.442417] (urdf_thor) StdoutLine: {'line': b'writing dependency_links to ../../build/urdf_thor/urdf_thor.egg-info/dependency_links.txt\n'}
+[1.446513] (urdf_thor) StdoutLine: {'line': b'writing entry points to ../../build/urdf_thor/urdf_thor.egg-info/entry_points.txt\n'}
+[1.449760] (urdf_thor) StdoutLine: {'line': b'writing requirements to ../../build/urdf_thor/urdf_thor.egg-info/requires.txt\n'}
+[1.452003] (urdf_thor) StdoutLine: {'line': b'writing top-level names to ../../build/urdf_thor/urdf_thor.egg-info/top_level.txt\n'}
+[1.484391] (urdf_thor) StdoutLine: {'line': b"reading manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'\n"}
+[1.505091] (-) TimerEvent: {}
+[1.523073] (urdf_thor) StdoutLine: {'line': b"adding license file 'LICENSE'\n"}
+[1.543000] (urdf_thor) StdoutLine: {'line': b"writing manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'\n"}
+[1.545305] (urdf_thor) StdoutLine: {'line': b'running build\n'}
+[1.547241] (urdf_thor) StdoutLine: {'line': b'running build_py\n'}
+[1.556468] (urdf_thor) StdoutLine: {'line': b'running install\n'}
+[1.557225] (urdf_thor) StderrLine: {'line': b'/usr/lib/python3/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.\n'}
+[1.557897] (urdf_thor) StderrLine: {'line': b'  warnings.warn(\n'}
+[1.558508] (urdf_thor) StdoutLine: {'line': b'running install_lib\n'}
+[1.598546] (urdf_thor) StdoutLine: {'line': b'running install_data\n'}
+[1.605181] (-) TimerEvent: {}
+[1.682241] (urdf_thor) StdoutLine: {'line': b'running install_egg_info\n'}
+[1.690104] (urdf_thor) StdoutLine: {'line': b"removing '/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info' (and everything under it)\n"}
+[1.705279] (-) TimerEvent: {}
+[1.730447] (urdf_thor) StdoutLine: {'line': b'Copying ../../build/urdf_thor/urdf_thor.egg-info to /Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info\n'}
+[1.805395] (-) TimerEvent: {}
+[1.892105] (urdf_thor) StdoutLine: {'line': b'running install_scripts\n'}
+[1.905472] (-) TimerEvent: {}
+[1.945004] (urdf_thor) StdoutLine: {'line': b"writing list of installed files to '/Thor-ROS/ws_thor/build/urdf_thor/install.log'\n"}
+[1.961802] (urdf_thor) CommandEnded: {'returncode': 0}
+[2.005588] (-) TimerEvent: {}
+[2.105991] (-) TimerEvent: {}
+[2.155693] (urdf_thor) JobEnded: {'identifier': 'urdf_thor', 'rc': 0}
+[2.160649] (-) EventReactorShutdown: {}

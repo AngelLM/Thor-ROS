@@ -1,0 +1,36 @@
+[0.899s] Invoking command in '/Thor-ROS/ws_thor/src/urdf_thor': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages: /usr/bin/python3 setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed
+[1.398s] running egg_info
+[1.402s] creating ../../build/urdf_thor/urdf_thor.egg-info
+[1.405s] writing ../../build/urdf_thor/urdf_thor.egg-info/PKG-INFO
+[1.412s] writing dependency_links to ../../build/urdf_thor/urdf_thor.egg-info/dependency_links.txt
+[1.416s] writing entry points to ../../build/urdf_thor/urdf_thor.egg-info/entry_points.txt
+[1.420s] writing requirements to ../../build/urdf_thor/urdf_thor.egg-info/requires.txt
+[1.422s] writing top-level names to ../../build/urdf_thor/urdf_thor.egg-info/top_level.txt
+[1.427s] writing manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[1.447s] reading manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[1.470s] adding license file 'LICENSE'
+[1.486s] writing manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[1.488s] running build
+[1.489s] running build_py
+[1.493s] creating /Thor-ROS/ws_thor/build/urdf_thor/build
+[1.494s] creating /Thor-ROS/ws_thor/build/urdf_thor/build/lib
+[1.496s] creating /Thor-ROS/ws_thor/build/urdf_thor/build/lib/urdf_thor
+[1.503s] copying urdf_thor/__init__.py -> /Thor-ROS/ws_thor/build/urdf_thor/build/lib/urdf_thor
+[1.513s] running install
+[1.514s] /usr/lib/python3/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[1.515s]   warnings.warn(
+[1.516s] running install_lib
+[1.531s] creating /Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor
+[1.544s] copying /Thor-ROS/ws_thor/build/urdf_thor/build/lib/urdf_thor/__init__.py -> /Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor
+[1.568s] byte-compiling /Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor/__init__.py to __init__.cpython-310.pyc
+[1.591s] running install_data
+[1.596s] creating /Thor-ROS/ws_thor/install/urdf_thor/share/ament_index
+[1.597s] creating /Thor-ROS/ws_thor/install/urdf_thor/share/ament_index/resource_index
+[1.599s] creating /Thor-ROS/ws_thor/install/urdf_thor/share/ament_index/resource_index/packages
+[1.607s] copying resource/urdf_thor -> /Thor-ROS/ws_thor/install/urdf_thor/share/ament_index/resource_index/packages
+[1.625s] copying package.xml -> /Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor
+[1.633s] running install_egg_info
+[1.645s] Copying ../../build/urdf_thor/urdf_thor.egg-info to /Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info
+[1.834s] running install_scripts
+[1.891s] writing list of installed files to '/Thor-ROS/ws_thor/build/urdf_thor/install.log'
+[1.909s] Invoked command in '/Thor-ROS/ws_thor/src/urdf_thor' returned '0': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages: /usr/bin/python3 setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed

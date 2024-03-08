@@ -44,6 +44,12 @@ RUN sudo colcon mixin remove default
 RUN sudo colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml \
 && sudo colcon mixin update default
 
+#ROS2 packages
+RUN sudo apt update \
+&& sudo apt install software-properties-common -y \
+&& sudo add-apt-repository universe -y \
+&& sudo apt update && sudo apt install curl -y \
+&& sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
 # VcsTool
 RUN sudo apt install python3-vcstool
 

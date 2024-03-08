@@ -1,0 +1,23 @@
+[0.924s] Invoking command in '/Thor-ROS/ws_thor/src/urdf_thor': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages: /usr/bin/python3 setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed
+[1.433s] running egg_info
+[1.437s] writing ../../build/urdf_thor/urdf_thor.egg-info/PKG-INFO
+[1.441s] writing dependency_links to ../../build/urdf_thor/urdf_thor.egg-info/dependency_links.txt
+[1.445s] writing entry points to ../../build/urdf_thor/urdf_thor.egg-info/entry_points.txt
+[1.448s] writing requirements to ../../build/urdf_thor/urdf_thor.egg-info/requires.txt
+[1.451s] writing top-level names to ../../build/urdf_thor/urdf_thor.egg-info/top_level.txt
+[1.483s] reading manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[1.522s] adding license file 'LICENSE'
+[1.542s] writing manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[1.545s] running build
+[1.546s] running build_py
+[1.555s] running install
+[1.556s] /usr/lib/python3/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[1.557s]   warnings.warn(
+[1.557s] running install_lib
+[1.597s] running install_data
+[1.681s] running install_egg_info
+[1.689s] removing '/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info' (and everything under it)
+[1.729s] Copying ../../build/urdf_thor/urdf_thor.egg-info to /Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info
+[1.891s] running install_scripts
+[1.944s] writing list of installed files to '/Thor-ROS/ws_thor/build/urdf_thor/install.log'
+[1.962s] Invoked command in '/Thor-ROS/ws_thor/src/urdf_thor' returned '0': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages: /usr/bin/python3 setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed

@@ -1,0 +1,6 @@
+source;share/urdf_thor/hook/pythonpath.ps1
+source;share/urdf_thor/hook/pythonpath.dsv
+source;share/urdf_thor/hook/pythonpath.sh
+source;share/urdf_thor/hook/ament_prefix_path.ps1
+source;share/urdf_thor/hook/ament_prefix_path.dsv
+source;share/urdf_thor/hook/ament_prefix_path.sh
