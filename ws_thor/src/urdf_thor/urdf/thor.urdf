@@ -12,6 +12,12 @@
         <color rgba="0.69803922 0.82352941 0.94117647 1.0"/> <!-- rgba="178 210 240 255"/-->
       </material>
     </visual>
+    <collision>
+      <origin xyz="0 0 0.066" rpy="0 0 0"/> 
+      <geometry>
+        <cylinder radius="0.096" length="0.132"/>
+      </geometry>
+    </collision>
   </link>
 
   <!-- Joint base_art1 -->
@@ -32,6 +38,12 @@
       </geometry>
       <material name="filament"/>
     </visual>
+    <collision>
+      <origin xyz="0 0 0.07" rpy="0 0 0"/> 
+        <geometry>
+          <box size="0.14 0.09 0.14"/>
+        </geometry>
+    </collision>
   </link>
   
   <!-- Joint art1_art2 -->
