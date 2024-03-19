@@ -53,3 +53,9 @@ RUN sudo apt update \
 # VcsTool
 RUN sudo apt install python3-vcstool
 
+# Obtain last version of ROS2 packages
+RUN sudo rosdep init -y \
+&& rosdep update -y \
+&& sudo apt update -y \
+&& sudo apt dist-upgrade -y
+
