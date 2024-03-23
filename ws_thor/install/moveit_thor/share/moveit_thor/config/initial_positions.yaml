@@ -1,0 +1,9 @@
+# Default initial positions for THOR_arm's ros2_control fake system
+
+initial_positions:
+  art1_yaw: 0
+  art2_pitch: 0
+  art3_pitch: 0
+  art4_roll: 0
+  art5_pitch: 0
+  art6_roll: 0

@@ -1,0 +1,2 @@
+source;share/moveit_thor/environment/ament_prefix_path.sh
+source;share/moveit_thor/environment/path.sh

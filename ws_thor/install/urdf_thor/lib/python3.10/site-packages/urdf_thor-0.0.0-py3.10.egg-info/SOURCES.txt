@@ -21,4 +21,5 @@ resource/urdf_thor
 test/test_copyright.py
 test/test_flake8.py
 test/test_pep257.py
+urdf/thor.urdf
 urdf_thor/__init__.py
