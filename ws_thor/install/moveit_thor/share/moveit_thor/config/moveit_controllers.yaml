@@ -17,3 +17,5 @@ moveit_simple_controller_manager:
       - art4_roll
       - art5_pitch
       - art6_roll
+    action_ns: follow_joint_trajectory
+    default: true

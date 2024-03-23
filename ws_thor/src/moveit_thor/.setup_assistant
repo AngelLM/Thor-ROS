@@ -7,7 +7,7 @@ moveit_setup_assistant_config:
   package_settings:
     author_name: Jorge Perez Ramos
     author_email: jorgepramoscontact@gmail.com
-    generated_timestamp: 1711195785
+    generated_timestamp: 1711199248
   control_xacro:
     command:
       - position
