@@ -156,6 +156,12 @@
       </geometry>
       <material name="filament"/>
     </visual>
+    <collision>
+      <origin xyz="0 0 0.06" rpy="0 0 0"/> 
+      <geometry>
+        <cylinder radius="0.025" length="0.012"/>
+      </geometry>
+    </collision>
   </link>
 
 </robot>
