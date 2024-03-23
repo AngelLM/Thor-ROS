@@ -110,6 +110,12 @@
       </geometry>
       <material name="filament"/>
     </visual>
+    <collision>
+      <origin xyz="0 0 0.07" rpy="0 0 0"/> 
+      <geometry>
+        <cylinder radius="0.065" length="0.14"/>
+      </geometry>
+    </collision>
   </link>
 
   <!-- Joint art4_art5 -->
