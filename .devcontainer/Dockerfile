@@ -59,3 +59,6 @@ RUN sudo rosdep init -y \
 && sudo apt update -y \
 && sudo apt dist-upgrade -y
 
+# Install Moveit2
+RUN sudo apt install ros-humble-moveit -y
+
