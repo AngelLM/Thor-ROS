@@ -1,0 +1,21 @@
+[1.888s] Invoking command in '/Thor-ROS/ws_thor/src/urdf_thor': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed install_data
+[2.694s] running egg_info
+[2.699s] writing ../../build/urdf_thor/urdf_thor.egg-info/PKG-INFO
+[2.704s] writing dependency_links to ../../build/urdf_thor/urdf_thor.egg-info/dependency_links.txt
+[2.708s] writing entry points to ../../build/urdf_thor/urdf_thor.egg-info/entry_points.txt
+[2.712s] writing requirements to ../../build/urdf_thor/urdf_thor.egg-info/requires.txt
+[2.715s] writing top-level names to ../../build/urdf_thor/urdf_thor.egg-info/top_level.txt
+[2.751s] reading manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[2.794s] adding license file 'LICENSE'
+[2.818s] writing manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[2.823s] running build
+[2.824s] running build_py
+[2.835s] running install
+[2.836s] running install_lib
+[2.885s] running install_data
+[2.988s] running install_egg_info
+[2.999s] removing '/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info' (and everything under it)
+[3.042s] Copying ../../build/urdf_thor/urdf_thor.egg-info to /Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info
+[3.224s] running install_scripts
+[3.293s] writing list of installed files to '/Thor-ROS/ws_thor/build/urdf_thor/install.log'
+[3.312s] Invoked command in '/Thor-ROS/ws_thor/src/urdf_thor' returned '0': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed install_data

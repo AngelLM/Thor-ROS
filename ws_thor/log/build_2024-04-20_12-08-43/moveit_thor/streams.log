@@ -1,0 +1,48 @@
+[0.085s] Invoking command in '/Thor-ROS/ws_thor/build/moveit_thor': AMENT_PREFIX_PATH=/Thor-ROS/ws_thor/install/urdf_thor:/Thor-ROS/ws_thor/install/moveit_thor:/opt/ros/humble CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble PYTHONPATH=/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages /usr/bin/cmake --build /Thor-ROS/ws_thor/build/moveit_thor -- -j24 -l24
+[0.173s] -- Found ament_cmake: 1.3.8 (/opt/ros/humble/share/ament_cmake/cmake)
+[1.267s] -- Configuring done
+[1.464s] -- Generating done
+[1.508s] -- Build files have been written to: /Thor-ROS/ws_thor/build/moveit_thor
+[1.528s] Invoked command in '/Thor-ROS/ws_thor/build/moveit_thor' returned '0': AMENT_PREFIX_PATH=/Thor-ROS/ws_thor/install/urdf_thor:/Thor-ROS/ws_thor/install/moveit_thor:/opt/ros/humble CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble PYTHONPATH=/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages /usr/bin/cmake --build /Thor-ROS/ws_thor/build/moveit_thor -- -j24 -l24
+[1.565s] Invoking command in '/Thor-ROS/ws_thor/build/moveit_thor': AMENT_PREFIX_PATH=/Thor-ROS/ws_thor/install/urdf_thor:/Thor-ROS/ws_thor/install/moveit_thor:/opt/ros/humble CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble PYTHONPATH=/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages /usr/bin/cmake --install /Thor-ROS/ws_thor/build/moveit_thor
+[1.572s] -- Install configuration: ""
+[1.594s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/ament_index/resource_index/package_run_dependencies/moveit_thor
+[1.628s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/ament_index/resource_index/parent_prefix_path/moveit_thor
+[1.644s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/environment/ament_prefix_path.sh
+[1.666s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/environment/ament_prefix_path.dsv
+[1.719s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/environment/path.sh
+[1.736s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/environment/path.dsv
+[1.792s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/local_setup.bash
+[1.807s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/local_setup.sh
+[1.821s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/local_setup.zsh
+[1.835s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/local_setup.dsv
+[1.876s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.dsv
+[1.925s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/ament_index/resource_index/packages/moveit_thor
+[1.940s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/cmake/moveit_thorConfig.cmake
+[1.953s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/cmake/moveit_thorConfig-version.cmake
+[1.969s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.xml
+[2.010s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch
+[2.031s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/demo.launch.py
+[2.087s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/fullDemo.launch.py
+[2.102s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/moveit_rviz.launch.py
+[2.158s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/move_group.launch.py
+[2.213s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/rsp.launch.py
+[2.270s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/setup_assistant.launch.py
+[2.320s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/spawn_controllers.launch.py
+[2.369s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/static_virtual_joint_tfs.launch.py
+[2.429s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/warehouse_db.launch.py
+[2.481s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config
+[2.500s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/initial_positions.yaml
+[2.557s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/joint_limits.yaml
+[2.612s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/joint_names.yaml
+[2.629s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/kinematics.yaml
+[2.685s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/moveit.rviz
+[2.742s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/moveit_controllers.yaml
+[2.794s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/pilz_cartesian_limits.yaml
+[2.849s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/ros2_controllers.yaml
+[2.907s] -- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/sensors_3d.yaml
+[2.922s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/THOR_arm.ros2_control.xacro
+[2.972s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/THOR_arm.srdf
+[3.030s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/THOR_arm.urdf.xacro
+[3.088s] -- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/.setup_assistant
+[3.125s] Invoked command in '/Thor-ROS/ws_thor/build/moveit_thor' returned '0': AMENT_PREFIX_PATH=/Thor-ROS/ws_thor/install/urdf_thor:/Thor-ROS/ws_thor/install/moveit_thor:/opt/ros/humble CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble PYTHONPATH=/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages /usr/bin/cmake --install /Thor-ROS/ws_thor/build/moveit_thor

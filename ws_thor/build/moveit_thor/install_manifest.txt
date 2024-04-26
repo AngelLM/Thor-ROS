@@ -14,6 +14,7 @@
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/cmake/moveit_thorConfig-version.cmake
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.xml
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/demo.launch.py
+/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/fullDemo.launch.py
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/moveit_rviz.launch.py
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/move_group.launch.py
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/rsp.launch.py
@@ -23,6 +24,7 @@
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/warehouse_db.launch.py
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/initial_positions.yaml
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/joint_limits.yaml
+/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/joint_names.yaml
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/kinematics.yaml
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/moveit.rviz
 /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/moveit_controllers.yaml
