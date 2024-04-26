@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source ros2 as underlay
-source /opt/ros/humble/setup.bash
+source /opt//ros/humble/setup.bash
 echo ">> Ros2 sourced."
 # Navigate to work space
 cd ws_thor/

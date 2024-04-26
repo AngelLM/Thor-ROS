@@ -54,10 +54,9 @@ RUN sudo apt update \
 RUN sudo apt install python3-vcstool
 
 # Obtain last version of ROS2 packages
-RUN sudo rosdep init -y \
-&& rosdep update -y \
-&& sudo apt update -y \
-&& sudo apt dist-upgrade -y
+RUN rosdep update -y
+RUN sudo apt update -y 
+RUN sudo apt dist-upgrade -y
 
 # Install Moveit2
 RUN sudo apt install ros-humble-moveit -y
