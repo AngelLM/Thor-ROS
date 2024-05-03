@@ -9,7 +9,7 @@ Graphical user interegace forwarded to port `6080`.
 
 Open `localhost:6080` in your browser and log in with `vscode` as password.
 
-## Current state.
+## Current state
 THOR URDF collisions + visual meshes
 
 Created Moveit 2.0 configuration package.
