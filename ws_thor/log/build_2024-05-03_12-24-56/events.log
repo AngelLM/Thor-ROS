@@ -1,0 +1,145 @@
+[0.000000] (-) TimerEvent: {}
+[0.000508] (urdf_thor) JobQueued: {'identifier': 'urdf_thor', 'dependencies': OrderedDict()}
+[0.000783] (moveit_thor) JobQueued: {'identifier': 'moveit_thor', 'dependencies': OrderedDict([('urdf_thor', '/Thor-ROS/ws_thor/install/urdf_thor')])}
+[0.001028] (urdf_thor) JobStarted: {'identifier': 'urdf_thor'}
+[0.098958] (-) TimerEvent: {}
+[0.199889] (-) TimerEvent: {}
+[0.300323] (-) TimerEvent: {}
+[0.400851] (-) TimerEvent: {}
+[0.501333] (-) TimerEvent: {}
+[0.601825] (-) TimerEvent: {}
+[0.702393] (-) TimerEvent: {}
+[0.802892] (-) TimerEvent: {}
+[0.903326] (-) TimerEvent: {}
+[1.003865] (-) TimerEvent: {}
+[1.109115] (-) TimerEvent: {}
+[1.209526] (-) TimerEvent: {}
+[1.309980] (-) TimerEvent: {}
+[1.410413] (-) TimerEvent: {}
+[1.510874] (-) TimerEvent: {}
+[1.611405] (-) TimerEvent: {}
+[1.712070] (-) TimerEvent: {}
+[1.812683] (-) TimerEvent: {}
+[1.913223] (-) TimerEvent: {}
+[2.013777] (-) TimerEvent: {}
+[2.036048] (urdf_thor) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', 'setup.py', 'egg_info', '--egg-base', '../../build/urdf_thor', 'build', '--build-base', '/Thor-ROS/ws_thor/build/urdf_thor/build', 'install', '--record', '/Thor-ROS/ws_thor/build/urdf_thor/install.log', '--single-version-externally-managed', 'install_data'], 'cwd': '/Thor-ROS/ws_thor/src/urdf_thor', 'env': {'HOSTNAME': 'docker-desktop', 'GIT_ASKPASS': '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/extensions/git/dist/askpass.sh', 'SHLVL': '2', 'LD_LIBRARY_PATH': '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'BROWSER': '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/bin/helpers/browser.sh', 'HOME': '/home/vscode', 'OLDPWD': '/Thor-ROS', 'TERM_PROGRAM_VERSION': '1.88.1', 'VSCODE_IPC_HOOK_CLI': '/tmp/vscode-ipc-c002b383-1bc2-4a73-9b21-053327f1549e.sock', 'ROS_PYTHON_VERSION': '3', 'VSCODE_GIT_ASKPASS_MAIN': '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/extensions/git/dist/askpass-main.js', 'VSCODE_GIT_ASKPASS_NODE': '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/node', 'COLORTERM': 'truecolor', 'REMOTE_CONTAINERS': 'true', 'WAYLAND_DISPLAY': 'vscode-wayland-b8020376-9888-44d0-9b75-a3f815fdbb23.sock', 'COLCON_PREFIX_PATH': '/Thor-ROS/ws_thor/install', 'ROS_DISTRO': 'humble', 'REMOTE_CONTAINERS_IPC': '/tmp/vscode-remote-containers-ipc-ef073d81-20e6-4533-8f46-4dc47972e7d4.sock', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'TERM': 'xterm-256color', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/bin/remote-cli:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'XDG_RUNTIME_DIR': '/tmp/user/1000', 'REMOTE_CONTAINERS_SOCKETS': '["/tmp/.X11-unix/X0","/home/vscode/.gnupg/S.gpg-agent"]', 'DISPLAY': ':1', 'LANG': 'C.UTF-8', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'VSCODE_GIT_IPC_HANDLE': '/tmp/user/1000/vscode-git-1956a56d10.sock', 'TERM_PROGRAM': 'vscode', 'AMENT_PREFIX_PATH': '/Thor-ROS/ws_thor/install/moveit_thor:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble', 'REMOTE_CONTAINERS_DISPLAY_SOCK': '/tmp/.X11-unix/X0', 'SHELL': '/bin/bash', 'VSCODE_GIT_ASKPASS_EXTRA_ARGS': '', 'PWD': '/Thor-ROS/ws_thor/build/urdf_thor', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/Thor-ROS/ws_thor/install/moveit_thor'}, 'shell': False}
+[2.113913] (-) TimerEvent: {}
+[2.214376] (-) TimerEvent: {}
+[2.314843] (-) TimerEvent: {}
+[2.415285] (-) TimerEvent: {}
+[2.515695] (-) TimerEvent: {}
+[2.616173] (-) TimerEvent: {}
+[2.716620] (-) TimerEvent: {}
+[2.817063] (-) TimerEvent: {}
+[2.917609] (-) TimerEvent: {}
+[2.940982] (urdf_thor) StdoutLine: {'line': b'running egg_info\n'}
+[2.945412] (urdf_thor) StdoutLine: {'line': b'writing ../../build/urdf_thor/urdf_thor.egg-info/PKG-INFO\n'}
+[2.950943] (urdf_thor) StdoutLine: {'line': b'writing dependency_links to ../../build/urdf_thor/urdf_thor.egg-info/dependency_links.txt\n'}
+[2.955531] (urdf_thor) StdoutLine: {'line': b'writing entry points to ../../build/urdf_thor/urdf_thor.egg-info/entry_points.txt\n'}
+[2.959288] (urdf_thor) StdoutLine: {'line': b'writing requirements to ../../build/urdf_thor/urdf_thor.egg-info/requires.txt\n'}
+[2.961850] (urdf_thor) StdoutLine: {'line': b'writing top-level names to ../../build/urdf_thor/urdf_thor.egg-info/top_level.txt\n'}
+[3.001849] (urdf_thor) StdoutLine: {'line': b"reading manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'\n"}
+[3.017682] (-) TimerEvent: {}
+[3.045241] (urdf_thor) StdoutLine: {'line': b"adding license file 'LICENSE'\n"}
+[3.068336] (urdf_thor) StdoutLine: {'line': b"writing manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'\n"}
+[3.070876] (urdf_thor) StdoutLine: {'line': b'running build\n'}
+[3.073233] (urdf_thor) StdoutLine: {'line': b'running build_py\n'}
+[3.084085] (urdf_thor) StdoutLine: {'line': b'running install\n'}
+[3.084808] (urdf_thor) StdoutLine: {'line': b'running install_lib\n'}
+[3.117791] (-) TimerEvent: {}
+[3.130528] (urdf_thor) StdoutLine: {'line': b'running install_data\n'}
+[3.217912] (-) TimerEvent: {}
+[3.226774] (urdf_thor) StdoutLine: {'line': b'running install_egg_info\n'}
+[3.238263] (urdf_thor) StdoutLine: {'line': b"removing '/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info' (and everything under it)\n"}
+[3.281829] (urdf_thor) StdoutLine: {'line': b'Copying ../../build/urdf_thor/urdf_thor.egg-info to /Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info\n'}
+[3.318032] (-) TimerEvent: {}
+[3.418509] (-) TimerEvent: {}
+[3.480048] (urdf_thor) StdoutLine: {'line': b'running install_scripts\n'}
+[3.518717] (-) TimerEvent: {}
+[3.581073] (urdf_thor) StdoutLine: {'line': b"writing list of installed files to '/Thor-ROS/ws_thor/build/urdf_thor/install.log'\n"}
+[3.602947] (urdf_thor) CommandEnded: {'returncode': 0}
+[3.618801] (-) TimerEvent: {}
+[3.719425] (-) TimerEvent: {}
+[3.819895] (-) TimerEvent: {}
+[3.846361] (urdf_thor) JobEnded: {'identifier': 'urdf_thor', 'rc': 0}
+[3.853259] (moveit_thor) JobStarted: {'identifier': 'moveit_thor'}
+[3.913842] (moveit_thor) JobProgress: {'identifier': 'moveit_thor', 'progress': 'cmake'}
+[3.920011] (-) TimerEvent: {}
+[3.927887] (moveit_thor) JobProgress: {'identifier': 'moveit_thor', 'progress': 'build'}
+[3.932732] (moveit_thor) Command: {'cmd': ['/usr/bin/cmake', '--build', '/Thor-ROS/ws_thor/build/moveit_thor', '--', '-j24', '-l24'], 'cwd': '/Thor-ROS/ws_thor/build/moveit_thor', 'env': OrderedDict([('HOSTNAME', 'docker-desktop'), ('GIT_ASKPASS', '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/extensions/git/dist/askpass.sh'), ('SHLVL', '2'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('BROWSER', '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/bin/helpers/browser.sh'), ('HOME', '/home/vscode'), ('OLDPWD', '/Thor-ROS'), ('TERM_PROGRAM_VERSION', '1.88.1'), ('VSCODE_IPC_HOOK_CLI', '/tmp/vscode-ipc-c002b383-1bc2-4a73-9b21-053327f1549e.sock'), ('ROS_PYTHON_VERSION', '3'), ('VSCODE_GIT_ASKPASS_MAIN', '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/node'), ('COLORTERM', 'truecolor'), ('REMOTE_CONTAINERS', 'true'), ('WAYLAND_DISPLAY', 'vscode-wayland-b8020376-9888-44d0-9b75-a3f815fdbb23.sock'), ('COLCON_PREFIX_PATH', '/Thor-ROS/ws_thor/install'), ('ROS_DISTRO', 'humble'), ('REMOTE_CONTAINERS_IPC', '/tmp/vscode-remote-containers-ipc-ef073d81-20e6-4533-8f46-4dc47972e7d4.sock'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm-256color'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/bin/remote-cli:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('XDG_RUNTIME_DIR', '/tmp/user/1000'), ('REMOTE_CONTAINERS_SOCKETS', '["/tmp/.X11-unix/X0","/home/vscode/.gnupg/S.gpg-agent"]'), ('DISPLAY', ':1'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/tmp/user/1000/vscode-git-1956a56d10.sock'), ('TERM_PROGRAM', 'vscode'), ('AMENT_PREFIX_PATH', '/Thor-ROS/ws_thor/install/urdf_thor:/Thor-ROS/ws_thor/install/moveit_thor:/opt/ros/humble'), ('REMOTE_CONTAINERS_DISPLAY_SOCK', '/tmp/.X11-unix/X0'), ('SHELL', '/bin/bash'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('PWD', '/Thor-ROS/ws_thor/build/moveit_thor'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/Thor-ROS/ws_thor/install/moveit_thor:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble')]), 'shell': False}
+[4.020144] (-) TimerEvent: {}
+[4.026382] (moveit_thor) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.8 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[4.120274] (-) TimerEvent: {}
+[4.220741] (-) TimerEvent: {}
+[4.321220] (-) TimerEvent: {}
+[4.421737] (-) TimerEvent: {}
+[4.524325] (-) TimerEvent: {}
+[4.624738] (-) TimerEvent: {}
+[4.725150] (-) TimerEvent: {}
+[4.825564] (-) TimerEvent: {}
+[4.926016] (-) TimerEvent: {}
+[5.026484] (-) TimerEvent: {}
+[5.126987] (-) TimerEvent: {}
+[5.220873] (moveit_thor) StdoutLine: {'line': b'-- Configuring done\n'}
+[5.227108] (-) TimerEvent: {}
+[5.327639] (-) TimerEvent: {}
+[5.409163] (moveit_thor) StdoutLine: {'line': b'-- Generating done\n'}
+[5.427739] (-) TimerEvent: {}
+[5.449895] (moveit_thor) StdoutLine: {'line': b'-- Build files have been written to: /Thor-ROS/ws_thor/build/moveit_thor\n'}
+[5.468708] (moveit_thor) CommandEnded: {'returncode': 0}
+[5.493795] (moveit_thor) JobProgress: {'identifier': 'moveit_thor', 'progress': 'install'}
+[5.501961] (moveit_thor) Command: {'cmd': ['/usr/bin/cmake', '--install', '/Thor-ROS/ws_thor/build/moveit_thor'], 'cwd': '/Thor-ROS/ws_thor/build/moveit_thor', 'env': OrderedDict([('HOSTNAME', 'docker-desktop'), ('GIT_ASKPASS', '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/extensions/git/dist/askpass.sh'), ('SHLVL', '2'), ('LD_LIBRARY_PATH', '/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('BROWSER', '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/bin/helpers/browser.sh'), ('HOME', '/home/vscode'), ('OLDPWD', '/Thor-ROS'), ('TERM_PROGRAM_VERSION', '1.88.1'), ('VSCODE_IPC_HOOK_CLI', '/tmp/vscode-ipc-c002b383-1bc2-4a73-9b21-053327f1549e.sock'), ('ROS_PYTHON_VERSION', '3'), ('VSCODE_GIT_ASKPASS_MAIN', '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/extensions/git/dist/askpass-main.js'), ('VSCODE_GIT_ASKPASS_NODE', '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/node'), ('COLORTERM', 'truecolor'), ('REMOTE_CONTAINERS', 'true'), ('WAYLAND_DISPLAY', 'vscode-wayland-b8020376-9888-44d0-9b75-a3f815fdbb23.sock'), ('COLCON_PREFIX_PATH', '/Thor-ROS/ws_thor/install'), ('ROS_DISTRO', 'humble'), ('REMOTE_CONTAINERS_IPC', '/tmp/vscode-remote-containers-ipc-ef073d81-20e6-4533-8f46-4dc47972e7d4.sock'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm-256color'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/vscode/vscode-server/bin/linux-x64/e170252f762678dec6ca2cc69aba1570769a5d39/bin/remote-cli:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('XDG_RUNTIME_DIR', '/tmp/user/1000'), ('REMOTE_CONTAINERS_SOCKETS', '["/tmp/.X11-unix/X0","/home/vscode/.gnupg/S.gpg-agent"]'), ('DISPLAY', ':1'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/tmp/user/1000/vscode-git-1956a56d10.sock'), ('TERM_PROGRAM', 'vscode'), ('AMENT_PREFIX_PATH', '/Thor-ROS/ws_thor/install/urdf_thor:/Thor-ROS/ws_thor/install/moveit_thor:/opt/ros/humble'), ('REMOTE_CONTAINERS_DISPLAY_SOCK', '/tmp/.X11-unix/X0'), ('SHELL', '/bin/bash'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('PWD', '/Thor-ROS/ws_thor/build/moveit_thor'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/Thor-ROS/ws_thor/install/moveit_thor:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble')]), 'shell': False}
+[5.509248] (moveit_thor) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[5.527880] (moveit_thor) StdoutLine: {'line': b'-- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/ament_index/resource_index/package_run_dependencies/moveit_thor\n'}
+[5.528726] (-) TimerEvent: {}
+[5.601786] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/ament_index/resource_index/parent_prefix_path/moveit_thor\n'}
+[5.614825] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/environment/ament_prefix_path.sh\n'}
+[5.628865] (-) TimerEvent: {}
+[5.631873] (moveit_thor) StdoutLine: {'line': b'-- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/environment/ament_prefix_path.dsv\n'}
+[5.687769] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/environment/path.sh\n'}
+[5.704695] (moveit_thor) StdoutLine: {'line': b'-- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/environment/path.dsv\n'}
+[5.729063] (-) TimerEvent: {}
+[5.761517] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/local_setup.bash\n'}
+[5.776380] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/local_setup.sh\n'}
+[5.790252] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/local_setup.zsh\n'}
+[5.804564] (moveit_thor) StdoutLine: {'line': b'-- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/local_setup.dsv\n'}
+[5.829128] (-) TimerEvent: {}
+[5.849226] (moveit_thor) StdoutLine: {'line': b'-- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.dsv\n'}
+[5.907027] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/ament_index/resource_index/packages/moveit_thor\n'}
+[5.924796] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/cmake/moveit_thorConfig.cmake\n'}
+[5.929230] (-) TimerEvent: {}
+[5.938369] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/cmake/moveit_thorConfig-version.cmake\n'}
+[5.957480] (moveit_thor) StdoutLine: {'line': b'-- Installing: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.xml\n'}
+[6.005622] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch\n'}
+[6.029455] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/demo.launch.py\n'}
+[6.030309] (-) TimerEvent: {}
+[6.049297] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/moveit_rviz.launch.py\n'}
+[6.067993] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/move_group.launch.py\n'}
+[6.085431] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/rsp.launch.py\n'}
+[6.101345] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/setup_assistant.launch.py\n'}
+[6.117630] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/spawn_controllers.launch.py\n'}
+[6.130460] (-) TimerEvent: {}
+[6.134527] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/static_virtual_joint_tfs.launch.py\n'}
+[6.153461] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/launch/warehouse_db.launch.py\n'}
+[6.166644] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config\n'}
+[6.188446] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/initial_positions.yaml\n'}
+[6.205700] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/joint_limits.yaml\n'}
+[6.222940] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/kinematics.yaml\n'}
+[6.230568] (-) TimerEvent: {}
+[6.239364] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/moveit.rviz\n'}
+[6.255288] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/moveit_controllers.yaml\n'}
+[6.270728] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/pilz_cartesian_limits.yaml\n'}
+[6.286320] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/ros2_controllers.yaml\n'}
+[6.302949] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/THOR_arm.ros2_control.xacro\n'}
+[6.317538] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/THOR_arm.srdf\n'}
+[6.330664] (-) TimerEvent: {}
+[6.332424] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/config/THOR_arm.urdf.xacro\n'}
+[6.349721] (moveit_thor) StdoutLine: {'line': b'-- Up-to-date: /Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/.setup_assistant\n'}
+[6.357604] (moveit_thor) CommandEnded: {'returncode': 0}
+[6.430765] (-) TimerEvent: {}
+[6.531187] (-) TimerEvent: {}
+[6.631813] (-) TimerEvent: {}
+[6.732669] (-) TimerEvent: {}
+[6.833175] (-) TimerEvent: {}
+[6.878348] (moveit_thor) JobEnded: {'identifier': 'moveit_thor', 'rc': 0}
+[6.884663] (-) EventReactorShutdown: {}
