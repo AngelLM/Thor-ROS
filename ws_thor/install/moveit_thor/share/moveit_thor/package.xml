@@ -6,7 +6,7 @@
   <description>
      An automatically generated package with all the configuration and launch files for using the THOR_arm with the MoveIt Motion Planning Framework
   </description>
-  <maintainer email="jorgepramoscontact@gmail.com">Jorge Perez Ramos</maintainer>
+  <maintainer email="jorgepramoscontact@gmail.com">JorgePRamos</maintainer>
 
   <license>BSD</license>
 
@@ -14,11 +14,9 @@
   <url type="bugtracker">https://github.com/ros-planning/moveit2/issues</url>
   <url type="repository">https://github.com/ros-planning/moveit2</url>
 
-  <author email="jorgepramoscontact@gmail.com">Jorge Perez Ramos</author>
+  <author email="jorgepramoscontact@gmail.com">JorgePRamos</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-
-  <exec_depend>moveit_ros_control_interface</exec_depend>
 
   <exec_depend>moveit_ros_move_group</exec_depend>
   <exec_depend>moveit_kinematics</exec_depend>
@@ -44,6 +42,7 @@
   <exec_depend>rviz_default_plugins</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>urdf_thor</exec_depend>
+  <exec_depend>warehouse_ros_mongo</exec_depend>
   <exec_depend>xacro</exec_depend>
 
 

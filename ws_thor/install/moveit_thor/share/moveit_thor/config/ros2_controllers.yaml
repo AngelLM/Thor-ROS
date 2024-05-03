@@ -3,14 +3,14 @@ controller_manager:
   ros__parameters:
     update_rate: 100  # Hz
 
-    thor_arm_controller:
+    arm_group_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-thor_arm_controller:
+arm_group_controller:
   ros__parameters:
     joints:
       - art1_yaw
@@ -21,6 +21,7 @@ thor_arm_controller:
       - art6_roll
     command_interfaces:
       - position
+      - velocity
     state_interfaces:
       - position
       - velocity

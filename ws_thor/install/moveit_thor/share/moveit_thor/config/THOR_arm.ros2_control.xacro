@@ -10,6 +10,7 @@
             </hardware>
             <joint name="art1_yaw">
                 <command_interface name="position"/>
+                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['art1_yaw']}</param>
                 </state_interface>
@@ -17,6 +18,7 @@
             </joint>
             <joint name="art2_pitch">
                 <command_interface name="position"/>
+                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['art2_pitch']}</param>
                 </state_interface>
@@ -24,6 +26,7 @@
             </joint>
             <joint name="art3_pitch">
                 <command_interface name="position"/>
+                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['art3_pitch']}</param>
                 </state_interface>
@@ -31,6 +34,7 @@
             </joint>
             <joint name="art4_roll">
                 <command_interface name="position"/>
+                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['art4_roll']}</param>
                 </state_interface>
@@ -38,6 +42,7 @@
             </joint>
             <joint name="art5_pitch">
                 <command_interface name="position"/>
+                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['art5_pitch']}</param>
                 </state_interface>
@@ -45,6 +50,7 @@
             </joint>
             <joint name="art6_roll">
                 <command_interface name="position"/>
+                <command_interface name="velocity"/>
                 <state_interface name="position">
                   <param name="initial_value">${initial_positions['art6_roll']}</param>
                 </state_interface>

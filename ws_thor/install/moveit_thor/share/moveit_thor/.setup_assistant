@@ -5,12 +5,13 @@ moveit_setup_assistant_config:
   srdf:
     relative_path: config/THOR_arm.srdf
   package_settings:
-    author_name: Jorge Perez Ramos
+    author_name: JorgePRamos
     author_email: jorgepramoscontact@gmail.com
-    generated_timestamp: 1713614843
+    generated_timestamp: 1714729317
   control_xacro:
     command:
       - position
+      - velocity
     state:
       - position
       - velocity
@@ -20,6 +21,7 @@ moveit_setup_assistant_config:
   control_xacro:
     command:
       - position
+      - velocity
     state:
       - position
       - velocity
