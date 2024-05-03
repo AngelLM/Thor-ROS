@@ -1,0 +1,23 @@
+[1.068s] Invoking command in '/Thor-ROS/ws_thor/src/urdf_thor': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed install_data
+[1.640s] running egg_info
+[1.644s] writing ../../build/urdf_thor/urdf_thor.egg-info/PKG-INFO
+[1.649s] writing dependency_links to ../../build/urdf_thor/urdf_thor.egg-info/dependency_links.txt
+[1.653s] writing entry points to ../../build/urdf_thor/urdf_thor.egg-info/entry_points.txt
+[1.657s] writing requirements to ../../build/urdf_thor/urdf_thor.egg-info/requires.txt
+[1.659s] writing top-level names to ../../build/urdf_thor/urdf_thor.egg-info/top_level.txt
+[1.695s] reading manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[1.734s] adding license file 'LICENSE'
+[1.758s] writing manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[1.762s] running build
+[1.762s] running build_py
+[1.772s] running install
+[1.773s] running install_lib
+[1.816s] running install_data
+[1.907s] creating /Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/urdf
+[1.914s] copying urdf/thor.urdf -> /Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/urdf
+[1.930s] running install_egg_info
+[1.938s] removing '/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info' (and everything under it)
+[1.979s] Copying ../../build/urdf_thor/urdf_thor.egg-info to /Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info
+[2.160s] running install_scripts
+[2.215s] writing list of installed files to '/Thor-ROS/ws_thor/build/urdf_thor/install.log'
+[2.235s] Invoked command in '/Thor-ROS/ws_thor/src/urdf_thor' returned '0': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed install_data

@@ -1,0 +1,196 @@
+[0.299s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.300s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=24, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x7f1d3c9408b0>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7f1d3c913e20>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7f1d3c913e20>>, mixin_verb=('build',))
+[0.525s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.526s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.526s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.526s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.526s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.526s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.527s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/Thor-ROS/ws_thor'
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.528s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.529s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.529s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.529s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.529s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.529s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.542s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.542s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.542s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.543s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.545s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.545s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.546s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.547s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.548s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.551s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.552s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.553s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.553s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.554s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.555s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.555s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.556s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.556s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.556s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.557s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.559s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.559s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.560s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.560s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.560s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.563s] Level 1:colcon.colcon_core.package_identification:_identify(src/moveit_thor) by extensions ['ignore', 'ignore_ament_install']
+[0.564s] Level 1:colcon.colcon_core.package_identification:_identify(src/moveit_thor) by extension 'ignore'
+[0.565s] Level 1:colcon.colcon_core.package_identification:_identify(src/moveit_thor) by extension 'ignore_ament_install'
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(src/moveit_thor) by extensions ['colcon_pkg']
+[0.566s] Level 1:colcon.colcon_core.package_identification:_identify(src/moveit_thor) by extension 'colcon_pkg'
+[0.567s] Level 1:colcon.colcon_core.package_identification:_identify(src/moveit_thor) by extensions ['colcon_meta']
+[0.567s] Level 1:colcon.colcon_core.package_identification:_identify(src/moveit_thor) by extension 'colcon_meta'
+[0.568s] Level 1:colcon.colcon_core.package_identification:_identify(src/moveit_thor) by extensions ['ros']
+[0.568s] Level 1:colcon.colcon_core.package_identification:_identify(src/moveit_thor) by extension 'ros'
+[0.584s] DEBUG:colcon.colcon_core.package_identification:Package 'src/moveit_thor' with type 'ros.ament_cmake' and name 'moveit_thor'
+[0.586s] Level 1:colcon.colcon_core.package_identification:_identify(src/urdf_thor) by extensions ['ignore', 'ignore_ament_install']
+[0.586s] Level 1:colcon.colcon_core.package_identification:_identify(src/urdf_thor) by extension 'ignore'
+[0.587s] Level 1:colcon.colcon_core.package_identification:_identify(src/urdf_thor) by extension 'ignore_ament_install'
+[0.589s] Level 1:colcon.colcon_core.package_identification:_identify(src/urdf_thor) by extensions ['colcon_pkg']
+[0.589s] Level 1:colcon.colcon_core.package_identification:_identify(src/urdf_thor) by extension 'colcon_pkg'
+[0.590s] Level 1:colcon.colcon_core.package_identification:_identify(src/urdf_thor) by extensions ['colcon_meta']
+[0.590s] Level 1:colcon.colcon_core.package_identification:_identify(src/urdf_thor) by extension 'colcon_meta'
+[0.591s] Level 1:colcon.colcon_core.package_identification:_identify(src/urdf_thor) by extensions ['ros']
+[0.591s] Level 1:colcon.colcon_core.package_identification:_identify(src/urdf_thor) by extension 'ros'
+[0.605s] DEBUG:colcon.colcon_core.package_identification:Package 'src/urdf_thor' with type 'ros.ament_python' and name 'urdf_thor'
+[0.605s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.605s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.605s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.605s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.605s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.672s] Level 5:colcon.colcon_core.verb:set package 'urdf_thor' build argument 'cmake_args' from command line to 'None'
+[0.672s] Level 5:colcon.colcon_core.verb:set package 'urdf_thor' build argument 'cmake_target' from command line to 'None'
+[0.672s] Level 5:colcon.colcon_core.verb:set package 'urdf_thor' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.672s] Level 5:colcon.colcon_core.verb:set package 'urdf_thor' build argument 'cmake_clean_cache' from command line to 'False'
+[0.673s] Level 5:colcon.colcon_core.verb:set package 'urdf_thor' build argument 'cmake_clean_first' from command line to 'False'
+[0.673s] Level 5:colcon.colcon_core.verb:set package 'urdf_thor' build argument 'cmake_force_configure' from command line to 'False'
+[0.673s] Level 5:colcon.colcon_core.verb:set package 'urdf_thor' build argument 'ament_cmake_args' from command line to 'None'
+[0.673s] Level 5:colcon.colcon_core.verb:set package 'urdf_thor' build argument 'catkin_cmake_args' from command line to 'None'
+[0.673s] Level 5:colcon.colcon_core.verb:set package 'urdf_thor' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.673s] DEBUG:colcon.colcon_core.verb:Building package 'urdf_thor' with the following arguments: {'ament_cmake_args': None, 'build_base': '/Thor-ROS/ws_thor/build/urdf_thor', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/Thor-ROS/ws_thor/install/urdf_thor', 'merge_install': False, 'path': '/Thor-ROS/ws_thor/src/urdf_thor', 'symlink_install': False, 'test_result_base': None}
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'moveit_thor' build argument 'cmake_args' from command line to 'None'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'moveit_thor' build argument 'cmake_target' from command line to 'None'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'moveit_thor' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'moveit_thor' build argument 'cmake_clean_cache' from command line to 'False'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'moveit_thor' build argument 'cmake_clean_first' from command line to 'False'
+[0.674s] Level 5:colcon.colcon_core.verb:set package 'moveit_thor' build argument 'cmake_force_configure' from command line to 'False'
+[0.675s] Level 5:colcon.colcon_core.verb:set package 'moveit_thor' build argument 'ament_cmake_args' from command line to 'None'
+[0.675s] Level 5:colcon.colcon_core.verb:set package 'moveit_thor' build argument 'catkin_cmake_args' from command line to 'None'
+[0.675s] Level 5:colcon.colcon_core.verb:set package 'moveit_thor' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.675s] DEBUG:colcon.colcon_core.verb:Building package 'moveit_thor' with the following arguments: {'ament_cmake_args': None, 'build_base': '/Thor-ROS/ws_thor/build/moveit_thor', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/Thor-ROS/ws_thor/install/moveit_thor', 'merge_install': False, 'path': '/Thor-ROS/ws_thor/src/moveit_thor', 'symlink_install': False, 'test_result_base': None}
+[0.675s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.676s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.677s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/Thor-ROS/ws_thor/src/urdf_thor' with build type 'ament_python'
+[0.677s] Level 1:colcon.colcon_core.shell:create_environment_hook('urdf_thor', 'ament_prefix_path')
+[0.685s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.686s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/hook/ament_prefix_path.ps1'
+[0.697s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/hook/ament_prefix_path.dsv'
+[0.707s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/hook/ament_prefix_path.sh'
+[0.716s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.717s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.361s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/Thor-ROS/ws_thor/src/urdf_thor'
+[1.362s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.362s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[2.409s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/Thor-ROS/ws_thor/src/urdf_thor': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed install_data
+[3.733s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/Thor-ROS/ws_thor/src/urdf_thor' returned '0': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed install_data
+[3.741s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/urdf_thor' for CMake module files
+[3.778s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/urdf_thor' for CMake config files
+[3.848s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/urdf_thor/lib'
+[3.851s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/urdf_thor/bin'
+[3.852s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/urdf_thor/lib/pkgconfig/urdf_thor.pc'
+[3.853s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages'
+[3.855s] Level 1:colcon.colcon_core.shell:create_environment_hook('urdf_thor', 'pythonpath')
+[3.855s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/hook/pythonpath.ps1'
+[3.866s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/hook/pythonpath.dsv'
+[3.877s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/hook/pythonpath.sh'
+[3.889s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/urdf_thor/bin'
+[3.890s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(urdf_thor)
+[3.891s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/package.ps1'
+[3.900s] INFO:colcon.colcon_core.shell:Creating package descriptor '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/package.dsv'
+[3.909s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/package.sh'
+[3.918s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/package.bash'
+[3.927s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/urdf_thor/share/urdf_thor/package.zsh'
+[3.935s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/Thor-ROS/ws_thor/install/urdf_thor/share/colcon-core/packages/urdf_thor)
+[3.942s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/Thor-ROS/ws_thor/src/moveit_thor' with build type 'ament_cmake'
+[3.942s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/Thor-ROS/ws_thor/src/moveit_thor'
+[3.942s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[3.943s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[4.052s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/Thor-ROS/ws_thor/build/moveit_thor': AMENT_PREFIX_PATH=/Thor-ROS/ws_thor/install/urdf_thor:/Thor-ROS/ws_thor/install/moveit_thor:/opt/ros/humble CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble PYTHONPATH=/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages /usr/bin/cmake --build /Thor-ROS/ws_thor/build/moveit_thor -- -j24 -l24
+[4.134s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/Thor-ROS/ws_thor/build/moveit_thor' returned '0': AMENT_PREFIX_PATH=/Thor-ROS/ws_thor/install/urdf_thor:/Thor-ROS/ws_thor/install/moveit_thor:/opt/ros/humble CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble PYTHONPATH=/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages /usr/bin/cmake --build /Thor-ROS/ws_thor/build/moveit_thor -- -j24 -l24
+[4.167s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/Thor-ROS/ws_thor/build/moveit_thor': AMENT_PREFIX_PATH=/Thor-ROS/ws_thor/install/urdf_thor:/Thor-ROS/ws_thor/install/moveit_thor:/opt/ros/humble CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble PYTHONPATH=/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages /usr/bin/cmake --install /Thor-ROS/ws_thor/build/moveit_thor
+[4.837s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(moveit_thor)
+[4.837s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor' for CMake module files
+[4.838s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/Thor-ROS/ws_thor/build/moveit_thor' returned '0': AMENT_PREFIX_PATH=/Thor-ROS/ws_thor/install/urdf_thor:/Thor-ROS/ws_thor/install/moveit_thor:/opt/ros/humble CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/Thor-ROS/ws_thor/install/urdf_thor:/opt/ros/humble PYTHONPATH=/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages:/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages /usr/bin/cmake --install /Thor-ROS/ws_thor/build/moveit_thor
+[4.897s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor' for CMake config files
+[4.954s] Level 1:colcon.colcon_core.shell:create_environment_hook('moveit_thor', 'cmake_prefix_path')
+[4.955s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/cmake_prefix_path.ps1'
+[4.965s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/cmake_prefix_path.dsv'
+[4.976s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/cmake_prefix_path.sh'
+[4.988s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor/lib'
+[4.991s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor/bin'
+[4.992s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor/lib/pkgconfig/moveit_thor.pc'
+[4.993s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages'
+[4.995s] Level 1:colcon.colcon_core.shell:create_environment_hook('moveit_thor', 'pythonpath')
+[4.996s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/pythonpath.ps1'
+[5.006s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/pythonpath.dsv'
+[5.016s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/pythonpath.sh'
+[5.027s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor/bin'
+[5.028s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.ps1'
+[5.036s] INFO:colcon.colcon_core.shell:Creating package descriptor '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.dsv'
+[5.044s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.sh'
+[5.052s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.bash'
+[5.061s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.zsh'
+[5.068s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/Thor-ROS/ws_thor/install/moveit_thor/share/colcon-core/packages/moveit_thor)
+[5.099s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(moveit_thor)
+[5.100s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor' for CMake module files
+[5.158s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor' for CMake config files
+[5.213s] Level 1:colcon.colcon_core.shell:create_environment_hook('moveit_thor', 'cmake_prefix_path')
+[5.213s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/cmake_prefix_path.ps1'
+[5.223s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/cmake_prefix_path.dsv'
+[5.233s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/cmake_prefix_path.sh'
+[5.246s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor/lib'
+[5.249s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor/bin'
+[5.250s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor/lib/pkgconfig/moveit_thor.pc'
+[5.251s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor/lib/python3.10/site-packages'
+[5.253s] Level 1:colcon.colcon_core.shell:create_environment_hook('moveit_thor', 'pythonpath')
+[5.254s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/pythonpath.ps1'
+[5.263s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/pythonpath.dsv'
+[5.273s] INFO:colcon.colcon_core.shell:Creating environment hook '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/hook/pythonpath.sh'
+[5.282s] Level 1:colcon.colcon_core.environment:checking '/Thor-ROS/ws_thor/install/moveit_thor/bin'
+[5.283s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.ps1'
+[5.291s] INFO:colcon.colcon_core.shell:Creating package descriptor '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.dsv'
+[5.298s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.sh'
+[5.307s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.bash'
+[5.315s] INFO:colcon.colcon_core.shell:Creating package script '/Thor-ROS/ws_thor/install/moveit_thor/share/moveit_thor/package.zsh'
+[5.324s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/Thor-ROS/ws_thor/install/moveit_thor/share/colcon-core/packages/moveit_thor)
+[5.330s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[5.331s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[5.331s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[5.331s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[5.359s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[5.360s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[5.360s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[5.360s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[5.364s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.Notifications was not provided by any .service files
+[5.364s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[5.365s] INFO:colcon.colcon_core.shell:Creating prefix script '/Thor-ROS/ws_thor/install/local_setup.ps1'
+[5.369s] INFO:colcon.colcon_core.shell:Creating prefix util module '/Thor-ROS/ws_thor/install/_local_setup_util_ps1.py'
+[5.373s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/Thor-ROS/ws_thor/install/setup.ps1'
+[5.387s] INFO:colcon.colcon_core.shell:Creating prefix script '/Thor-ROS/ws_thor/install/local_setup.sh'
+[5.390s] INFO:colcon.colcon_core.shell:Creating prefix util module '/Thor-ROS/ws_thor/install/_local_setup_util_sh.py'
+[5.393s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/Thor-ROS/ws_thor/install/setup.sh'
+[5.407s] INFO:colcon.colcon_core.shell:Creating prefix script '/Thor-ROS/ws_thor/install/local_setup.bash'
+[5.411s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/Thor-ROS/ws_thor/install/setup.bash'
+[5.425s] INFO:colcon.colcon_core.shell:Creating prefix script '/Thor-ROS/ws_thor/install/local_setup.zsh'
+[5.428s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/Thor-ROS/ws_thor/install/setup.zsh'

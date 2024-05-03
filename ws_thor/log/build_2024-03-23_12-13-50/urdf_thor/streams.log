@@ -1,0 +1,21 @@
+[0.979s] Invoking command in '/Thor-ROS/ws_thor/src/urdf_thor': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages: /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed install_data
+[1.501s] running egg_info
+[1.505s] writing ../../build/urdf_thor/urdf_thor.egg-info/PKG-INFO
+[1.510s] writing dependency_links to ../../build/urdf_thor/urdf_thor.egg-info/dependency_links.txt
+[1.515s] writing entry points to ../../build/urdf_thor/urdf_thor.egg-info/entry_points.txt
+[1.518s] writing requirements to ../../build/urdf_thor/urdf_thor.egg-info/requires.txt
+[1.521s] writing top-level names to ../../build/urdf_thor/urdf_thor.egg-info/top_level.txt
+[1.556s] reading manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[1.596s] adding license file 'LICENSE'
+[1.619s] writing manifest file '../../build/urdf_thor/urdf_thor.egg-info/SOURCES.txt'
+[1.624s] running build
+[1.624s] running build_py
+[1.635s] running install
+[1.635s] running install_lib
+[1.676s] running install_data
+[1.762s] running install_egg_info
+[1.771s] removing '/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info' (and everything under it)
+[1.813s] Copying ../../build/urdf_thor/urdf_thor.egg-info to /Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages/urdf_thor-0.0.0-py3.10.egg-info
+[2.000s] running install_scripts
+[2.060s] writing list of installed files to '/Thor-ROS/ws_thor/build/urdf_thor/install.log'
+[2.079s] Invoked command in '/Thor-ROS/ws_thor/src/urdf_thor' returned '0': PYTHONPATH=/Thor-ROS/ws_thor/build/urdf_thor/prefix_override:/Thor-ROS/ws_thor/install/urdf_thor/lib/python3.10/site-packages: /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../../build/urdf_thor build --build-base /Thor-ROS/ws_thor/build/urdf_thor/build install --record /Thor-ROS/ws_thor/build/urdf_thor/install.log --single-version-externally-managed install_data
