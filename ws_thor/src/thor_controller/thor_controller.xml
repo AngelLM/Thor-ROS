@@ -1,0 +1,10 @@
+<library path="thor_controller">
+    <class name="thor_controller/ThorInterface"
+      type="thor_controller::ThorInterface"
+      base_class_type="hardware_interface::SystemInterface"
+    >
+      <description>
+        Thor Hardware Interface
+      </description>
+    </class>
+  </library>
