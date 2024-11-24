@@ -24,13 +24,22 @@
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
     <virtual_joint name="virtual_joint" type="fixed" parent_frame="world" child_link="base"/>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
+    <disable_collisions link1="base" link2="art1" reason="Adjacent"/>
+    <disable_collisions link1="base" link2="art2" reason="Never"/>
+    <disable_collisions link1="base" link2="art3" reason="Never"/>
     <disable_collisions link1="art1" link2="art2" reason="Adjacent"/>
+    <disable_collisions link1="art1" link2="art3" reason="Never"/>
     <disable_collisions link1="art1" link2="art4" reason="Never"/>
-    <disable_collisions link1="art1" link2="art6" reason="Never"/>
-    <disable_collisions link1="art1" link2="base" reason="Adjacent"/>
-    <disable_collisions link1="art2" link2="art4" reason="Adjacent"/>
+    <disable_collisions link1="art1" link2="art5" reason="Never"/>
+    <disable_collisions link1="art1" link2="art6" reason="Never"/>    
+    <disable_collisions link1="art2" link2="art3" reason="Adjacent"/>
+    <disable_collisions link1="art2" link2="art4" reason="Never"/>
+    <disable_collisions link1="art2" link2="art5" reason="Never"/>
     <disable_collisions link1="art2" link2="art6" reason="Never"/>
-    <disable_collisions link1="art4" link2="art6" reason="Adjacent"/>
-    <disable_collisions link1="art4" link2="base" reason="Never"/>
-    <disable_collisions link1="art6" link2="base" reason="Never"/>
+    <disable_collisions link1="art3" link2="art4" reason="Adjacent"/>
+    <disable_collisions link1="art3" link2="art5" reason="Never"/>
+    <disable_collisions link1="art3" link2="art6" reason="Never"/>
+    <disable_collisions link1="art4" link2="art5" reason="Adjacent"/>
+    <disable_collisions link1="art4" link2="art6" reason="Default"/>
+    <disable_collisions link1="art5" link2="art6" reason="Adjacent"/>
 </robot>
