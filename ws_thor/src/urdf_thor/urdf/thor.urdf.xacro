@@ -12,8 +12,8 @@
 
   <!-- Useful XACRO Variables (Properties) -->
   <xacro:property name="PI" value="3.14159265359" />
-  <xacro:property name="effort" value="30.0" />
-  <xacro:property name="velocity" value="10.0" />
+  <xacro:property name="effort" value="4.0" />
+  <xacro:property name="velocity" value="1.0" />
 
   <!-- Useful Macros -->
   <xacro:macro name="default_inertial" params="mass">
@@ -39,169 +39,202 @@
   <link name="base">
     <xacro:default_inertial mass="1.0"/>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/base.stl" scale="0.001 0.001 0.001" />
+        <mesh filename="package://urdf_thor/meshes/Base.dae" scale="0.001 0.001 0.001" />
       </geometry>
-      <material name="filament">
-        <color rgba="0.69803922 0.82352941 0.94117647 1.0"/> <!-- rgba="178 210 240 255"/-->
-      </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0.066" rpy="0 0 0"/> 
-      <geometry>
-        <cylinder radius="0.096" length="0.132"/>
-      </geometry>
+        <origin xyz="0 0 0.049" rpy="0 0 -${PI / 2}"/>
+        <geometry>
+            <cylinder radius="0.075" length="0.098"/>
+        </geometry>
+    </collision>
+    <collision>
+        <origin xyz="0 -0.1312686 0.035250" rpy="0 0 -${PI / 2}"/>
+        <geometry>
+            <box size="0.176 0.180 0.0705"/>
+        </geometry>
     </collision>
   </link>
 
   <!-- Joint base_art1 -->
   <joint name="art1_yaw" type="revolute">
-    <origin xyz="0 0 0.104" rpy="0 0 0"/>
+    <origin xyz="0 0 0.099" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <parent link="base"/>
     <child link="art1"/>
-    <limit lower="-3.1415" upper="3.1415" effort="4" velocity="1" />
+    <limit lower="-2.967" upper="2.967" effort="${effort}" velocity="${velocity}"/>
   </joint>
 
   <!-- Link art1 -->
   <link name="art1">
     <xacro:default_inertial mass="1.0"/>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/art1.stl" scale="0.001 0.001 0.001" />
+        <mesh filename="package://urdf_thor/meshes/Art1.dae" scale="0.001 0.001 0.001" />
       </geometry>
-      <material name="filament"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0.07" rpy="0 0 0"/> 
+        <origin xyz="0 0 0.0765" rpy="0 0 -${PI / 2}"/>
         <geometry>
-          <box size="0.14 0.09 0.14"/>
+            <cylinder radius="0.075" length="0.179"/>
         </geometry>
     </collision>
   </link>
   
   <!-- Joint art1_art2 -->
   <joint name="art2_pitch" type="revolute">
-    <origin xyz="0 -0.0318752 0.0974304" rpy="1.5707963267948966 -1.5707963267948966 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0.103" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
     <parent link="art1"/>
     <child link="art2"/>
-    <limit lower="-1.5707963267948966" upper="1.5707963267948966" effort="4" velocity="1" />
+    <limit lower="-${PI / 2}" upper="${PI / 2}" effort="${effort}" velocity="${velocity}"/>
   </joint>
 
   <!-- Link art2 -->
   <link name="art2">
     <xacro:default_inertial mass="1.0"/>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/art2.stl" scale="0.001 0.001 0.001" />
+        <mesh filename="package://urdf_thor/meshes/Art2.dae" scale="0.001 0.001 0.001" />
       </geometry>
-      <material name="filament"/>
     </visual>
     <collision>
-      <origin xyz="0.08 0 -0.035" rpy="0 1.5708 0"/> 
-      <geometry>
-        <cylinder radius="0.085" length="0.28"/>
-      </geometry>
+        <origin xyz="0 0 0" rpy="${PI / 2} 0 -${PI / 2}"/>
+        <geometry>
+            <cylinder radius="0.065" length="0.140"/>
+        </geometry>
+    </collision>
+    <collision>
+        <origin xyz="0 0 0.080" rpy="${PI / 2} 0 -${PI / 2}"/>
+        <geometry>
+            <box size="0.130 0.160 0.140"/>
+        </geometry>
+    </collision>
+    <collision>
+        <origin xyz="0 0 0.160" rpy="${PI / 2} 0 -${PI / 2}"/>
+        <geometry>
+            <cylinder radius="0.065" length="0.140"/>
+        </geometry>
     </collision>
   </link>
 
   <!-- Joint art2_art3 -->
   <joint name="art3_pitch" type="revolute">
-    <origin xyz="0.160 0 0" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0.160" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
     <parent link="art2"/>
     <child link="art3"/>
-    <limit lower="-1.5707963267948966" upper="1.5707963267948966" effort="4" velocity="1" />
+    <limit lower="-${PI / 2}" upper="${PI / 2}" effort="${effort}" velocity="${velocity}"/>
   </joint>
 
   <!-- Link art3 -->
   <link name="art3">
     <xacro:default_inertial mass="1.0"/>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/art3.stl" scale="0.001 0.001 0.001" />
+        <mesh filename="package://urdf_thor/meshes/Art3.dae" scale="0.001 0.001 0.001" />
       </geometry>
-      <material name="filament"/>
     </visual>
+    <collision>
+        <origin xyz="0 0 0.01225" rpy="0 0 -${PI / 2}"/>
+        <geometry>
+            <cylinder radius="0.055" length="0.1525"/>
+        </geometry>
+    </collision>
   </link>
   
   <!-- Joint art3_art4 -->
   <joint name="art4_roll" type="revolute">
-    <origin xyz="0.0885 0 -0.035" rpy="0 1.5707963267948966 0"/>
+    <origin xyz="0 0 0.0895" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <parent link="art3"/>
     <child link="art4"/>
-    <limit lower="-3.1415" upper="3.1415" effort="4" velocity="1" />
+    <limit lower="-2.967" upper="2.967" effort="${effort}" velocity="${velocity}"/>
   </joint>
 
   <!-- Link art4 -->
   <link name="art4">
     <xacro:default_inertial mass="1.0"/>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/art4.stl" scale="0.001 0.001 0.001" />
+        <mesh filename="package://urdf_thor/meshes/Art4.dae" scale="0.001 0.001 0.001" />
       </geometry>
-      <material name="filament"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0.07" rpy="0 0 0"/> 
-      <geometry>
-        <cylinder radius="0.065" length="0.14"/>
-      </geometry>
+        <origin xyz="0 0 0.1045" rpy="0 0 -${PI / 2}"/>
+        <geometry>
+            <sphere radius="0.055"/>
+        </geometry>
+    </collision>
+    <collision>
+        <origin xyz="0 0 0.05525" rpy="0 0 -${PI / 2}"/>
+        <geometry>
+            <cylinder radius="0.055" length="0.1045"/>
+        </geometry>
+    </collision>
+    <collision>
+        <origin xyz="0 0 0.0295" rpy="0 0 -${PI / 2}"/>
+        <geometry>
+            <box size="0.050 0.132 0.050"/>
+        </geometry>
     </collision>
   </link>
 
   <!-- Joint art4_art5 -->
   <joint name="art5_pitch" type="revolute">
-    <origin xyz="0 0 0.1" rpy="0 -1.5707963267948966 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="0 0 0.1045" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
     <parent link="art4"/>
     <child link="art5"/>
-    <limit lower="-1.5" upper="1.5" effort="4" velocity="1" /> <!-- Slightly less than right angle -->
+    <limit lower="-${PI / 2}" upper="${PI / 2}" effort="${effort}" velocity="${velocity}"/>
   </joint>
 
   <!-- Link art5 -->
   <link name="art5">
     <xacro:default_inertial mass="1.0"/>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/art5.stl" scale="0.001 0.001 0.001" />
+          <mesh filename="package://urdf_thor/meshes/Art5.dae" scale="0.001 0.001 0.001" />
       </geometry>
-      <material name="filament"/>
     </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="${PI / 2} 0 -${PI / 2}"/>
+        <geometry>
+            <cylinder radius="0.047" length="0.03"/>
+        </geometry>
+    </collision>
   </link>
 
   <!-- Joint art5_art6 -->
   <joint name="art6_roll" type="revolute">
-    <origin xyz="0 0 0" rpy="0 1.5707963267948966 0"/>
+    <origin xyz="0 0 0.0135" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <parent link="art5"/>
     <child link="art6"/>
-    <limit lower="-3.1415" upper="3.1415" effort="4" velocity="1" />
+    <limit lower="-2.967" upper="2.967" effort="${effort}" velocity="${velocity}"/>
   </joint>
 
   <!-- Link art6 -->
   <link name="art6">
     <xacro:default_inertial mass="1.0"/>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
+      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/art6.stl" scale="0.001 0.001 0.001" />
+          <mesh filename="package://urdf_thor/meshes/Art6.dae" scale="0.001 0.001 0.001" />
       </geometry>
-      <material name="filament"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0.06" rpy="0 0 0"/> 
-      <geometry>
-        <cylinder radius="0.025" length="0.012"/>
-      </geometry>
+        <origin xyz="0 0 0.025" rpy="0 0 -${PI / 2}"/>
+        <geometry>
+            <cylinder radius="0.015" length="0.05"/>
+        </geometry>
     </collision>
   </link>
 
