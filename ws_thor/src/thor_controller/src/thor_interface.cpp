@@ -60,8 +60,9 @@ CallbackReturn ThorInterface::on_init(const hardware_interface::HardwareInfo &ha
   }
 
   position_commands_.reserve(info_.joints.size());
+  curr_angles_.reserve(info_.joints.size());
+  prev_angles_.reserve(info_.joints.size());
   position_states_.reserve(info_.joints.size());
-  prev_position_commands_.reserve(info_.joints.size());
   RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "ON INIT - Joints Size: " << info_.joints.size());
 
   return CallbackReturn::SUCCESS;
@@ -104,7 +105,8 @@ CallbackReturn ThorInterface::on_activate(const rclcpp_lifecycle::State &previou
 
   // Reset commands and states
   position_commands_ = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-  prev_position_commands_ = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  curr_angles_ = { 0, 0, 0, 0, 0, 0};
+  curr_angles_ = { 0, 0, 0, 0, 0, 0};
   position_states_ = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
   try
@@ -179,49 +181,37 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time,
 }
 
 hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time,
-                                                           const rclcpp::Duration &period)
+                                                     const rclcpp::Duration &period)
 {
-  if (position_commands_ == prev_position_commands_)
-  {
-    // Nothing changed, do not send any command
+  // Calculo de angulos
+  int art1 = -90 + static_cast<int>(((position_commands_.at(0) + (M_PI / 2)) * 180) / M_PI);
+  int art2 = 90 - static_cast<int>(((position_commands_.at(1) + (M_PI / 2)) * 180) / M_PI);
+  int art3 = 90 - static_cast<int>(((position_commands_.at(2) + (M_PI / 2)) * 180) / M_PI);
+  int art4 = static_cast<int>(((position_commands_.at(3)) * 180) / M_PI);
+  int art5 = static_cast<int>(((-position_commands_.at(4)) * 180) / M_PI);
+  int art6 = static_cast<int>(((position_commands_.at(5)) * 180) / M_PI);
+
+  int m_art5 = art5 + 2 * art6;
+  int m_art6 = -1 * art5 + 2 * art6;
+
+  curr_angles_ = {art1, art2, art3, art4, m_art5, m_art6};
+
+  if (curr_angles_ == prev_angles_){
     return hardware_interface::return_type::OK;
   }
 
-  // RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "  1:" << position_commands_.at(0) << "  2:" << position_commands_.at(1) << "  3:" << position_commands_.at(2) << "  4:" << position_commands_.at(3) << "  5:" << position_commands_.at(4) << "  6:" << position_commands_.at(5));
 
+  // Construir el mensaje
   std::string msg;
-  msg.append("G0 ");
-  int art1 = 90 - static_cast<int>(((position_commands_.at(0) + (M_PI / 2)) * 180) / M_PI);
-  msg.append("X");
-  //msg.append(compensateZeros(art1));
-  msg.append(std::to_string(art1));
-  msg.append(" ");
-  int art2 = 90 - static_cast<int>(((position_commands_.at(1) + (M_PI / 2)) * 180) / M_PI);
-  msg.append("Y");
-  // msg.append(compensateZeros(art2));
-  msg.append(std::to_string(art2));
-  msg.append(" ");
-  int art3 = 90 - static_cast<int>(((position_commands_.at(2) + (M_PI / 2)) * 180) / M_PI);
-  msg.append("Z");
-  // msg.append(compensateZeros(art3));
-  msg.append(std::to_string(art3));
-  msg.append(" ");
-  int art4 = static_cast<int>(((-position_commands_.at(3)) * 180) / (M_PI / 2));
-  msg.append("U");
-  // msg.append(compensateZeros(art4));
-  msg.append(std::to_string(art4));
-  msg.append(" ");
-  int art5 = static_cast<int>(((-position_commands_.at(4)) * 180) / (M_PI / 2));
-  msg.append("V");
-  // msg.append(compensateZeros(art5));
-  msg.append(std::to_string(art5));
-  msg.append(" ");
-  int art6 = static_cast<int>(((-position_commands_.at(5)) * 180) / (M_PI / 2));
-  msg.append("W");
-  // msg.append(compensateZeros(art6));
-  msg.append(std::to_string(art6));
-  msg.append("\r\n");
+  msg.append("G1 ");
+  msg.append("X").append(std::to_string(art1)).append(" ");
+  msg.append("Y").append(std::to_string(art2)).append(" ");
+  msg.append("Z").append(std::to_string(art3)).append(" ");
+  msg.append("U").append(std::to_string(art4)).append(" ");
+  msg.append("V").append(std::to_string(m_art5)).append(" ");
+  msg.append("W").append(std::to_string(m_art6)).append("\r\n");
 
+  // Enviar el comando
   try
   {
     RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Sending new command " << msg);
@@ -235,10 +225,43 @@ hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time,
     return hardware_interface::return_type::ERROR;
   }
 
-  prev_position_commands_ = position_commands_;
+  // Esperar la respuesta "ok"
+  std::string response;
+  try
+  {
+    const auto timeout = std::chrono::milliseconds(1000); // Tiempo máximo de espera
+    auto start_time = std::chrono::steady_clock::now();
+
+    while (std::chrono::steady_clock::now() - start_time < timeout)
+    {
+      if (thor_.IsDataAvailable() > 0)
+      {
+        thor_.ReadLine(response);
+        if (response.find("ok") != std::string::npos)
+        {
+          // RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Received response: " << response);
+          break; // Se recibió "ok", salir del bucle
+        }
+      }
+    }
+
+    if (response.find("ok") == std::string::npos)
+    {
+      RCLCPP_WARN(rclcpp::get_logger("ThorInterface"), "No 'ok' response received within timeout");
+    }
+  }
+  catch (...)
+  {
+    RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Error while waiting for 'ok' response");
+    return hardware_interface::return_type::ERROR;
+  }
+
+  // Actualizar los comandos previos
+  prev_angles_ = curr_angles_;
 
   return hardware_interface::return_type::OK;
 }
+
 }
 
 PLUGINLIB_EXPORT_CLASS(thor_controller::ThorInterface, hardware_interface::SystemInterface)
