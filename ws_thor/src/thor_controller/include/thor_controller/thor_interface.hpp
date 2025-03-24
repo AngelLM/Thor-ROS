@@ -41,6 +41,9 @@ private:
   std::vector<int> curr_angles_;
   std::vector<int> prev_angles_;
   std::vector<double> position_states_;
+
+  bool homed_;
+  std::string status_;
 };
 }
 

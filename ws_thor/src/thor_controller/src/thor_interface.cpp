@@ -153,7 +153,7 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time,
                                                           const rclcpp::Duration &period)
 {
   // Open Loop Control - assuming the robot is always where we command to be
-  position_states_ = position_commands_;
+  // position_states_ = position_commands_;
 
   // Leer datos enviados por Thor
 
@@ -182,13 +182,48 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time,
         if (serial_data.find("{\"status\":") == 0) {
           try {
             auto json_data = json::parse(serial_data);
+
+            // Extract the status data
+            if (json_data.contains("status")){
+              auto status = json_data["status"];
+              RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Status: " << status);
+            }
+
+            // Extract the position data
             if (json_data.contains("pos")) {
               auto pos = json_data["pos"];
               for (size_t i = 0; i < pos.size() && i < position_states_.size(); ++i) {
                 position_states_[i] = pos[i];
               }
+
+              position_states_[0] = position_states_[0] * M_PI / 180;
+              position_states_[1] = position_states_[1] * M_PI / -180;
+              position_states_[2] = position_states_[2] * M_PI / -180;
+              position_states_[3] = position_states_[3] * M_PI / 180;
+              double a6pos = (position_states_[4] + position_states_[5]) / 4;
+              double a5pos = (position_states_[5] - 2 * a6pos);
+              position_states_[4] = a5pos * M_PI / 180;
+              position_states_[5] = a6pos * M_PI / 180;
+
               RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Position states: " << position_states_[0] << " " << position_states_[1] << " " << position_states_[2] << " " << position_states_[3] << " " << position_states_[4] << " " << position_states_[5]);
+              RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Command positions: " << position_commands_[0] << " " << position_commands_[1] << " " << position_commands_[2] << " " << position_commands_[3] << " " << position_commands_[4] << " " << position_commands_[5]);
+
             }
+            
+            // Extract the axis homed data
+            if (json_data.contains("homed")) {
+              auto axis_homed = json_data["homed"];
+              bool homed = true;
+              for (size_t i = 0; i < axis_homed.size() && i < axis_homed.size(); ++i) {
+                if (axis_homed[i] == 0) {
+                  homed = false;
+                  break;
+                }
+              }
+              RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Homed: " << homed);
+            }
+
+            
           } catch (const json::parse_error &e) {
             RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Failed to parse JSON: %s", e.what());
           }
@@ -250,35 +285,35 @@ hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time,
   }
 
   // Esperar la respuesta "ok"
-  std::string response;
-  try
-  {
-    const auto timeout = std::chrono::milliseconds(1000); // Tiempo máximo de espera
-    auto start_time = std::chrono::steady_clock::now();
+  // std::string response;
+  // try
+  // {
+  //   const auto timeout = std::chrono::milliseconds(1000); // Tiempo máximo de espera
+  //   auto start_time = std::chrono::steady_clock::now();
 
-    while (std::chrono::steady_clock::now() - start_time < timeout)
-    {
-      if (thor_.IsDataAvailable() > 0)
-      {
-        thor_.ReadLine(response);
-        if (response.find("ok") != std::string::npos)
-        {
-          // RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Received response: " << response);
-          break; // Se recibió "ok", salir del bucle
-        }
-      }
-    }
+  //   while (std::chrono::steady_clock::now() - start_time < timeout)
+  //   {
+  //     if (thor_.IsDataAvailable() > 0)
+  //     {
+  //       thor_.ReadLine(response);
+  //       if (response.find("ok") != std::string::npos)
+  //       {
+  //         // RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Received response: " << response);
+  //         break; // Se recibió "ok", salir del bucle
+  //       }
+  //     }
+  //   }
 
-    if (response.find("ok") == std::string::npos)
-    {
-      RCLCPP_WARN(rclcpp::get_logger("ThorInterface"), "No 'ok' response received within timeout");
-    }
-  }
-  catch (...)
-  {
-    RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Error while waiting for 'ok' response");
-    return hardware_interface::return_type::ERROR;
-  }
+  //   if (response.find("ok") == std::string::npos)
+  //   {
+  //     RCLCPP_WARN(rclcpp::get_logger("ThorInterface"), "No 'ok' response received within timeout");
+  //   }
+  // }
+  // catch (...)
+  // {
+  //   RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Error while waiting for 'ok' response");
+  //   return hardware_interface::return_type::ERROR;
+  // }
 
   // Actualizar los comandos previos
   prev_angles_ = curr_angles_;
