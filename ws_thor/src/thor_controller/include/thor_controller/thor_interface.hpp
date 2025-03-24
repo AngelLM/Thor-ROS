@@ -9,12 +9,13 @@
 
 #include <vector>
 #include <string>
-
+#include <nlohmann/json.hpp>
 
 namespace thor_controller
 {
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+using json = nlohmann::json;
 
 class ThorInterface : public hardware_interface::SystemInterface
 {

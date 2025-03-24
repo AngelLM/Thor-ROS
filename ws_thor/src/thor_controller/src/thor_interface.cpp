@@ -157,25 +157,49 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time,
 
   // Leer datos enviados por Thor
 
-  // if (thor_.IsOpen() && thor_.IsDataAvailable() > 0)
-  // {
-  //   std::string serial_data;
-  //   try
-  //   {
-  //     thor_.ReadLine(serial_data);
-  //     if (!serial_data.empty())
-  //     {
-  //       //auto msg = std_msgs::msg::String();
-  //       //msg.data = serial_data;
-  //       //thor_output_publisher_->publish(msg);
-  //       RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Received from Thor: " << serial_data);
-  //     }
-  //   }
-  //   catch (...)
-  //   {
-  //     RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Failed to read data from Thor.");
-  //   }
-  // }
+  if (thor_.IsOpen() && thor_.IsDataAvailable() <= 0){
+    try
+    {
+      thor_.Write("M408\r\n");
+    }
+    catch (...)
+    {
+      RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Failed to write data to Thor.");
+    }
+  }
+
+  if (thor_.IsOpen() && thor_.IsDataAvailable() > 0)
+  {
+    std::string serial_data;
+    try
+    {
+      thor_.ReadLine(serial_data);
+      if (!serial_data.empty())
+      {
+        //auto msg = std_msgs::msg::String();
+        //msg.data = serial_data;
+        //thor_output_publisher_->publish(msg);
+        if (serial_data.find("{\"status\":") == 0) {
+          try {
+            auto json_data = json::parse(serial_data);
+            if (json_data.contains("pos")) {
+              auto pos = json_data["pos"];
+              for (size_t i = 0; i < pos.size() && i < position_states_.size(); ++i) {
+                position_states_[i] = pos[i];
+              }
+              RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Position states: " << position_states_[0] << " " << position_states_[1] << " " << position_states_[2] << " " << position_states_[3] << " " << position_states_[4] << " " << position_states_[5]);
+            }
+          } catch (const json::parse_error &e) {
+            RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Failed to parse JSON: %s", e.what());
+          }
+        }
+      }
+    }
+    catch (...)
+    {
+      RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Failed to read data from Thor.");
+    }
+  }
 
   return hardware_interface::return_type::OK;
 }
