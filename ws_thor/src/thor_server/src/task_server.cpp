@@ -1,7 +1,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
-#include "thor_server/action/thor_task.hpp"
+#include "thor_server/action/joint_task.hpp"
+#include "thor_server/action/pose_task.hpp"
 #include <moveit/move_group_interface/move_group_interface.h>
 
 #include <memory>
@@ -15,29 +16,46 @@ namespace thor_server
 class TaskServer : public rclcpp::Node
 {
 public:
-  explicit TaskServer(const rclcpp::NodeOptions& options = rclcpp::NodeOptions()) : Node("task_server", options){
+  explicit TaskServer(const rclcpp::NodeOptions& options = rclcpp::NodeOptions()) : Node("task_server", options)
+  {
     RCLCPP_INFO(get_logger(), "Starting the Server");
-    action_server_ = rclcpp_action::create_server<thor_server::action::ThorTask>(
-        this, "task_server", std::bind(&TaskServer::goalCallback, this, _1, _2),
-        std::bind(&TaskServer::cancelCallback, this, _1),
-        std::bind(&TaskServer::acceptedCallback, this, _1));
+
+    // Servidor para JointTask
+    joint_task_server_ = rclcpp_action::create_server<thor_server::action::JointTask>(
+        this, "joint_task",
+        std::bind(&TaskServer::jointTaskGoalCallback, this, _1, _2),
+        std::bind(&TaskServer::jointTaskCancelCallback, this, _1),
+        std::bind(&TaskServer::jointTaskAcceptedCallback, this, _1));
+
+    // Servidor para PoseTask
+    pose_task_server_ = rclcpp_action::create_server<thor_server::action::PoseTask>(
+        this, "pose_task",
+        std::bind(&TaskServer::poseTaskGoalCallback, this, _1, _2),
+        std::bind(&TaskServer::poseTaskCancelCallback, this, _1),
+        std::bind(&TaskServer::poseTaskAcceptedCallback, this, _1));
   }
 
 private:
-  rclcpp_action::Server<thor_server::action::ThorTask>::SharedPtr action_server_;
-  // std::shared_ptr<moveit::planning_interface::MoveGroupInterface> arm_move_group_, gripper_move_group_;
-  // std::vector<double> arm_joint_goal_, gripper_joint_goal_;
+  // Miembros de la clase
   std::shared_ptr<moveit::planning_interface::MoveGroupInterface> arm_move_group_;
   std::vector<double> arm_joint_goal_;
 
-  rclcpp_action::GoalResponse goalCallback(const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const thor_server::action::ThorTask::Goal> goal){
-    RCLCPP_INFO(get_logger(), "Received goal request with task_number %d", goal->task_number);
+  // Servidores de acción
+  rclcpp_action::Server<thor_server::action::JointTask>::SharedPtr joint_task_server_;
+  rclcpp_action::Server<thor_server::action::PoseTask>::SharedPtr pose_task_server_;
+
+  // Callbacks para JointTask
+  rclcpp_action::GoalResponse jointTaskGoalCallback(const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const thor_server::action::JointTask::Goal> goal)
+  {
+    RCLCPP_INFO(get_logger(), "Received JointTask goal request");
     (void)uuid;
     return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
   }
 
-  rclcpp_action::CancelResponse cancelCallback(const std::shared_ptr<rclcpp_action::ServerGoalHandle<thor_server::action::ThorTask>> goal_handle){
-    RCLCPP_INFO(get_logger(), "Received request to cancel goal");
+  rclcpp_action::CancelResponse jointTaskCancelCallback(const std::shared_ptr<rclcpp_action::ServerGoalHandle<thor_server::action::JointTask>> goal_handle)
+  {
+    RCLCPP_INFO(get_logger(), "Received request to cancel JointTask");
+
     if(arm_move_group_){
       arm_move_group_->stop();
     }
@@ -48,12 +66,14 @@ private:
     return rclcpp_action::CancelResponse::ACCEPT;
   }
 
-  void acceptedCallback(const std::shared_ptr<rclcpp_action::ServerGoalHandle<thor_server::action::ThorTask>> goal_handle){
+  void jointTaskAcceptedCallback(const std::shared_ptr<rclcpp_action::ServerGoalHandle<thor_server::action::JointTask>> goal_handle)
+  {
+    RCLCPP_INFO(get_logger(), "JointTask goal accepted");
     // this needs to return quickly to avoid blocking the executor, so spin up a new thread
-    std::thread{ std::bind(&TaskServer::execute, this, _1), goal_handle }.detach();
+    std::thread{ std::bind(&TaskServer::jointTaskExecute, this, _1), goal_handle }.detach();
   }
 
-  void execute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<thor_server::action::ThorTask>> goal_handle){
+  void jointTaskExecute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<thor_server::action::JointTask>> goal_handle){
     RCLCPP_INFO(get_logger(), "Executing goal");
     if(!arm_move_group_){
       arm_move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "arm_group");
@@ -62,26 +82,9 @@ private:
     //   gripper_move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "gripper");
     // }
 
-    auto result = std::make_shared<thor_server::action::ThorTask::Result>();
+    auto result = std::make_shared<thor_server::action::JointTask::Result>();
 
-    if(goal_handle->get_goal()->task_number == 0){
-      arm_joint_goal_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-      // gripper_joint_goal_ = {0.0};
-    }
-    else if(goal_handle->get_goal()->task_number == 1){
-      arm_joint_goal_ = {10.0, 20.0, -10.0, 5.0, 10.0, -5.0};
-      // gripper_joint_goal_ = {0.0};
-    }
-    else if(goal_handle->get_goal()->task_number == 2){
-      arm_joint_goal_ = {-40.0, -10.0, 25.0, 15.0, -20.0, 90.0};
-      // gripper_joint_goal_ = {0.0};
-    }
-    else{
-      RCLCPP_ERROR(get_logger(), "Unknown task number");
-      // result->success = false;
-      // goal_handle->succeed(result);
-      return;
-    }
+    arm_joint_goal_ = {goal_handle->get_goal()->joint1_deg, goal_handle->get_goal()->joint2_deg, goal_handle->get_goal()->joint3_deg, goal_handle->get_goal()->joint4_deg, goal_handle->get_goal()->joint5_deg, goal_handle->get_goal()->joint6_deg};
 
     // convert joint angles to radians
     for(int i = 0; i < arm_joint_goal_.size(); i++){
@@ -123,7 +126,27 @@ private:
     result->success = true;
     goal_handle->succeed(result);
   }
-};
-}  // namespace thor_server
 
-RCLCPP_COMPONENTS_REGISTER_NODE(thor_server::TaskServer)
+  // Callbacks para PoseTask
+  rclcpp_action::GoalResponse poseTaskGoalCallback(const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const thor_server::action::PoseTask::Goal> goal)
+  {
+    RCLCPP_INFO(get_logger(), "Received PoseTask goal request");
+    (void)uuid;
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+  }
+
+  rclcpp_action::CancelResponse poseTaskCancelCallback(const std::shared_ptr<rclcpp_action::ServerGoalHandle<thor_server::action::PoseTask>> goal_handle)
+  {
+    RCLCPP_INFO(get_logger(), "Received request to cancel PoseTask");
+    return rclcpp_action::CancelResponse::ACCEPT;
+  }
+
+  void poseTaskAcceptedCallback(const std::shared_ptr<rclcpp_action::ServerGoalHandle<thor_server::action::PoseTask>> goal_handle)
+  {
+    RCLCPP_INFO(get_logger(), "PoseTask goal accepted");
+    // Ejecutar la tarea
+  }
+};
+} // namespace thor_server
+
+RCLCPP_COMPONENTS_REGISTER_NODE(thor_server::TaskServer) 
