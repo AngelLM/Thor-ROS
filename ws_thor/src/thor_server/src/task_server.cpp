@@ -144,9 +144,76 @@ private:
   void poseTaskAcceptedCallback(const std::shared_ptr<rclcpp_action::ServerGoalHandle<thor_server::action::PoseTask>> goal_handle)
   {
     RCLCPP_INFO(get_logger(), "PoseTask goal accepted");
-    // Ejecutar la tarea
+    // this needs to return quickly to avoid blocking the executor, so spin up a new thread
+    std::thread{ std::bind(&TaskServer::poseTaskExecute, this, _1), goal_handle }.detach();
   }
-};
+
+  void poseTaskExecute(const std::shared_ptr<rclcpp_action::ServerGoalHandle<thor_server::action::PoseTask>> goal_handle){
+    RCLCPP_INFO(get_logger(), "Executing goal");
+    if(!arm_move_group_){
+      arm_move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "arm_group");
+    }
+
+    auto result = std::make_shared<thor_server::action::PoseTask::Result>();
+
+    arm_move_group_->setStartState(*arm_move_group_->getCurrentState());
+
+    // Print current end effector name
+    RCLCPP_INFO(get_logger(), "End effector link: %s", arm_move_group_->getEndEffectorLink().c_str());
+
+    // Print current position and orientation
+    RCLCPP_INFO(get_logger(), "Current position: %f, %f, %f", arm_move_group_->getCurrentPose().pose.position.x, arm_move_group_->getCurrentPose().pose.position.y, arm_move_group_->getCurrentPose().pose.position.z);
+    RCLCPP_INFO(get_logger(), "Current orientation: %f, %f, %f", arm_move_group_->getCurrentRPY().at(0), arm_move_group_->getCurrentRPY().at(1), arm_move_group_->getCurrentRPY().at(2));
+    
+    // Asegurarse de que el frame de referencia sea correcto
+    arm_move_group_->setPoseReferenceFrame("base_link"); // Asegúrate de que "base_link" es el marco correcto
+
+    // Crear una pose objetivo
+    geometry_msgs::msg::Pose target_pose;
+    target_pose.position.x = goal_handle->get_goal()->x;
+    target_pose.position.y = goal_handle->get_goal()->y;
+    target_pose.position.z = goal_handle->get_goal()->z;
+
+    // Convertir RPY a quaternion para establecer la orientación correctamente
+    tf2::Quaternion q;
+    q.setRPY(goal_handle->get_goal()->roll, goal_handle->get_goal()->pitch, goal_handle->get_goal()->yaw);
+    target_pose.orientation.x = q.x();
+    target_pose.orientation.y = q.y();
+    target_pose.orientation.z = q.z();
+    target_pose.orientation.w = q.w();
+
+
+    arm_move_group_->setStartStateToCurrentState();
+    // Establecer la pose objetivo completa
+    arm_move_group_->setPoseTarget(target_pose);
+
+    // Ajustar escalado de velocidad y aceleración (antes de planificar)
+    arm_move_group_->setMaxVelocityScalingFactor(1.0);
+    arm_move_group_->setMaxAccelerationScalingFactor(1.0);
+
+    // Favorecer posiciones finales similares a la posicion actual
+    arm_move_group_->setGoalPositionTolerance(0.01);
+    arm_move_group_->setGoalOrientationTolerance(0.01);
+
+    // Planificar el movimiento
+    moveit::planning_interface::MoveGroupInterface::Plan arm_plan;
+    bool arm_plan_success = (arm_move_group_->plan(arm_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+
+    if (arm_plan_success)
+    {
+        arm_move_group_->execute(arm_plan);
+    }
+      else{
+        RCLCPP_ERROR(get_logger(), "Failed to plan arm movement");
+        result->success = false;
+        goal_handle->succeed(result);
+        return;
+      }
+
+      result->success = true;
+      goal_handle->succeed(result);
+    }
+  };
 } // namespace thor_server
 
 RCLCPP_COMPONENTS_REGISTER_NODE(thor_server::TaskServer) 
