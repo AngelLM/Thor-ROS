@@ -9,12 +9,13 @@
 
 #include <vector>
 #include <string>
-
+#include <nlohmann/json.hpp>
 
 namespace thor_controller
 {
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
+using json = nlohmann::json;
 
 class ThorInterface : public hardware_interface::SystemInterface
 {
@@ -37,8 +38,12 @@ private:
   LibSerial::SerialPort thor_;
   std::string port_;
   std::vector<double> position_commands_;
-  std::vector<double> prev_position_commands_;
+  std::vector<int> curr_angles_;
+  std::vector<int> prev_angles_;
   std::vector<double> position_states_;
+
+  bool homed_;
+  std::string status_;
 };
 }
 

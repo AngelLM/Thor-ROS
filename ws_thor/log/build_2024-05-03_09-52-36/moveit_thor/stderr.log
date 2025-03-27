@@ -1,6 +1,0 @@
-[31mCMake Error at cmake_install.cmake:50 (file):
-  file INSTALL cannot set permissions on
-  "/Thor-ROS/ws_thor/install/moveit_thor/share/ament_index/resource_index/parent_prefix_path/moveit_thor":
-  Operation not permitted.
-
-[0m
