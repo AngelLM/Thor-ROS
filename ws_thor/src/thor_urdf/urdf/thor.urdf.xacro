@@ -8,7 +8,7 @@
   <xacro:include filename="$(find thor_urdf)/urdf/thor_gazebo.xacro" />
 
   <!-- Include ros2_control Plugins -->
-  <xacro:include filename="$(find moveit_thor)/config/THOR_arm.ros2_control.xacro" />
+  <xacro:include filename="$(find thor_moveit)/config/THOR_arm.ros2_control.xacro" />
 
   <!-- Useful XACRO Variables (Properties) -->
   <xacro:property name="PI" value="3.14159265359" />

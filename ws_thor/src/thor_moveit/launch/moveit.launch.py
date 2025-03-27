@@ -16,7 +16,7 @@ def generate_launch_description():
     is_sim = LaunchConfiguration("is_sim")
 
     moveit_config = (
-        MoveItConfigsBuilder("thor", package_name="moveit_thor")
+        MoveItConfigsBuilder("thor", package_name="thor_moveit")
         .robot_description(file_path=os.path.join(get_package_share_directory("thor_urdf"), "urdf", "thor.urdf.xacro"))
         .robot_description_semantic(file_path="config/THOR_arm.srdf")
         .trajectory_execution(file_path="config/moveit_controllers.yaml")
@@ -31,7 +31,7 @@ def generate_launch_description():
         arguments=["--ros-args", "--log-level", "info"]
     )
 
-    rviz_config = os.path.join(get_package_share_directory("moveit_thor"), "config", "moveit.rviz;")
+    rviz_config = os.path.join(get_package_share_directory("thor_moveit"), "config", "moveit.rviz")
 
     rviz_node = Node(
         package="rviz2",

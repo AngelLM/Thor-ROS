@@ -17,7 +17,7 @@ def generate_launch_description():
     
     moveit = IncludeLaunchDescription(
             os.path.join(
-                get_package_share_directory("moveit_thor"),
+                get_package_share_directory("thor_moveit"),
                 "launch",
                 "moveit.launch.py"
             ),
