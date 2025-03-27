@@ -6,19 +6,6 @@
 namespace thor_controller
 {
 
-std::string compensateZeros(const int value)
-{
-  std::string compensate_zeros = "";
-  if(value < 10){
-    compensate_zeros = "00";
-  } else if(value < 100){
-    compensate_zeros = "0";
-  } else {
-    compensate_zeros = "";
-  }
-  return compensate_zeros;
-}
-  
 ThorInterface::ThorInterface()
 {
 }
@@ -26,35 +13,27 @@ ThorInterface::ThorInterface()
 
 ThorInterface::~ThorInterface()
 {
-  if (thor_.IsOpen())
-  {
-    try
-    {
+  if(thor_.IsOpen()){
+    try{
       thor_.Close();
     }
-    catch (...)
-    {
-      RCLCPP_FATAL_STREAM(rclcpp::get_logger("ThorInterface"),
-                          "Something went wrong while closing connection with port " << port_);
+    catch(...){
+      RCLCPP_FATAL_STREAM(rclcpp::get_logger("ThorInterface"), "Something went wrong while closing connection with port " << port_);
     }
   }
 }
 
 
-CallbackReturn ThorInterface::on_init(const hardware_interface::HardwareInfo &hardware_info)
-{
+CallbackReturn ThorInterface::on_init(const hardware_interface::HardwareInfo &hardware_info){
   CallbackReturn result = hardware_interface::SystemInterface::on_init(hardware_info);
-  if (result != CallbackReturn::SUCCESS)
-  {
+  if(result != CallbackReturn::SUCCESS){
     return result;
   }
 
-  try
-  {
+  try{
     port_ = info_.hardware_parameters.at("port");
   }
-  catch (const std::out_of_range &e)
-  {
+  catch(const std::out_of_range &e){
     RCLCPP_FATAL(rclcpp::get_logger("ThorInterface"), "No Serial Port provided! Aborting");
     return CallbackReturn::FAILURE;
   }
@@ -69,15 +48,12 @@ CallbackReturn ThorInterface::on_init(const hardware_interface::HardwareInfo &ha
 }
 
 
-std::vector<hardware_interface::StateInterface> ThorInterface::export_state_interfaces()
-{
+std::vector<hardware_interface::StateInterface> ThorInterface::export_state_interfaces(){
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
   // Provide only a position Interafce
-  for (size_t i = 0; i < info_.joints.size(); i++)
-  {
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_states_[i]));
+  for(size_t i = 0; i < info_.joints.size(); i++){
+    state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_states_[i]));
   }
 
   return state_interfaces;
@@ -89,10 +65,8 @@ std::vector<hardware_interface::CommandInterface> ThorInterface::export_command_
   std::vector<hardware_interface::CommandInterface> command_interfaces;
 
   // Provide only a position Interafce
-  for (size_t i = 0; i < info_.joints.size(); i++)
-  {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
+  for(size_t i = 0; i < info_.joints.size(); i++){
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
   }
 
   return command_interfaces;
@@ -104,43 +78,34 @@ CallbackReturn ThorInterface::on_activate(const rclcpp_lifecycle::State &previou
   RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "Starting robot hardware ...");
 
   // Reset commands and states
-  position_commands_ = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-  curr_angles_ = { 0, 0, 0, 0, 0, 0};
-  curr_angles_ = { 0, 0, 0, 0, 0, 0};
-  position_states_ = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  position_commands_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  curr_angles_ = {0, 0, 0, 0, 0, 0};
+  curr_angles_ = {0, 0, 0, 0, 0, 0};
+  position_states_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-  try
-  {
+  try{
     thor_.Open(port_);
     thor_.SetBaudRate(LibSerial::BaudRate::BAUD_115200);
   }
-  catch (...)
-  {
-    RCLCPP_FATAL_STREAM(rclcpp::get_logger("ThorInterface"),
-                        "Something went wrong while interacting with port " << port_);
+  catch(...){
+    RCLCPP_FATAL_STREAM(rclcpp::get_logger("ThorInterface"), "Something went wrong while interacting with port " << port_);
     return CallbackReturn::FAILURE;
   }
 
-  RCLCPP_INFO(rclcpp::get_logger("ThorInterface"),
-              "Hardware started, ready to take commands");
+  RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "Hardware started, ready to take commands");
   return CallbackReturn::SUCCESS;
 }
 
 
-CallbackReturn ThorInterface::on_deactivate(const rclcpp_lifecycle::State &previous_state)
-{
+CallbackReturn ThorInterface::on_deactivate(const rclcpp_lifecycle::State &previous_state){
   RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "Stopping robot hardware ...");
 
-  if (thor_.IsOpen())
-  {
-    try
-    {
+  if(thor_.IsOpen()){
+    try{
       thor_.Close();
     }
-    catch (...)
-    {
-      RCLCPP_FATAL_STREAM(rclcpp::get_logger("ThorInterface"),
-                          "Something went wrong while closing connection with port " << port_);
+    catch(...){
+      RCLCPP_FATAL_STREAM(rclcpp::get_logger("ThorInterface"), "Something went wrong while closing connection with port " << port_);
     }
   }
 
@@ -149,50 +114,35 @@ CallbackReturn ThorInterface::on_deactivate(const rclcpp_lifecycle::State &previ
 }
 
 
-hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time,
-                                                          const rclcpp::Duration &period)
-{
-  // Open Loop Control - assuming the robot is always where we command to be
-  // position_states_ = position_commands_;
-
-  // Leer datos enviados por Thor
-
-  if (thor_.IsOpen() && thor_.IsDataAvailable() <= 0){
-    try
-    {
+hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time, const rclcpp::Duration &period){
+  // Read data from Thor
+  if(thor_.IsOpen() && thor_.IsDataAvailable() <= 0){
+    try{
       thor_.Write("M408\r\n");
     }
-    catch (...)
-    {
+    catch(...){
       RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Failed to write data to Thor.");
     }
   }
 
-  if (thor_.IsOpen() && thor_.IsDataAvailable() > 0)
-  {
+  if(thor_.IsOpen() && thor_.IsDataAvailable() > 0){
     std::string serial_data;
-    try
-    {
+    try{
       thor_.ReadLine(serial_data);
-      if (!serial_data.empty())
-      {
-        //auto msg = std_msgs::msg::String();
-        //msg.data = serial_data;
-        //thor_output_publisher_->publish(msg);
-        if (serial_data.find("{\"status\":") == 0) {
-          try {
+      if(!serial_data.empty()){
+        if(serial_data.find("{\"status\":") == 0){
+          try{
             auto json_data = json::parse(serial_data);
 
             // Extract the status data
-            if (json_data.contains("status")){
+            if(json_data.contains("status")){
               auto status = json_data["status"];
-              RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Status: " << status);
             }
 
             // Extract the position data
-            if (json_data.contains("pos")) {
+            if(json_data.contains("pos")){
               auto pos = json_data["pos"];
-              for (size_t i = 0; i < pos.size() && i < position_states_.size(); ++i) {
+              for(size_t i = 0; i < pos.size() && i < position_states_.size(); ++i){
                 position_states_[i] = pos[i];
               }
 
@@ -204,34 +154,27 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time,
               double a5pos = (position_states_[5] - 2 * a6pos);
               position_states_[4] = a5pos * M_PI / 180;
               position_states_[5] = a6pos * M_PI / 180;
-
-              RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Position states: " << position_states_[0] << " " << position_states_[1] << " " << position_states_[2] << " " << position_states_[3] << " " << position_states_[4] << " " << position_states_[5]);
-              RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Command positions: " << position_commands_[0] << " " << position_commands_[1] << " " << position_commands_[2] << " " << position_commands_[3] << " " << position_commands_[4] << " " << position_commands_[5]);
-
             }
             
             // Extract the axis homed data
-            if (json_data.contains("homed")) {
+            if(json_data.contains("homed")){
               auto axis_homed = json_data["homed"];
               bool homed = true;
-              for (size_t i = 0; i < axis_homed.size() && i < axis_homed.size(); ++i) {
-                if (axis_homed[i] == 0) {
+              for(size_t i = 0; i < axis_homed.size() && i < axis_homed.size(); ++i){
+                if(axis_homed[i] == 0){
                   homed = false;
                   break;
                 }
               }
-              RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Homed: " << homed);
             }
-
-            
-          } catch (const json::parse_error &e) {
+          } 
+          catch(const json::parse_error &e){
             RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Failed to parse JSON: %s", e.what());
           }
         }
       }
     }
-    catch (...)
-    {
+    catch(...){
       RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Failed to read data from Thor.");
     }
   }
@@ -239,9 +182,7 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time,
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time,
-                                                     const rclcpp::Duration &period)
-{
+hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time, const rclcpp::Duration &period){
   // Calculo de angulos
   int art1 = -90 + static_cast<int>(((position_commands_.at(0) + (M_PI / 2)) * 180) / M_PI);
   int art2 = 90 - static_cast<int>(((position_commands_.at(1) + (M_PI / 2)) * 180) / M_PI);
@@ -255,7 +196,7 @@ hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time,
 
   curr_angles_ = {art1, art2, art3, art4, m_art5, m_art6};
 
-  if (curr_angles_ == prev_angles_){
+  if(curr_angles_ == prev_angles_){
     return hardware_interface::return_type::OK;
   }
 
@@ -271,51 +212,15 @@ hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time,
   msg.append("W").append(std::to_string(m_art6)).append("\r\n");
 
   // Enviar el comando
-  try
-  {
+  try{
     RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Sending new command " << msg);
     thor_.Write(msg);
   }
-  catch (...)
-  {
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger("ThorInterface"),
-                        "Something went wrong while sending the message "
-                            << msg << " to the port " << port_);
+  catch(...){
+    RCLCPP_ERROR_STREAM(rclcpp::get_logger("ThorInterface"), "Something went wrong while sending the message " << msg << " to the port " << port_);
     return hardware_interface::return_type::ERROR;
   }
 
-  // Esperar la respuesta "ok"
-  // std::string response;
-  // try
-  // {
-  //   const auto timeout = std::chrono::milliseconds(1000); // Tiempo máximo de espera
-  //   auto start_time = std::chrono::steady_clock::now();
-
-  //   while (std::chrono::steady_clock::now() - start_time < timeout)
-  //   {
-  //     if (thor_.IsDataAvailable() > 0)
-  //     {
-  //       thor_.ReadLine(response);
-  //       if (response.find("ok") != std::string::npos)
-  //       {
-  //         // RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Received response: " << response);
-  //         break; // Se recibió "ok", salir del bucle
-  //       }
-  //     }
-  //   }
-
-  //   if (response.find("ok") == std::string::npos)
-  //   {
-  //     RCLCPP_WARN(rclcpp::get_logger("ThorInterface"), "No 'ok' response received within timeout");
-  //   }
-  // }
-  // catch (...)
-  // {
-  //   RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Error while waiting for 'ok' response");
-  //   return hardware_interface::return_type::ERROR;
-  // }
-
-  // Actualizar los comandos previos
   prev_angles_ = curr_angles_;
 
   return hardware_interface::return_type::OK;

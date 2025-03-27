@@ -166,7 +166,7 @@ private:
     RCLCPP_INFO(get_logger(), "Current orientation: %f, %f, %f", arm_move_group_->getCurrentRPY().at(0), arm_move_group_->getCurrentRPY().at(1), arm_move_group_->getCurrentRPY().at(2));
     
     // Asegurarse de que el frame de referencia sea correcto
-    arm_move_group_->setPoseReferenceFrame("base_link"); // Asegúrate de que "base_link" es el marco correcto
+    arm_move_group_->setPoseReferenceFrame("base_link");
 
     // Crear una pose objetivo
     geometry_msgs::msg::Pose target_pose;
