@@ -21,9 +21,13 @@ ament_target_dependencies(joystick_moveit_controller rclcpp sensor_msgs geometry
 add_executable(joystick_joint_controller src/joystick_joint_controller.cpp)
 ament_target_dependencies(joystick_joint_controller rclcpp rclcpp_action sensor_msgs thor_server)
 
+add_executable(joystick_pose_controller src/joystick_pose_controller.cpp)
+ament_target_dependencies(joystick_pose_controller rclcpp rclcpp_action sensor_msgs thor_server)
+
 install(TARGETS
   joystick_moveit_controller
   joystick_joint_controller
+  joystick_pose_controller
   DESTINATION lib/${PROJECT_NAME}
 )
 
