@@ -1,6 +1,6 @@
 moveit_setup_assistant_config:
   urdf:
-    package: urdf_thor
+    package: thor_urdf
     relative_path: urdf/thor.urdf
   srdf:
     relative_path: config/THOR_arm.srdf

@@ -9,7 +9,7 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     model_arg = DeclareLaunchArgument(
         name="model", 
-        default_value=os.path.join(get_package_share_directory("urdf_thor"), "urdf", "thor.urdf.xacro"),
+        default_value=os.path.join(get_package_share_directory("thor_urdf"), "urdf", "thor.urdf.xacro"),
         description="Absolute path to the robot URDF file"
         )
     
@@ -31,7 +31,7 @@ def generate_launch_description():
         executable="rviz2",
         name="rviz2",
         output="screen",
-        arguments=["-d", os.path.join(get_package_share_directory("urdf_thor"), "rviz", "display.rviz")]
+        arguments=["-d", os.path.join(get_package_share_directory("thor_urdf"), "rviz", "display.rviz")]
     )
 
     return LaunchDescription([

@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 import os
 from glob import glob
 
-package_name = 'urdf_thor'
+package_name = 'thor_urdf'
 
 setup(
     name=package_name,

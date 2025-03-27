@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 def generate_launch_description():
-    urdf_file = os.path.join('src','urdf_thor', 'urdf', 'thor.urdf')
+    urdf_file = os.path.join('src','thor_urdf', 'urdf', 'thor.urdf')
 
     print(">>> ",urdf_file)
     with open(urdf_file,'r') as infp:

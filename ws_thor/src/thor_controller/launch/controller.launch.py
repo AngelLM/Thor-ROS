@@ -22,7 +22,7 @@ def generate_launch_description():
             [
                 "xacro ",
                 os.path.join(
-                    get_package_share_directory("urdf_thor"),
+                    get_package_share_directory("thor_urdf"),
                     "urdf",
                     "thor.urdf.xacro",
                 ),

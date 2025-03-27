@@ -3,7 +3,7 @@
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
 
     <!-- Import THOR_arm urdf file -->
-    <xacro:include filename="$(find urdf_thor)/urdf/thor.urdf" />
+    <xacro:include filename="$(find thor_urdf)/urdf/thor.urdf" />
 
     <!-- Import control_xacro -->
     <xacro:include filename="THOR_arm.ros2_control.xacro" />

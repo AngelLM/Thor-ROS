@@ -7,7 +7,7 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     gazebo = IncludeLaunchDescription(
             os.path.join(
-                get_package_share_directory("urdf_thor"),
+                get_package_share_directory("thor_urdf"),
                 "launch",
                 "gazebo.launch.py"
             )

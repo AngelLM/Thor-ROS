@@ -5,7 +5,7 @@
   <xacro:arg name="is_sim" default="true"/>
 
   <!-- Include Gazebo Parameters -->
-  <xacro:include filename="$(find urdf_thor)/urdf/thor_gazebo.xacro" />
+  <xacro:include filename="$(find thor_urdf)/urdf/thor_gazebo.xacro" />
 
   <!-- Include ros2_control Plugins -->
   <xacro:include filename="$(find moveit_thor)/config/THOR_arm.ros2_control.xacro" />
@@ -41,7 +41,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/Base.dae" scale="0.001 0.001 0.001" />
+        <mesh filename="package://thor_urdf/meshes/Base.dae" scale="0.001 0.001 0.001" />
       </geometry>
     </visual>
     <collision>
@@ -73,7 +73,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/Art1.dae" scale="0.001 0.001 0.001" />
+        <mesh filename="package://thor_urdf/meshes/Art1.dae" scale="0.001 0.001 0.001" />
       </geometry>
     </visual>
     <collision>
@@ -99,7 +99,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/Art2.dae" scale="0.001 0.001 0.001" />
+        <mesh filename="package://thor_urdf/meshes/Art2.dae" scale="0.001 0.001 0.001" />
       </geometry>
     </visual>
     <collision>
@@ -137,7 +137,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/Art3.dae" scale="0.001 0.001 0.001" />
+        <mesh filename="package://thor_urdf/meshes/Art3.dae" scale="0.001 0.001 0.001" />
       </geometry>
     </visual>
     <collision>
@@ -163,7 +163,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-        <mesh filename="package://urdf_thor/meshes/Art4.dae" scale="0.001 0.001 0.001" />
+        <mesh filename="package://thor_urdf/meshes/Art4.dae" scale="0.001 0.001 0.001" />
       </geometry>
     </visual>
     <collision>
@@ -201,7 +201,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-          <mesh filename="package://urdf_thor/meshes/Art5.dae" scale="0.001 0.001 0.001" />
+          <mesh filename="package://thor_urdf/meshes/Art5.dae" scale="0.001 0.001 0.001" />
       </geometry>
     </visual>
     <collision>
@@ -227,7 +227,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
       <geometry>
-          <mesh filename="package://urdf_thor/meshes/Art6.dae" scale="0.001 0.001 0.001" />
+          <mesh filename="package://thor_urdf/meshes/Art6.dae" scale="0.001 0.001 0.001" />
       </geometry>
     </visual>
     <collision>

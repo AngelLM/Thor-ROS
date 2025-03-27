@@ -10,11 +10,11 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
     model_arg = DeclareLaunchArgument(
         name="model", 
-        default_value=os.path.join(get_package_share_directory("urdf_thor"), "urdf", "thor.urdf.xacro"),
+        default_value=os.path.join(get_package_share_directory("thor_urdf"), "urdf", "thor.urdf.xacro"),
         description="Absolute path to the robot URDF file"
         )
     
-    env_variable = SetEnvironmentVariable("GAZEBO_MODEL_PATH", os.path.join(get_package_prefix("urdf_thor"), "share"))
+    env_variable = SetEnvironmentVariable("GAZEBO_MODEL_PATH", os.path.join(get_package_prefix("thor_urdf"), "share"))
     
     robot_description = ParameterValue(Command(["xacro ", LaunchConfiguration("model")]))
 
