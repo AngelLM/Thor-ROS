@@ -1,241 +1,424 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="THOR_arm">
 
-  <!-- Load Simulated or Real Hardware Interfaces -->
-  <xacro:arg name="is_sim" default="true"/>
+    <!-- Load Simulated or Real Hardware Interfaces -->
+    <xacro:arg name="is_sim" default="true"/>
 
-  <!-- Include Gazebo Parameters -->
-  <xacro:include filename="$(find thor_urdf)/urdf/thor_gazebo.xacro" />
+    <!-- Include Gazebo Parameters -->
+    <xacro:include filename="$(find thor_urdf)/urdf/thor_gazebo.xacro" />
 
-  <!-- Include ros2_control Plugins -->
-  <xacro:include filename="$(find thor_moveit)/config/THOR_arm.ros2_control.xacro" />
+    <!-- Include ros2_control Plugins -->
+    <xacro:include filename="$(find thor_moveit)/config/THOR_arm.ros2_control.xacro" />
 
-  <!-- Useful XACRO Variables (Properties) -->
-  <xacro:property name="PI" value="3.14159265359" />
-  <xacro:property name="effort" value="4.0" />
-  <xacro:property name="velocity" value="1.0" />
+    <!-- Useful XACRO Variables (Properties) -->
+    <xacro:property name="PI" value="3.14159265359" />
+    <xacro:property name="effort" value="4.0" />
+    <xacro:property name="velocity" value="1.0" />
 
-  <!-- Useful Macros -->
-  <xacro:macro name="default_inertial" params="mass">
-      <inertial>
-          <origin xyz="0 0 0" rpy="0 0 0"/>
-          <mass value="${mass}" />
-          <inertia ixx="1.0" ixy="0.0" ixz="0.0"
-                  iyy="1.0" iyz="0.0"
-                  izz="1.0" />
-      </inertial>
-  </xacro:macro>
+    <!-- Useful Macros -->
+    <xacro:macro name="default_inertial" params="mass">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="${mass}" />
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0"
+                     iyy="1.0" iyz="0.0"
+                     izz="1.0" />
+        </inertial>
+    </xacro:macro>
 
-  <!-- World Link -->
-  <link name="world"/>
 
-  <joint name="virtual_joint" type="fixed">
-    <parent link="world"/>
-    <child link="base"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-  </joint> 
+    <!-- Links -->
+    <link name="world"/>
 
-  <!-- Link robot base -->
-  <link name="base">
-    <xacro:default_inertial mass="1.0"/>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
-      <geometry>
-        <mesh filename="package://thor_urdf/meshes/Base.dae" scale="0.001 0.001 0.001" />
-      </geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0.049" rpy="0 0 -${PI / 2}"/>
+    <link name="base_link">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+              <mesh filename="package://thor_urdf/meshes/Base.dae" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.049" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.075" length="0.098"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 -0.1312686 0.035250" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <box size="0.176 0.180 0.0705"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="link_1">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+              <mesh filename="package://thor_urdf/meshes/Art1.dae" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.0765" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.075" length="0.179"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="link_2">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+              <mesh filename="package://thor_urdf/meshes/Art2.dae" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="${PI / 2} 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.065" length="0.140"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 0 0.080" rpy="${PI / 2} 0 -${PI / 2}"/>
+            <geometry>
+                <box size="0.130 0.160 0.140"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 0 0.160" rpy="${PI / 2} 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.065" length="0.140"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="link_3">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+              <mesh filename="package://thor_urdf/meshes/Art3.dae" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.01225" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.055" length="0.1525"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="link_4">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+              <mesh filename="package://thor_urdf/meshes/Art4.dae" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.1045" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <sphere radius="0.055"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 0 0.05525" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.055" length="0.1045"/>
+            </geometry>
+        </collision>
+        <collision>
+            <origin xyz="0 0 0.0295" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <box size="0.050 0.132 0.050"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="link_5">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <mesh filename="package://thor_urdf/meshes/Art5.dae" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="${PI / 2} 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.047" length="0.03"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="link_6">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
         <geometry>
-            <cylinder radius="0.075" length="0.098"/>
+            <mesh filename="package://thor_urdf/meshes/Art6.dae" scale="0.001 0.001 0.001" />
         </geometry>
-    </collision>
-    <collision>
-        <origin xyz="0 -0.1312686 0.035250" rpy="0 0 -${PI / 2}"/>
-        <geometry>
-            <box size="0.176 0.180 0.0705"/>
-        </geometry>
-    </collision>
-  </link>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.025" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+        </collision>
+    </link>
 
-  <!-- Joint base_art1 -->
-  <joint name="art1_yaw" type="revolute">
-    <origin xyz="0 0 0.099" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <parent link="base"/>
-    <child link="art1"/>
-    <limit lower="-2.967" upper="2.967" effort="${effort}" velocity="${velocity}"/>
-  </joint>
+    <link name="gripper_base">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://thor_urdf/meshes/GripperBase.dae" scale="0.001 0.001 0.001" />
+        </geometry>
+        </visual>
+        <!-- 
+        <collision>
+            <origin xyz="0 0 0.025" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+        </collision>
+        -->  
+    </link>
+    <link name="gripper_arm_gear_right">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 -${PI / 2} ${PI / 2}"/>
+        <geometry>
+            <mesh filename="package://thor_urdf/meshes/GripperArmGear.dae" scale="0.001 0.001 0.001" />
+        </geometry>
+        </visual>
+        <!-- 
+        <collision>
+            <origin xyz="0 0 0.025" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+        </collision>
+        -->  
+    </link>
+    <link name="gripper_arm_gear_left">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 ${PI / 2} -${PI / 2}"/>
+        <geometry>
+            <mesh filename="package://thor_urdf/meshes/GripperArmGear.dae" scale="0.001 0.001 0.001" />
+        </geometry>
+        </visual>
+        <!-- 
+        <collision>
+            <origin xyz="0 0 0.025" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+        </collision>
+        -->  
+    </link>
+    <link name="gripper_arm_simple_right">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 -${PI / 2} ${PI / 2}"/>
+        <geometry>
+            <mesh filename="package://thor_urdf/meshes/GripperArm.dae" scale="0.001 0.001 0.001" />
+        </geometry>
+        </visual>
+        <!-- 
+        <collision>
+            <origin xyz="0 0 0.025" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+        </collision>
+        -->  
+    </link>
+    <link name="gripper_arm_simple_left">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 ${PI / 2} -${PI / 2}"/>
+        <geometry>
+            <mesh filename="package://thor_urdf/meshes/GripperArm.dae" scale="0.001 0.001 0.001" />
+        </geometry>
+        </visual>
+        <!-- 
+        <collision>
+            <origin xyz="0 0 0.025" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+        </collision>
+        -->  
+    </link>
+    <link name="gripper_finger_right">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://thor_urdf/meshes/GripperFinger.dae" scale="0.001 0.001 0.001" />
+        </geometry>
+        </visual>
+        <!-- 
+        <collision>
+            <origin xyz="0 0 0.025" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+        </collision>
+        -->  
+    </link>
+    <link name="gripper_finger_left">
+        <xacro:default_inertial mass="1.0"/>
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <mesh filename="package://thor_urdf/meshes/GripperFinger.dae" scale="0.001 0.001 0.001" />
+        </geometry>
+        </visual>
+        <!-- 
+        <collision>
+            <origin xyz="0 0 0.025" rpy="0 0 -${PI / 2}"/>
+            <geometry>
+                <cylinder radius="0.015" length="0.05"/>
+            </geometry>
+        </collision>
+        -->  
+    </link>
 
-  <!-- Link art1 -->
-  <link name="art1">
-    <xacro:default_inertial mass="1.0"/>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
-      <geometry>
-        <mesh filename="package://thor_urdf/meshes/Art1.dae" scale="0.001 0.001 0.001" />
-      </geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0.0765" rpy="0 0 -${PI / 2}"/>
-        <geometry>
-            <cylinder radius="0.075" length="0.179"/>
-        </geometry>
-    </collision>
-  </link>
-  
-  <!-- Joint art1_art2 -->
-  <joint name="art2_pitch" type="revolute">
-    <origin xyz="0 0 0.103" rpy="0 0 0"/>
-    <axis xyz="1 0 0"/>
-    <parent link="art1"/>
-    <child link="art2"/>
-    <limit lower="-${PI / 2}" upper="${PI / 2}" effort="${effort}" velocity="${velocity}"/>
-  </joint>
 
-  <!-- Link art2 -->
-  <link name="art2">
-    <xacro:default_inertial mass="1.0"/>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
-      <geometry>
-        <mesh filename="package://thor_urdf/meshes/Art2.dae" scale="0.001 0.001 0.001" />
-      </geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0" rpy="${PI / 2} 0 -${PI / 2}"/>
-        <geometry>
-            <cylinder radius="0.065" length="0.140"/>
-        </geometry>
-    </collision>
-    <collision>
-        <origin xyz="0 0 0.080" rpy="${PI / 2} 0 -${PI / 2}"/>
-        <geometry>
-            <box size="0.130 0.160 0.140"/>
-        </geometry>
-    </collision>
-    <collision>
-        <origin xyz="0 0 0.160" rpy="${PI / 2} 0 -${PI / 2}"/>
-        <geometry>
-            <cylinder radius="0.065" length="0.140"/>
-        </geometry>
-    </collision>
-  </link>
+    
+    <!-- Joints -->  
+    <joint name="virtual_joint" type="fixed">
+        <parent link="world"/>
+        <child link="base_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint> 
 
-  <!-- Joint art2_art3 -->
-  <joint name="art3_pitch" type="revolute">
-    <origin xyz="0 0 0.160" rpy="0 0 0"/>
-    <axis xyz="1 0 0"/>
-    <parent link="art2"/>
-    <child link="art3"/>
-    <limit lower="-${PI / 2}" upper="${PI / 2}" effort="${effort}" velocity="${velocity}"/>
-  </joint>
+    <joint name ="joint_1" type="revolute">
+        <parent link="base_link"/>
+        <child link="link_1"/>
+        <origin xyz="0 0 0.099" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-2.967" upper="2.967" 
+               effort="${effort}" velocity="${velocity}"/>
+    </joint>
 
-  <!-- Link art3 -->
-  <link name="art3">
-    <xacro:default_inertial mass="1.0"/>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
-      <geometry>
-        <mesh filename="package://thor_urdf/meshes/Art3.dae" scale="0.001 0.001 0.001" />
-      </geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0.01225" rpy="0 0 -${PI / 2}"/>
-        <geometry>
-            <cylinder radius="0.055" length="0.1525"/>
-        </geometry>
-    </collision>
-  </link>
-  
-  <!-- Joint art3_art4 -->
-  <joint name="art4_roll" type="revolute">
-    <origin xyz="0 0 0.0895" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <parent link="art3"/>
-    <child link="art4"/>
-    <limit lower="-2.967" upper="2.967" effort="${effort}" velocity="${velocity}"/>
-  </joint>
 
-  <!-- Link art4 -->
-  <link name="art4">
-    <xacro:default_inertial mass="1.0"/>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
-      <geometry>
-        <mesh filename="package://thor_urdf/meshes/Art4.dae" scale="0.001 0.001 0.001" />
-      </geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0.1045" rpy="0 0 -${PI / 2}"/>
-        <geometry>
-            <sphere radius="0.055"/>
-        </geometry>
-    </collision>
-    <collision>
-        <origin xyz="0 0 0.05525" rpy="0 0 -${PI / 2}"/>
-        <geometry>
-            <cylinder radius="0.055" length="0.1045"/>
-        </geometry>
-    </collision>
-    <collision>
-        <origin xyz="0 0 0.0295" rpy="0 0 -${PI / 2}"/>
-        <geometry>
-            <box size="0.050 0.132 0.050"/>
-        </geometry>
-    </collision>
-  </link>
+    <joint name="joint_2" type="revolute">
+        <parent link="link_1"/>
+        <child link="link_2"/>
+        <origin xyz="0 0 0.103" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit lower="-${PI / 2}" upper="${PI / 2}"
+               effort="${effort}" velocity="${velocity}"/>
+    </joint>
 
-  <!-- Joint art4_art5 -->
-  <joint name="art5_pitch" type="revolute">
-    <origin xyz="0 0 0.1045" rpy="0 0 0"/>
-    <axis xyz="1 0 0"/>
-    <parent link="art4"/>
-    <child link="art5"/>
-    <limit lower="-${PI / 2}" upper="${PI / 2}" effort="${effort}" velocity="${velocity}"/>
-  </joint>
+    <joint name="joint_3" type="revolute">
+        <parent link="link_2"/>
+        <child link="link_3"/>
+        <origin xyz="0 0 0.16" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit lower="-${PI / 2}" upper="${PI / 2}"
+               effort="${effort}" velocity="${velocity}"/>
+    </joint>
 
-  <!-- Link art5 -->
-  <link name="art5">
-    <xacro:default_inertial mass="1.0"/>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
-      <geometry>
-          <mesh filename="package://thor_urdf/meshes/Art5.dae" scale="0.001 0.001 0.001" />
-      </geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0" rpy="${PI / 2} 0 -${PI / 2}"/>
-        <geometry>
-            <cylinder radius="0.047" length="0.03"/>
-        </geometry>
-    </collision>
-  </link>
+    <joint name="joint_4" type="revolute">
+        <parent link="link_3"/>
+        <child link="link_4"/>
+        <origin xyz="0 0 0.0895" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-2.967" upper="2.967"
+               effort="${effort}" velocity="${velocity}"/>
+    </joint>
 
-  <!-- Joint art5_art6 -->
-  <joint name="art6_roll" type="revolute">
-    <origin xyz="0 0 0.0135" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
-    <parent link="art5"/>
-    <child link="art6"/>
-    <limit lower="-2.967" upper="2.967" effort="${effort}" velocity="${velocity}"/>
-  </joint>
+    <joint name="joint_5" type="revolute">
+        <parent link="link_4"/>
+        <child link="link_5"/>
+        <origin xyz="0 0 0.1045" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+        <limit lower="-${PI / 2}" upper="${PI / 2}"
+               effort="${effort}" velocity="${velocity}"/>
+      </joint>
 
-  <!-- Link art6 -->
-  <link name="art6">
-    <xacro:default_inertial mass="1.0"/>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 -${PI / 2}"/>
-      <geometry>
-          <mesh filename="package://thor_urdf/meshes/Art6.dae" scale="0.001 0.001 0.001" />
-      </geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0.025" rpy="0 0 -${PI / 2}"/>
-        <geometry>
-            <cylinder radius="0.015" length="0.05"/>
-        </geometry>
-    </collision>
-  </link>
+    <joint name="joint_6" type="revolute">
+        <parent link="link_5"/>
+        <child link="link_6"/>
+        <origin xyz="0 0 0.0135" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="-2.967" upper="2.967"
+               effort="${effort}" velocity="${velocity}"/>
+    </joint>
+
+    <joint name ="link6_to_gripperbase" type="fixed">
+        <parent link="link_6"/>
+        <child link = "gripper_base"/>
+        <origin xyz="0 0 0.043"/>
+    </joint>
+
+    <joint name="gripperbase_to_armgearright" type="revolute">
+        <parent link="gripper_base"/>
+        <child link="gripper_arm_gear_right"/>
+        <origin xyz="0.0145 0.00275 0.0325" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-${PI / 2}" upper="0"
+               effort="${effort}" velocity="${velocity}"/>
+    </joint>
+
+    <joint name="gripperbase_to_armgearleft" type="revolute">
+        <parent link="gripper_base"/>
+        <child link="gripper_arm_gear_left"/>
+        <origin xyz="-0.0145 0.00275 0.0325" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="0" upper="${PI / 2}"
+               effort="${effort}" velocity="${velocity}"/>
+        <mimic joint="gripperbase_to_armgearright" multiplier="-1"/>
+    </joint>
+
+    <joint name="gripperbase_to_armsimpleright" type="revolute">
+        <parent link="gripper_base"/>
+        <child link="gripper_arm_simple_right"/>
+        <origin xyz="0.006 0.00275 0.051" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="-${PI / 2}" upper="0"
+               effort="${effort}" velocity="${velocity}"/>
+        <mimic joint="gripperbase_to_armgearright" multiplier="1"/>
+    </joint>
+
+    <joint name="gripperbase_to_armsimpleleft" type="revolute">
+        <parent link="gripper_base"/>
+        <child link="gripper_arm_simple_left"/>
+        <origin xyz="-0.006 0.00275 0.051" rpy="0 0 0"/>
+        <axis xyz="0 1 0"/>
+        <limit lower="0" upper="${PI / 2}"
+               effort="${effort}" velocity="${velocity}"/>
+        <mimic joint="gripperbase_to_armgearright" multiplier="-1"/>
+    </joint>
+
+    <joint name="armgearright_to_fingerright" type="revolute">
+        <parent link="gripper_arm_gear_right"/>
+        <child link="gripper_finger_right"/>
+        <origin xyz="0.035 -0.01023 0" rpy="-${PI / 2} ${PI} 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="0" upper="${PI / 2}"
+               effort="${effort}" velocity="${velocity}"/>
+        <mimic joint="gripperbase_to_armgearright" multiplier="-1"/>
+    </joint>
+
+    <joint name="armgearleft_to_fingerleft" type="revolute">
+        <parent link="gripper_arm_gear_left"/>
+        <child link="gripper_finger_left"/>
+        <origin xyz="-0.035 0.005175 0" rpy="${PI / 2} 0 0"/>
+        <axis xyz="0 0 1"/>
+        <limit lower="0" upper="${PI / 2}"
+               effort="${effort}" velocity="${velocity}"/>
+        <mimic joint="gripperbase_to_armgearright" multiplier="-1"/>
+    </joint>
 
 </robot>

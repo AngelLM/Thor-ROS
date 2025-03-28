@@ -9,6 +9,31 @@
         <hardware>
             <plugin>gazebo_ros2_control/GazeboSystem</plugin>
         </hardware>
+
+        <joint name="gripperbase_to_armgearleft">
+                <param name="mimic">gripperbase_to_armgearright</param>
+                <param name="multiplier">-1</param>
+        </joint>
+
+        <joint name="gripperbase_to_armsimpleright">
+                <param name="mimic">gripperbase_to_armgearright</param>
+                <param name="multiplier">1</param>
+        </joint>
+
+        <joint name="gripperbase_to_armsimpleleft">
+                <param name="mimic">gripperbase_to_armgearright</param>
+                <param name="multiplier">-1</param>
+        </joint>
+
+        <joint name="armgearright_to_fingerright">
+                <param name="mimic">gripperbase_to_armgearright</param>
+                <param name="multiplier">-1</param>
+        </joint>
+
+        <joint name="armgearleft_to_fingerleft">
+                <param name="mimic">gripperbase_to_armgearright</param>
+                <param name="multiplier">-1</param>
+        </joint>
     </xacro:if>
       
     <xacro:unless value="$(arg is_sim)">
@@ -20,37 +45,43 @@
 
     <!-- JOINTS -->
 
-    <joint name="art1_yaw">
+    <joint name="joint_1">
         <command_interface name="position"/>
         <!--<command_interface name="velocity"/>-->
         <state_interface name="position"/>
         <!--<state_interface name="velocity"/>-->
     </joint>
-    <joint name="art2_pitch">
+    <joint name="joint_2">
         <command_interface name="position"/>
         <!--<command_interface name="velocity"/>-->
         <state_interface name="position"/>
         <!--<state_interface name="velocity"/>-->
     </joint>
-    <joint name="art3_pitch">
+    <joint name="joint_3">
         <command_interface name="position"/>
         <!--<command_interface name="velocity"/>-->
         <state_interface name="position"/>
         <!--<state_interface name="velocity"/>-->
     </joint>
-    <joint name="art4_roll">
+    <joint name="joint_4">
         <command_interface name="position"/>
         <!--<command_interface name="velocity"/>-->
         <state_interface name="position"/>
         <!--<state_interface name="velocity"/>-->
     </joint>
-    <joint name="art5_pitch">
+    <joint name="joint_5">
         <command_interface name="position"/>
         <!--<command_interface name="velocity"/>-->
         <state_interface name="position"/>
         <!--<state_interface name="velocity"/>-->
     </joint>
-    <joint name="art6_roll">
+    <joint name="joint_6">
+        <command_interface name="position"/>
+        <!--<command_interface name="velocity"/>-->
+        <state_interface name="position"/>
+        <!--<state_interface name="velocity"/>-->
+    </joint>
+    <joint name="gripperbase_to_armgearright">
         <command_interface name="position"/>
         <!--<command_interface name="velocity"/>-->
         <state_interface name="position"/>

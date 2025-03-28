@@ -8,32 +8,62 @@ default_acceleration_scaling_factor: 0.1
 # Specific joint properties can be changed with the keys [max_position, min_position, max_velocity, max_acceleration]
 # Joint limits can be turned off with [has_velocity_limits, has_acceleration_limits]
 joint_limits:
-  art1_yaw:
+  joint_1:
     has_velocity_limits: true
     max_velocity: 1.0
     has_acceleration_limits: false
     max_acceleration: 0.0
-  art2_pitch:
+  joint_2:
     has_velocity_limits: true
     max_velocity: 1.0
     has_acceleration_limits: false
     max_acceleration: 0.0
-  art3_pitch:
+  joint_3:
     has_velocity_limits: true
     max_velocity: 1.0
     has_acceleration_limits: false
     max_acceleration: 0.0
-  art4_roll:
+  joint_4:
     has_velocity_limits: true
     max_velocity: 1.0
     has_acceleration_limits: false
     max_acceleration: 0.0
-  art5_pitch:
+  joint_5:
     has_velocity_limits: true
     max_velocity: 1.0
     has_acceleration_limits: false
     max_acceleration: 0.0
-  art6_roll:
+  joint_6:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  gripperbase_to_armgearright:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  gripperbase_to_armgearleft:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  gripperbase_to_armsimpleright:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  gripperbase_to_armsimpleleft:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  armgearright_to_fingerright:
+    has_velocity_limits: true
+    max_velocity: 1.0
+    has_acceleration_limits: false
+    max_acceleration: 0.0
+  armgearleft_to_fingerleft:
     has_velocity_limits: true
     max_velocity: 1.0
     has_acceleration_limits: false
