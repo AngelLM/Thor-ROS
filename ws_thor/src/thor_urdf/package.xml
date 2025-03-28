@@ -4,7 +4,7 @@
   <name>thor_urdf</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="jorgepramoscontact@gmail.com">vscode</maintainer>
+  <maintainer email="jorgepramoscontact@gmail.com">JorgePRamos</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

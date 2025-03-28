@@ -4,7 +4,7 @@
   <name>thor_bringup</name>
   <version>0.0.0</version>
   <description>Thor Bringup package</description>
-  <maintainer email="mail@mail.com">Author</maintainer>
+  <maintainer email="contacto@angel-lm.com">Angel LM</maintainer>
   <license>Apache 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
