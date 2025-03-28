@@ -1,4 +1,4 @@
-# Default initial positions for THOR_arm's ros2_control fake system
+# Default initial positions for thor_arm's ros2_control fake system
 
 initial_positions:
   joint_1: 0
