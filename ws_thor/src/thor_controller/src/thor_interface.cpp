@@ -78,10 +78,10 @@ CallbackReturn ThorInterface::on_activate(const rclcpp_lifecycle::State &previou
   RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "Starting robot hardware ...");
 
   // Reset commands and states
-  position_commands_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-  curr_angles_ = {0, 0, 0, 0, 0, 0};
-  curr_angles_ = {0, 0, 0, 0, 0, 0};
-  position_states_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  position_commands_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  curr_angles_ = {0, 0, 0, 0, 0, 0, 0};
+  prev_angles_ = {0, 0, 0, 0, 0, 0, 0};
+  position_states_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
   try{
     thor_.Open(port_);
@@ -154,6 +154,8 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time, co
               double a5pos = (position_states_[5] - 2 * a6pos);
               position_states_[4] = a5pos * M_PI / 180;
               position_states_[5] = a6pos * M_PI / 180;
+
+              position_states_[6] = curr_angles_[6] * M_PI / -180;
             }
             
             // Extract the axis homed data
@@ -194,38 +196,56 @@ hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time, c
   int m_art5 = art5 + 2 * art6;
   int m_art6 = -1 * art5 + 2 * art6;
 
-  curr_angles_ = {art1, art2, art3, art4, m_art5, m_art6};
+  int end_effector = static_cast<int>(-1 * position_commands_.at(6) * 180 / M_PI);
+
+  curr_angles_ = {art1, art2, art3, art4, m_art5, m_art6, end_effector};
 
   if(curr_angles_ == prev_angles_){
     return hardware_interface::return_type::OK;
   }
 
+  if(curr_angles_.at(0) != prev_angles_.at(0) || curr_angles_.at(1) != prev_angles_.at(1) || curr_angles_.at(2) != prev_angles_.at(2) || curr_angles_.at(3) != prev_angles_.at(3) || curr_angles_.at(4) != prev_angles_.at(4) || curr_angles_.at(5) != prev_angles_.at(5)){
+    // Construir el mensaje GCODE para el movimiento del brazo
+    std::string msg;
+    msg.append("G1 ");
+    msg.append("X").append(std::to_string(art1)).append(" ");
+    msg.append("Y").append(std::to_string(art2)).append(" ");
+    msg.append("Z").append(std::to_string(art3)).append(" ");
+    msg.append("U").append(std::to_string(art4)).append(" ");
+    msg.append("V").append(std::to_string(m_art5)).append(" ");
+    msg.append("W").append(std::to_string(m_art6)).append("\r\n");
 
-  // Construir el mensaje
-  std::string msg;
-  msg.append("G1 ");
-  msg.append("X").append(std::to_string(art1)).append(" ");
-  msg.append("Y").append(std::to_string(art2)).append(" ");
-  msg.append("Z").append(std::to_string(art3)).append(" ");
-  msg.append("U").append(std::to_string(art4)).append(" ");
-  msg.append("V").append(std::to_string(m_art5)).append(" ");
-  msg.append("W").append(std::to_string(m_art6)).append("\r\n");
-
-  // Enviar el comando
-  try{
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Sending new command " << msg);
-    thor_.Write(msg);
+    // Enviar el comando
+    try{
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Sending new command " << msg);
+      thor_.Write(msg);
+    }
+    catch(...){
+      RCLCPP_ERROR_STREAM(rclcpp::get_logger("ThorInterface"), "Something went wrong while sending the message " << msg << " to the port " << port_);
+      return hardware_interface::return_type::ERROR;
+    }
   }
-  catch(...){
-    RCLCPP_ERROR_STREAM(rclcpp::get_logger("ThorInterface"), "Something went wrong while sending the message " << msg << " to the port " << port_);
-    return hardware_interface::return_type::ERROR;
+  if(curr_angles_.at(6) != prev_angles_.at(6)){
+    // Construir el mensaje GCODE para el movimiento del end effector
+    std::string msg;
+    msg.append("M280 P0 ");
+    msg.append("S").append(std::to_string(end_effector)).append("\r\n");
+
+    // Enviar el comando
+    try{
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "Sending new command " << msg);
+      thor_.Write(msg);
+    }
+    catch(...){
+      RCLCPP_ERROR_STREAM(rclcpp::get_logger("ThorInterface"), "Something went wrong while sending the message " << msg << " to the port " << port_);
+      return hardware_interface::return_type::ERROR;
+    }
+
   }
+    prev_angles_ = curr_angles_;
 
-  prev_angles_ = curr_angles_;
-
-  return hardware_interface::return_type::OK;
-}
-
-}
+    return hardware_interface::return_type::OK;
+  }
+} // namespace thor_controller
 
 PLUGINLIB_EXPORT_CLASS(thor_controller::ThorInterface, hardware_interface::SystemInterface)

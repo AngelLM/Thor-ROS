@@ -3,7 +3,7 @@ moveit_setup_assistant_config:
     package: thor_urdf
     relative_path: urdf/thor.urdf
   srdf:
-    relative_path: config/THOR_arm.srdf
+    relative_path: config/thor_arm.srdf
   package_settings:
     author_name: JorgePRamos
     author_email: jorgepramoscontact@gmail.com

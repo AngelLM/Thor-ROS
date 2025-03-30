@@ -71,6 +71,12 @@ def generate_launch_description():
         arguments=["arm_group_controller", "--controller-manager", "/controller_manager"],
     )
 
+    gripper_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["gripper_group_controller", "--controller-manager", "/controller_manager"],
+    )
+
     return LaunchDescription(
         [
             is_sim_arg,
@@ -78,5 +84,6 @@ def generate_launch_description():
             controller_manager,
             joint_state_broadcaster_spawner,
             arm_controller_spawner,
+            gripper_controller_spawner,
         ]
     )

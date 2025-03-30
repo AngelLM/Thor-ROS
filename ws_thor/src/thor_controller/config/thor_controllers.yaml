@@ -5,8 +5,8 @@ controller_manager:
     arm_group_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
-    # gripper_controller:
-    #   type: forward_command_controller/ForwardCommandController
+    gripper_group_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -14,12 +14,26 @@ controller_manager:
 arm_group_controller:
   ros__parameters:
     joints:
-      - art1_yaw
-      - art2_pitch
-      - art3_pitch
-      - art4_roll
-      - art5_pitch
-      - art6_roll
+      - joint_1
+      - joint_2
+      - joint_3
+      - joint_4
+      - joint_5
+      - joint_6
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+
+    open_loop_control: true
+    allow_integration_in_goal_trajectories: true
+
+gripper_group_controller:
+  ros__parameters:
+    joints:
+      - gripperbase_to_armgearright
 
     command_interfaces:
       - position

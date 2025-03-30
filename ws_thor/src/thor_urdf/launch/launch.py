@@ -10,7 +10,7 @@ def generate_launch_description():
     print(">>> ",urdf_file)
     with open(urdf_file,'r') as infp:
     	robot_desc = infp.read()
-    #thor_ws/src/urdf_vis/urdf_vis/urdf_test.urdf
+    #thor_ws/src/urdf_vis/urdf_vis/urdf_
     params = {'robot_description': robot_desc}
     
     robot_state_publisher_node =launch_ros.actions.Node(

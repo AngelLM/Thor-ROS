@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="thor_arm">
+
+  <ros2_control name="RobotSystem" type="system">
+  
+    <!-- HARDWARE -->
+
+    <xacro:if value="$(arg is_sim)">
+        <hardware>
+            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </hardware>
+
+        <joint name="gripperbase_to_armgearleft">
+                <param name="mimic">gripperbase_to_armgearright</param>
+                <param name="multiplier">-1</param>
+        </joint>
+
+        <joint name="gripperbase_to_armsimpleright">
+                <param name="mimic">gripperbase_to_armgearright</param>
+                <param name="multiplier">1</param>
+        </joint>
+
+        <joint name="gripperbase_to_armsimpleleft">
+                <param name="mimic">gripperbase_to_armgearright</param>
+                <param name="multiplier">-1</param>
+        </joint>
+
+        <joint name="armgearright_to_fingerright">
+                <param name="mimic">gripperbase_to_armgearright</param>
+                <param name="multiplier">-1</param>
+        </joint>
+
+        <joint name="armgearleft_to_fingerleft">
+                <param name="mimic">gripperbase_to_armgearright</param>
+                <param name="multiplier">-1</param>
+        </joint>
+    </xacro:if>
+      
+    <xacro:unless value="$(arg is_sim)">
+        <hardware>
+            <plugin>thor_controller/ThorInterface</plugin>
+            <param name="port">/dev/ttyACM0</param>
+        </hardware>
+    </xacro:unless>
+
+    <!-- JOINTS -->
+
+    <joint name="joint_1">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+    </joint>
+    <joint name="joint_2">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+    </joint>
+    <joint name="joint_3">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+    </joint>
+    <joint name="joint_4">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+    </joint>
+    <joint name="joint_5">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+    </joint>
+    <joint name="joint_6">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+    </joint>
+    <joint name="gripperbase_to_armgearright">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+    </joint>
+
+  </ros2_control>
+</robot>

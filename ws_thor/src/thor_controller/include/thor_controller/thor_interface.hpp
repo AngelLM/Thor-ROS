@@ -45,7 +45,7 @@ private:
   bool homed_;
   std::string status_;
 };
-}
+} // namespace thor_controller
 
 
 #endif  // THOR_INTERFACE_H

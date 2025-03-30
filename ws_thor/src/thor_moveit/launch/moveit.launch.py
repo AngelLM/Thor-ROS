@@ -18,7 +18,7 @@ def generate_launch_description():
     moveit_config = (
         MoveItConfigsBuilder("thor", package_name="thor_moveit")
         .robot_description(file_path=os.path.join(get_package_share_directory("thor_urdf"), "urdf", "thor.urdf.xacro"))
-        .robot_description_semantic(file_path="config/THOR_arm.srdf")
+        .robot_description_semantic(file_path="config/thor_arm.srdf")
         .trajectory_execution(file_path="config/moveit_controllers.yaml")
         .to_moveit_configs()
     )

@@ -4,8 +4,8 @@
   <name>thor_joystick</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="alm37454@gmail.com">thor</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="contacto@angel-lm.com">Angel LM</maintainer>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
