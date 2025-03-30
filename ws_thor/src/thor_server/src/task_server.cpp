@@ -20,14 +20,14 @@ public:
   {
     RCLCPP_INFO(get_logger(), "Starting the Server");
 
-    // Servidor para JointTask
+    // JointTask Server
     joint_task_server_ = rclcpp_action::create_server<thor_server::action::JointTask>(
         this, "joint_task",
         std::bind(&TaskServer::jointTaskGoalCallback, this, _1, _2),
         std::bind(&TaskServer::jointTaskCancelCallback, this, _1),
         std::bind(&TaskServer::jointTaskAcceptedCallback, this, _1));
 
-    // Servidor para PoseTask
+    // PoseTask Server
     pose_task_server_ = rclcpp_action::create_server<thor_server::action::PoseTask>(
         this, "pose_task",
         std::bind(&TaskServer::poseTaskGoalCallback, this, _1, _2),
@@ -36,15 +36,15 @@ public:
   }
 
 private:
-  // Miembros de la clase
-  std::shared_ptr<moveit::planning_interface::MoveGroupInterface> arm_move_group_;
-  std::vector<double> arm_joint_goal_;
+  // Class members
+  std::shared_ptr<moveit::planning_interface::MoveGroupInterface> arm_move_group_, gripper_move_group_;
+  std::vector<double> arm_joint_goal_, gripper_joint_goal_;
 
-  // Servidores de acción
+  // Action servers
   rclcpp_action::Server<thor_server::action::JointTask>::SharedPtr joint_task_server_;
   rclcpp_action::Server<thor_server::action::PoseTask>::SharedPtr pose_task_server_;
 
-  // Callbacks para JointTask
+  // JointTask callbacks
   rclcpp_action::GoalResponse jointTaskGoalCallback(const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const thor_server::action::JointTask::Goal> goal)
   {
     RCLCPP_INFO(get_logger(), "Received JointTask goal request");
@@ -59,9 +59,9 @@ private:
     if(arm_move_group_){
       arm_move_group_->stop();
     }
-    // if(gripper_move_group_){
-    //   gripper_move_group_->stop();
-    // }
+    if(gripper_move_group_){
+      gripper_move_group_->stop();
+    }
     (void)goal_handle;
     return rclcpp_action::CancelResponse::ACCEPT;
   }
@@ -78,9 +78,9 @@ private:
     if(!arm_move_group_){
       arm_move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "arm_group");
     }
-    // if(!gripper_move_group_){
-    //   gripper_move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "gripper");
-    // }
+    if(!gripper_move_group_){
+      gripper_move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "gripper_group");
+    }
 
     auto result = std::make_shared<thor_server::action::JointTask::Result>();
 
@@ -91,35 +91,48 @@ private:
       arm_joint_goal_[i] = arm_joint_goal_[i] * M_PI / 180.0;
     }
 
+    double gripper_joint_rad = goal_handle->get_goal()->gripper_joint_deg * M_PI / 180.0;
+
+    gripper_joint_goal_ = {gripper_joint_rad, gripper_joint_rad, -gripper_joint_rad, gripper_joint_rad, gripper_joint_rad, -gripper_joint_rad};
+
     arm_move_group_->setStartState(*arm_move_group_->getCurrentState());
-    // gripper_move_group_->setStartState(*gripper_move_group_->getCurrentState());
+    gripper_move_group_->setStartState(*gripper_move_group_->getCurrentState());
 
     bool arm_within_bounds = arm_move_group_->setJointValueTarget(arm_joint_goal_);
-    // bool gripper_within_bounds gripper_move_group_->setJointValueTarget(gripper_joint_goal_);
+    bool gripper_within_bounds = gripper_move_group_->setJointValueTarget(gripper_joint_goal_);
 
-    if (!arm_within_bounds){ // || !gripper_within_bounds){
-      RCLCPP_ERROR(get_logger(), "Arm goal is out of bounds");
-      // result->success = false;
-      // goal_handle->succeed(result);
-      return;
+    if (!arm_within_bounds || !gripper_within_bounds){
+      if (!arm_within_bounds)
+        RCLCPP_ERROR(get_logger(), "Arm goal is out of bounds");
+      if (!gripper_within_bounds)
+        RCLCPP_ERROR(get_logger(), "Gripper goal is out of bounds");
     }
 
-    moveit::planning_interface::MoveGroupInterface::Plan arm_plan; //, gripper_plan;
+    moveit::planning_interface::MoveGroupInterface::Plan arm_plan, gripper_plan;
 
     bool arm_plan_success = (arm_move_group_->plan(arm_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-    // bool gripper_plan_success = (gripper_move_group_->plan(gripper_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+    bool gripper_plan_success = (gripper_move_group_->plan(gripper_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
     arm_move_group_->setMaxVelocityScalingFactor(1.0);
     arm_move_group_->setMaxAccelerationScalingFactor(1.0);
 
-    if(arm_plan_success){ // && gripper_plan_success){
-      arm_move_group_->execute(arm_plan);
-      // gripper_move_group_->execute(gripper_plan);
+    gripper_move_group_->setMaxVelocityScalingFactor(1.0);
+    gripper_move_group_->setMaxAccelerationScalingFactor(1.0);
+
+    if (arm_plan_success || gripper_plan_success){
+      if(arm_plan_success)
+        arm_move_group_->execute(arm_plan);
+      else
+        RCLCPP_ERROR(get_logger(), "Failed to plan arm movement");
+
+      if(gripper_plan_success)
+        gripper_move_group_->execute(gripper_plan);
+      else
+        RCLCPP_ERROR(get_logger(), "Failed to plan gripper movement");
     }
+    
     else{
       RCLCPP_ERROR(get_logger(), "Failed to plan arm movement");
-      // result->success = false;
-      // goal_handle->succeed(result);
       return;
     }
 
@@ -127,7 +140,7 @@ private:
     goal_handle->succeed(result);
   }
 
-  // Callbacks para PoseTask
+  // PoseTask callbacks
   rclcpp_action::GoalResponse poseTaskGoalCallback(const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const thor_server::action::PoseTask::Goal> goal)
   {
     RCLCPP_INFO(get_logger(), "Received PoseTask goal request");
@@ -165,16 +178,16 @@ private:
     RCLCPP_INFO(get_logger(), "Current position: %f, %f, %f", arm_move_group_->getCurrentPose().pose.position.x, arm_move_group_->getCurrentPose().pose.position.y, arm_move_group_->getCurrentPose().pose.position.z);
     RCLCPP_INFO(get_logger(), "Current orientation: %f, %f, %f", arm_move_group_->getCurrentRPY().at(0), arm_move_group_->getCurrentRPY().at(1), arm_move_group_->getCurrentRPY().at(2));
     
-    // Asegurarse de que el frame de referencia sea correcto
+    // Ensure the reference frame is correct
     arm_move_group_->setPoseReferenceFrame("world");
 
-    // Crear una pose objetivo
+    // Create a target pose
     geometry_msgs::msg::Pose target_pose;
     target_pose.position.x = goal_handle->get_goal()->x;
     target_pose.position.y = goal_handle->get_goal()->y;
     target_pose.position.z = goal_handle->get_goal()->z;
 
-    // Convertir RPY a quaternion para establecer la orientación correctamente
+    // Converr RPY to quaternion to set orientation correctly
     tf2::Quaternion q;
     q.setRPY(goal_handle->get_goal()->roll, goal_handle->get_goal()->pitch, goal_handle->get_goal()->yaw);
     target_pose.orientation.x = q.x();
@@ -184,18 +197,18 @@ private:
 
 
     arm_move_group_->setStartStateToCurrentState();
-    // Establecer la pose objetivo completa
+    // Establish the complete target pose
     arm_move_group_->setPoseTarget(target_pose);
 
-    // Ajustar escalado de velocidad y aceleración (antes de planificar)
+    // Adjust speed and acceleration scaling (before planning)
     arm_move_group_->setMaxVelocityScalingFactor(1.0);
     arm_move_group_->setMaxAccelerationScalingFactor(1.0);
 
-    // Favorecer posiciones finales similares a la posicion actual
+    // Favor similar final positions to the current position
     arm_move_group_->setGoalPositionTolerance(0.01);
     arm_move_group_->setGoalOrientationTolerance(0.01);
 
-    // Planificar el movimiento
+    // Plan the movement
     moveit::planning_interface::MoveGroupInterface::Plan arm_plan;
     bool arm_plan_success = (arm_move_group_->plan(arm_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 

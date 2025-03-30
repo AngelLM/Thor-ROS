@@ -5,6 +5,7 @@ float32 joint3_deg
 float32 joint4_deg
 float32 joint5_deg
 float32 joint6_deg
+float32 gripper_joint_deg
 ---
 # Result
 bool success

@@ -6,7 +6,7 @@
 class JoystickJointController : public rclcpp::Node
 {
 public:
-    JoystickJointController() : Node("joystick_joint_controller"), current_axes_(8, 0.0), current_joint_positions_(6, 0.0)
+    JoystickJointController() : Node("joystick_joint_controller"), current_axes_(8, 0.0), current_joint_positions_(7, 0.0)
     {
         // Subscriber to the /joy topic
         joy_subscription_ = this->create_subscription<sensor_msgs::msg::Joy>("/joy", 10, std::bind(&JoystickJointController::joyCallback, this, std::placeholders::_1));
@@ -35,8 +35,11 @@ private:
 
         // Check if the axes are outside the dead zone
         for(size_t i = 0; i < msg->axes.size(); i++){
-            if(i==2 || i==5 || std::abs(msg->axes[i]) < deadzone){
-                current_axes_[i] = 0.0;
+            if((i != 2 && i != 5) && std::abs(msg->axes[i]) < deadzone){
+                current_axes_[i] = 0.0;                    
+            }
+            else if((i == 2 || i == 5) && std::abs(msg->axes[i] - 1) < deadzone){
+                current_axes_[i] = 1.0;
             }
             else{
                 current_axes_[i] = msg->axes[i];
@@ -64,6 +67,8 @@ private:
         current_joint_positions_[3] += current_axes_[4] * step;
         current_joint_positions_[4] += current_axes_[6] * step;
         current_joint_positions_[5] += current_axes_[7] * step;
+        current_joint_positions_[6] += (current_axes_[2] - 1) * step;
+        current_joint_positions_[6] -= (current_axes_[5] - 1) * step;
 
         // Create a goal for JointTask
         auto goal_msg = thor_server::action::JointTask::Goal();
@@ -73,9 +78,10 @@ private:
         goal_msg.joint4_deg = current_joint_positions_[3];
         goal_msg.joint5_deg = current_joint_positions_[4];
         goal_msg.joint6_deg = current_joint_positions_[5];
+        goal_msg.gripper_joint_deg = current_joint_positions_[6];
 
         // Print
-        RCLCPP_INFO(this->get_logger(), "Sending JointTask goal: %f, %f, %f, %f, %f, %f", goal_msg.joint1_deg, goal_msg.joint2_deg, goal_msg.joint3_deg, goal_msg.joint4_deg, goal_msg.joint5_deg, goal_msg.joint6_deg);
+        RCLCPP_INFO(this->get_logger(), "Sending JointTask goal: %f, %f, %f, %f, %f, %f, %f", goal_msg.joint1_deg, goal_msg.joint2_deg, goal_msg.joint3_deg, goal_msg.joint4_deg, goal_msg.joint5_deg, goal_msg.joint6_deg, goal_msg.gripper_joint_deg);
 
         // Send the goal to the action server
         auto send_goal_options = rclcpp_action::Client<thor_server::action::JointTask>::SendGoalOptions();
