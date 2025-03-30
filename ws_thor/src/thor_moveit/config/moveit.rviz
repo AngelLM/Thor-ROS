@@ -4,9 +4,6 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
-        - /RobotModel1
         - /RobotModel1/Description Topic1
       Splitter Ratio: 0.5
     Tree Height: 214
@@ -89,11 +86,11 @@ Visualization Manager:
       Update Interval: 0
       Value: false
       Visual Enabled: true
-    - Acceleration_Scaling_Factor: 0.1
+    - Acceleration_Scaling_Factor: 1
       Class: moveit_rviz_plugin/MotionPlanning
       Enabled: true
       Move Group Namespace: ""
-      MoveIt_Allow_Approximate_IK: false
+      MoveIt_Allow_Approximate_IK: true
       MoveIt_Allow_External_Program: true
       MoveIt_Allow_Replanning: false
       MoveIt_Allow_Sensor_Positioning: false
@@ -120,37 +117,72 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
-          art1:
+          base_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          art2:
+          gripper_arm_gear_left:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          art3:
+          gripper_arm_gear_right:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          art4:
+          gripper_arm_simple_left:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          art5:
+          gripper_arm_simple_right:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          art6:
+          gripper_base:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          base:
+          gripper_finger_left:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          gripper_finger_right:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_4:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_5:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_6:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -205,37 +237,72 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
-          art1:
+          base_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          art2:
+          gripper_arm_gear_left:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          art3:
+          gripper_arm_gear_right:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          art4:
+          gripper_arm_simple_left:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          art5:
+          gripper_arm_simple_right:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          art6:
+          gripper_base:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          base:
+          gripper_finger_left:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          gripper_finger_right:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_4:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_5:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_6:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -248,7 +315,7 @@ Visualization Manager:
         Show Robot Collision: false
         Show Robot Visual: true
       Value: true
-      Velocity_Scaling_Factor: 0.1
+      Velocity_Scaling_Factor: 1
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -295,25 +362,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.5760143995285034
+      Distance: 1.3868926763534546
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.11483839154243469
-        Y: -0.09733547270298004
-        Z: 0.13302162289619446
+        X: -0.19213275611400604
+        Y: -0.04275248572230339
+        Z: 0.25609228014945984
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.84539794921875
+      Pitch: 0.5053982734680176
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.6203979253768921
+      Yaw: 0.3453978896141052
     Saved: ~
 Window Geometry:
   Displays:

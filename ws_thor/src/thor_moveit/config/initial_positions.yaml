@@ -7,4 +7,4 @@ initial_positions:
   joint_4: 0
   joint_5: 0
   joint_6: 0
-  gripperbase_to_armgearright: -0.5
+  gripperbase_to_armgearright: 0

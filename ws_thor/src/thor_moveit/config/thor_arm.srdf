@@ -38,8 +38,22 @@
         <joint name="joint_5" value="0"/>
         <joint name="joint_6" value="0"/>
     </group_state>
-    <group_state name="Zero" group="gripper_group">
+    <group_state name="Rest" group="arm_group">
+        <joint name="joint_1" value="0"/>
+        <joint name="joint_2" value="0.7854"/>
+        <joint name="joint_3" value="-1.4835"/>
+        <joint name="joint_4" value="0"/>
+        <joint name="joint_5" value="-0.7854"/>
+        <joint name="joint_6" value="0"/>
+    </group_state>
+    <group_state name="Open" group="gripper_group">
         <joint name="gripperbase_to_armgearright" value="0"/>
+    </group_state>
+    <group_state name="Semi-closed" group="gripper_group">
+        <joint name="gripperbase_to_armgearright" value="-0.7854"/>
+    </group_state>
+    <group_state name="Closed" group="gripper_group">
+        <joint name="gripperbase_to_armgearright" value="-1.57"/>
     </group_state>
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
     <virtual_joint name="virtual_joint" type="fixed" parent_frame="world" child_link="base_link"/>
