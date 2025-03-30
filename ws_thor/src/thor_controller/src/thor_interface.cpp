@@ -42,6 +42,7 @@ CallbackReturn ThorInterface::on_init(const hardware_interface::HardwareInfo &ha
   curr_angles_.reserve(info_.joints.size());
   prev_angles_.reserve(info_.joints.size());
   position_states_.reserve(info_.joints.size());
+  RCLCPP_INFO_STREAM(rclcpp::get_logger("ThorInterface"), "ON INIT - Joints Size: " << info_.joints.size());
 
   return CallbackReturn::SUCCESS;
 }
@@ -79,6 +80,7 @@ CallbackReturn ThorInterface::on_activate(const rclcpp_lifecycle::State &previou
   // Reset commands and states
   position_commands_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   curr_angles_ = {0, 0, 0, 0, 0, 0, 0};
+  prev_angles_ = {0, 0, 0, 0, 0, 0, 0};
   position_states_ = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
   try{
@@ -113,11 +115,6 @@ CallbackReturn ThorInterface::on_deactivate(const rclcpp_lifecycle::State &previ
 
 
 hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time, const rclcpp::Duration &period){
-
-  position_states_ = position_commands_;
-  return hardware_interface::return_type::OK;
-
-
   // Read data from Thor
   if(thor_.IsOpen() && thor_.IsDataAvailable() <= 0){
     try{
@@ -145,7 +142,7 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time, co
             // Extract the position data
             if(json_data.contains("pos")){
               auto pos = json_data["pos"];
-              for(size_t i = 0; i < pos.size(); ++i){
+              for(size_t i = 0; i < pos.size() && i < position_states_.size(); ++i){
                 position_states_[i] = pos[i];
               }
 
@@ -157,6 +154,7 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time, co
               double a5pos = (position_states_[5] - 2 * a6pos);
               position_states_[4] = a5pos * M_PI / 180;
               position_states_[5] = a6pos * M_PI / 180;
+
               position_states_[6] = curr_angles_[6] * M_PI / -180;
             }
             
@@ -198,7 +196,7 @@ hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time, c
   int m_art5 = art5 + 2 * art6;
   int m_art6 = -1 * art5 + 2 * art6;
 
-  int end_effector = -position_commands_.at(6) * 180 / M_PI;
+  int end_effector = static_cast<int>(-1 * position_commands_.at(6) * 180 / M_PI);
 
   curr_angles_ = {art1, art2, art3, art4, m_art5, m_art6, end_effector};
 
@@ -206,14 +204,8 @@ hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time, c
     return hardware_interface::return_type::OK;
   }
 
-  std::vector<int> articulation_angles_prev(prev_angles_.begin(), prev_angles_.end() - 1);
-  int end_effector_prev = prev_angles_.back();
-
-  std::vector<int> articulation_angles_curr(curr_angles_.begin(), curr_angles_.end() - 1);
-  int end_effector_curr = curr_angles_.back();
-
-  if (articulation_angles_prev != articulation_angles_curr){
-    // Construir el mensaje GCODE para el movimiento de las articulaciones
+  if(curr_angles_.at(0) != prev_angles_.at(0) || curr_angles_.at(1) != prev_angles_.at(1) || curr_angles_.at(2) != prev_angles_.at(2) || curr_angles_.at(3) != prev_angles_.at(3) || curr_angles_.at(4) != prev_angles_.at(4) || curr_angles_.at(5) != prev_angles_.at(5)){
+    // Construir el mensaje GCODE para el movimiento del brazo
     std::string msg;
     msg.append("G1 ");
     msg.append("X").append(std::to_string(art1)).append(" ");
@@ -232,11 +224,8 @@ hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time, c
       RCLCPP_ERROR_STREAM(rclcpp::get_logger("ThorInterface"), "Something went wrong while sending the message " << msg << " to the port " << port_);
       return hardware_interface::return_type::ERROR;
     }
-
-    prev_angles_ = curr_angles_;
   }
-
-  if (end_effector_prev != end_effector_curr){
+  if(curr_angles_.at(6) != prev_angles_.at(6)){
     // Construir el mensaje GCODE para el movimiento del end effector
     std::string msg;
     msg.append("M280 P0 ");
@@ -252,12 +241,11 @@ hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time, c
       return hardware_interface::return_type::ERROR;
     }
 
-    prev_angles_ = curr_angles_;
   }
+    prev_angles_ = curr_angles_;
 
-  return hardware_interface::return_type::OK;
-}
-
-}
+    return hardware_interface::return_type::OK;
+  }
+} // namespace thor_controller
 
 PLUGINLIB_EXPORT_CLASS(thor_controller::ThorInterface, hardware_interface::SystemInterface)
