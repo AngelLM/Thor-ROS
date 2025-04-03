@@ -26,7 +26,7 @@ def generate_launch_description():
     
     task_server = Node(
         package="thor_server",
-        executable="task_server",
+        executable="task_server_node",
         name="task_server_node",
         output="screen",
         parameters=[{"use_sim_time": False}]
