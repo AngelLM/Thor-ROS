@@ -155,7 +155,7 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time, co
               position_states_[4] = a5pos * M_PI / 180;
               position_states_[5] = a6pos * M_PI / 180;
 
-              position_states_[6] = curr_angles_[6] * M_PI / -180;
+              position_states_[6] = (curr_angles_[6]-180) * M_PI / 180;
             }
             
             // Extract the axis homed data
@@ -196,7 +196,7 @@ hardware_interface::return_type ThorInterface::write(const rclcpp::Time &time, c
   int m_art5 = art5 + 2 * art6;
   int m_art6 = -1 * art5 + 2 * art6;
 
-  int end_effector = static_cast<int>(-1 * position_commands_.at(6) * 180 / M_PI);
+  int end_effector = static_cast<int>(180 + (position_commands_.at(6) * 180 / M_PI));
 
   curr_angles_ = {art1, art2, art3, art4, m_art5, m_art6, end_effector};
 

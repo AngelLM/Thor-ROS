@@ -13,6 +13,7 @@
   <exec_depend>thor_controller</exec_depend>
   <exec_depend>thor_urdf</exec_depend>
   <exec_depend>thor_moveit</exec_depend>
+  <exec_depend>thor_server</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
