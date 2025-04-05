@@ -40,6 +40,8 @@
         <hardware>
             <plugin>thor_controller/ThorInterface</plugin>
             <param name="port">/dev/ttyACM0</param>
+            <param name="board_type">thor_pcb</param>
+            <!-- <param name="board_type">super8</param> -->
         </hardware>
     </xacro:unless>
 

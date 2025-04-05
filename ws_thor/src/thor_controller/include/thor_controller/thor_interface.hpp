@@ -36,7 +36,7 @@ public:
 
 private:
   LibSerial::SerialPort thor_;
-  std::string port_;
+  std::string port_, board_type_;
   std::vector<double> position_commands_;
   std::vector<int> curr_angles_;
   std::vector<int> prev_angles_;
