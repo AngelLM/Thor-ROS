@@ -1,8 +1,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "thor_controller/thor_interface.hpp"
-
-using thor_controller::ThorInterface;
+#include <fstream> // Para manejar archivos
 
 class HardwareCommandNode : public rclcpp::Node
 {
@@ -21,7 +19,16 @@ private:
   void command_callback(const std_msgs::msg::String::SharedPtr msg)
   {
     RCLCPP_INFO(this->get_logger(), "Recibido comando: '%s'", msg->data.c_str());
-    ThorInterface::enqueue_external_command(msg->data);
+
+    // Abrir el archivo en modo de agregar (append)
+    std::ofstream file("/tmp/commands.txt", std::ios::app);
+    if (file.is_open()) {
+      file << msg->data << "\n"; // Escribir el comando en una nueva línea
+      file.close();
+      RCLCPP_INFO(this->get_logger(), "Comando guardado en /tmp/commands.txt.");
+    } else {
+      RCLCPP_ERROR(this->get_logger(), "No se pudo abrir /tmp/commands.txt para escribir.");
+    }
   }
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
