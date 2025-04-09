@@ -5,6 +5,18 @@
 namespace thor_controller
 {
 
+  std::queue<std::string>& ThorInterface::get_external_command_queue()
+  {
+      static std::queue<std::string> external_command_queue;
+      return external_command_queue;
+  }
+  
+  std::mutex& ThorInterface::get_external_command_mutex()
+  {
+      static std::mutex external_command_mutex;
+      return external_command_mutex;
+  }
+
 ThorInterface::ThorInterface()
 {
 }
@@ -19,6 +31,15 @@ ThorInterface::~ThorInterface()
       RCLCPP_FATAL_STREAM(rclcpp::get_logger("ThorInterface"), "Something went wrong while closing connection with port " << port_);
     }
   }
+}
+
+void ThorInterface::enqueue_external_command(const std::string &cmd)
+{
+    std::lock_guard<std::mutex> lock(get_external_command_mutex());
+    auto& queue = get_external_command_queue();
+    RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "Queue address: %p", static_cast<void*>(&queue));
+    queue.push(cmd);
+    RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "Command enqueued: %s", cmd.c_str());
 }
 
 CallbackReturn ThorInterface::on_init(const hardware_interface::HardwareInfo &hardware_info){
@@ -224,6 +245,21 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time, co
     }
     catch(...){
       RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Failed to read data from Thor.");
+    }
+  }
+
+  // Process external commands
+  {
+    std::lock_guard<std::mutex> lock(get_external_command_mutex());
+    auto& queue = get_external_command_queue();
+    RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "Queue address: %p", static_cast<void*>(&queue));
+    RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "External command queue size: %zu", queue.size());
+    while (!queue.empty())
+    {
+        const std::string &cmd = queue.front();
+        RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "Sending external command: %s", cmd.c_str());
+        thor_.Write(cmd + "\r\n");
+        queue.pop();
     }
   }
 

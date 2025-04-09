@@ -11,6 +11,9 @@
 #include <string>
 #include <nlohmann/json.hpp>
 
+#include <fstream>
+#include <sstream>
+
 namespace thor_controller
 {
 
@@ -34,6 +37,10 @@ public:
   virtual hardware_interface::return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
   virtual hardware_interface::return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
+  // Function to send serial commands externally
+  static void enqueue_external_command(const std::string &cmd);
+
+
 private:
   LibSerial::SerialPort thor_;
   std::string port_, board_type_;
@@ -44,6 +51,12 @@ private:
 
   bool homed_;
   std::string status_;
+
+  static std::queue<std::string>& get_external_command_queue();
+  static std::mutex& get_external_command_mutex();
+
+  static std::queue<std::string> external_command_queue_;
+  static std::mutex external_command_mutex_;
 };
 } // namespace thor_controller
 

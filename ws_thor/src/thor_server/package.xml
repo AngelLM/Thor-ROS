@@ -17,6 +17,7 @@
   <depend>moveit_ros_planning_interface</depend>
   <depend>std_msgs</depend>
   <depend>action_msgs</depend>
+  <depend>thor_controller</depend>
   
   <exec_depend>rosidl_default_runtime</exec_depend>
 

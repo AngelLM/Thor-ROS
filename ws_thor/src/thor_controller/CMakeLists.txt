@@ -46,7 +46,7 @@ install(
 )
 
 install(
-  DIRECTORY include
+  DIRECTORY include/thor_controller
   DESTINATION include
 )
 

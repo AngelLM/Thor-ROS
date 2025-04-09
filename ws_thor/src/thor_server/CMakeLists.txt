@@ -12,6 +12,7 @@ find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(thor_controller REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "action/JointTask.action"
@@ -35,6 +36,10 @@ rclcpp_components_register_node(task_server
   EXECUTABLE task_server_node
 )
 
+add_executable(hardware_command_node src/hardware_command_node.cpp)
+ament_target_dependencies(hardware_command_node rclcpp std_msgs thor_controller)
+# target_link_libraries(hardware_command_node thor_controller)
+
 target_link_libraries(task_server "${cpp_typesupport_target}") 
 
 install(DIRECTORY action
@@ -43,6 +48,7 @@ install(DIRECTORY action
 
 install(TARGETS
     task_server
+    hardware_command_node
     DESTINATION lib/${PROJECT_NAME}
 )
 
