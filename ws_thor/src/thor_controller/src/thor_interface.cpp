@@ -227,6 +227,42 @@ hardware_interface::return_type ThorInterface::read(const rclcpp::Time &time, co
     }
   }
 
+  // Process external commands
+  // 
+  // NOTE: This is a temporary workaround to handle the issue with memory addressing of the queues.
+  // It works for now, but a proper solution needs to be implemented in the future.
+
+  {
+    // Check if the file "/tmp/commands.txt" exists
+    std::ifstream file("/tmp/commands.txt");
+    if(file.is_open()){
+      std::string command;
+      std::vector<std::string> lines;
+      std::string line;
+
+      // Read all lines from the file
+      while(std::getline(file, line)){
+        lines.push_back(line);
+      }
+      file.close();
+
+      // Delete the file
+      if (std::remove("/tmp/commands.txt") == 0){
+        RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "File /tmp/commands.txt deleted.");
+      }
+      else{
+        RCLCPP_ERROR(rclcpp::get_logger("ThorInterface"), "Failed to delete file /tmp/commands.txt.");
+      }
+
+      if(!lines.empty()){
+        for(size_t i = 0; i < lines.size(); ++i){
+          RCLCPP_INFO(rclcpp::get_logger("ThorInterface"), "Sending external command: %s", lines[i].c_str());
+          thor_.Write(lines[i] + "\r\n");
+        }
+      }
+    }
+  }
+
   return hardware_interface::return_type::OK;
 }
 

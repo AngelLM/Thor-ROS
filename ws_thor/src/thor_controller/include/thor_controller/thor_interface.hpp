@@ -11,6 +11,9 @@
 #include <string>
 #include <nlohmann/json.hpp>
 
+#include <fstream>
+#include <sstream>
+
 namespace thor_controller
 {
 
@@ -33,6 +36,7 @@ public:
   virtual std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
   virtual hardware_interface::return_type read(const rclcpp::Time & time, const rclcpp::Duration & period) override;
   virtual hardware_interface::return_type write(const rclcpp::Time & time, const rclcpp::Duration & period) override;
+
 
 private:
   LibSerial::SerialPort thor_;
