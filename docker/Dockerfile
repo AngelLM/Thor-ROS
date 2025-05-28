@@ -23,6 +23,9 @@ COPY xfce4-desktop.xml /root/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desk
 # Add config supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy gazebo cache files
+COPY gazebo_cache/. /root/.gazebo/
+
 # Start script
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
