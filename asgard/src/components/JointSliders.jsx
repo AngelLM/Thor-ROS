@@ -1,23 +1,22 @@
-// src/components/JointSliders.jsx
 import React, { useState } from 'react';
 import { useROS } from '../RosContext';
 import ROSLIB from 'roslib';
 
-const jointNames = [
-  'joint_1',
-  'joint_2',
-  'joint_3',
-  'joint_4',
-  'joint_5',
-  'joint_6'
+const jointConfigs = [
+  { name: 'joint_1', label: 'Art 1', min: -170, max: 170 },
+  { name: 'joint_2', label: 'Art 2', min: -90, max: 90 },
+  { name: 'joint_3', label: 'Art 3', min: -90, max: 90 },
+  { name: 'joint_4', label: 'Art 4', min: -170, max: 170 },
+  { name: 'joint_5', label: 'Art 5', min: -90, max: 90 },
+  { name: 'joint_6', label: 'Art 6', min: -170, max: 170 }
 ];
 
 function JointSliders() {
   const { ros, connected } = useROS();
 
   const [sliderValues, setSliderValues] = useState(
-    jointNames.reduce((acc, name) => {
-      acc[name] = 0;
+    jointConfigs.reduce((acc, joint) => {
+      acc[joint.name] = 0;
       return acc;
     }, {})
   );
@@ -26,6 +25,18 @@ function JointSliders() {
     setSliderValues(prev => ({
       ...prev,
       [name]: parseFloat(value)
+    }));
+  };
+
+  const handleInputChange = (name, value, min, max) => {
+    let num = parseFloat(value);
+    if (isNaN(num)) num = 0;
+    if (num > max) num = max;
+    if (num < min) num = min;
+    num = Math.round(num * 100) / 100;
+    setSliderValues(prev => ({
+      ...prev,
+      [name]: num
     }));
   };
 
@@ -42,7 +53,7 @@ function JointSliders() {
     });
 
     const message = new ROSLIB.Message({
-      data: jointNames.map(name => (sliderValues[name] * Math.PI) / 180), // convertir grados a radianes
+      data: jointConfigs.map(joint => (sliderValues[joint.name] * Math.PI) / 180),
     });
 
     topic.publish(message);
@@ -50,22 +61,39 @@ function JointSliders() {
 
   return (
     <div style={{ marginTop: '2rem' }}>
-      <h3>🎛️ Control de articulaciones</h3>
-      {jointNames.map(name => (
-        <div key={name} style={{ marginBottom: '1rem' }}>
-          <label htmlFor={name}>
-            {name}: {sliderValues[name].toFixed(1)}°
+      {jointConfigs.map(joint => (
+        <div
+          key={joint.name}
+          style={{
+            marginBottom: '0.7rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          <label htmlFor={joint.name} style={{ minWidth: '90px' }}>
+            {joint.label}:
           </label>
           <input
             type="range"
-            id={name}
-            min={-180}
-            max={180}
-            step={1}
-            value={sliderValues[name]}
-            onChange={e => handleSliderChange(name, e.target.value)}
-            style={{ width: '100%' }}
+            id={joint.name}
+            min={joint.min}
+            max={joint.max}
+            step={0.01}
+            value={sliderValues[joint.name]}
+            onChange={e => handleSliderChange(joint.name, e.target.value)}
+            style={{ flex: 1 }}
           />
+          <input
+            type="number"
+            min={joint.min}
+            max={joint.max}
+            step={0.01}
+            value={sliderValues[joint.name]}
+            onChange={e => handleInputChange(joint.name, e.target.value, joint.min, joint.max)}
+            style={{ width: '60px' }}
+          />
+          <span>°</span>
         </div>
       ))}
       <button
@@ -80,7 +108,7 @@ function JointSliders() {
           cursor: 'pointer'
         }}
       >
-        Enviar posiciones
+        Move
       </button>
     </div>
   );

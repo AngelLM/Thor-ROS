@@ -40,3 +40,50 @@
 .read-the-docs {
   color: #888;
 }
+
+.app-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #1e1e1e;
+  color: #ffffff;
+  font-family: Arial, sans-serif;
+}
+
+.sidebar {
+  flex: 1;
+  padding: 1rem;
+  border-right: 1px solid #444;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.5rem;
+  background: #222;
+  color: #fff;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: background 0.2s, border-bottom 0.2s;
+}
+
+.tab-btn.active {
+  background: #333;
+  border-bottom: 2px solid #00bcd4;
+}
+
+.tab-content {
+  flex: 1;
+}
+
+.main-content {
+  flex: 2;
+  padding: 1rem;
+}

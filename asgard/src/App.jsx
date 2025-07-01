@@ -1,5 +1,4 @@
-// src/App.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import { RosProvider } from './RosContext';
 import JointStateViewer from './components/JointStateViewer';
@@ -7,29 +6,45 @@ import UrdfViewer from './components/UrdfViewer';
 import JointSliders from './components/JointSliders';
 
 function App() {
+  const [activeTab, setActiveTab] = useState('forward');
+
   return (
     <RosProvider>
-      <div style={{
-        display: 'flex',
-        height: '100vh',
-        backgroundColor: '#1e1e1e',
-        color: '#ffffff',
-        fontFamily: 'Arial, sans-serif'
-      }}>
-        <div style={{
-          flex: 1,
-          padding: '1rem',
-          borderRight: '1px solid #444',
-          overflowY: 'auto'
-        }}>
-          <h2>📊 Estado de las articulaciones</h2>
-          <JointStateViewer />
-          <JointSliders />
+      <div className="app-layout">
+        <div className="sidebar">
+          <div className="tabs">
+            <button
+              className={`tab-btn${activeTab === 'forward' ? ' active' : ''}`}
+              onClick={() => setActiveTab('forward')}
+            >
+              Forward Kinematics
+            </button>
+            <button
+              className={`tab-btn${activeTab === 'inverse' ? ' active' : ''}`}
+              onClick={() => setActiveTab('inverse')}
+            >
+              Inverse Kinematics
+            </button>
+          </div>
+          <div className="tab-content">
+            {activeTab === 'forward' && (
+              <>
+                <h2>Forward Kinematics</h2>
+                <JointStateViewer />
+                <JointSliders />
+              </>
+            )}
+            {activeTab === 'inverse' && (
+              <>
+                <h2>Inverse Kinematics</h2>
+                {
+                  
+                }
+              </>
+            )}
+          </div>
         </div>
-        <div style={{
-          flex: 2,
-          padding: '1rem'
-        }}>
+        <div className="main-content">
           <h2>🤖 Visor 3D del robot</h2>
           <UrdfViewer />
         </div>
