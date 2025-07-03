@@ -4,9 +4,12 @@ import { RosProvider } from './RosContext';
 import JointStateViewer from './components/JointStateViewer';
 import UrdfViewer from './components/UrdfViewer';
 import JointSliders from './components/JointSliders';
+import IKViewer from './components/IKViewer';
+import IKSliders from './components/IkSliders';
 
 function App() {
   const [activeTab, setActiveTab] = useState('forward');
+  const [ikPose, setIkPose] = useState(null); // Estado compartido para la pose IK
 
   return (
     <RosProvider>
@@ -37,9 +40,8 @@ function App() {
             {activeTab === 'inverse' && (
               <>
                 <h2>Inverse Kinematics</h2>
-                {
-                  
-                }
+                <IKViewer onCopyPose={setIkPose} />
+                <IKSliders ikPose={ikPose} />
               </>
             )}
           </div>

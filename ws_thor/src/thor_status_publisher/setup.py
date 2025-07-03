@@ -23,6 +23,7 @@ setup(
         'robot_status_publisher = thor_status_publisher.robot_status_publisher:main',
         'joint_goal_listener = thor_status_publisher.joint_goal_listener:main',
         'random_position_commander = thor_status_publisher.random_position_commander:main',
+        'ik_goal_listener = thor_status_publisher.ik_goal_listener:main',
         ],
     },
 )
