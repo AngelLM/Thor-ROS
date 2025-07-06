@@ -43,7 +43,7 @@ class IKGoalListener(Node):
         if not self.ik_client.wait_for_service(timeout_sec=5.0):
             self.get_logger().warn('Servicio /compute_ik no disponible')
             if callback:
-                callback(False)
+                callback(False, None)
             return False
         self.get_logger().info('Servicio /compute_ik disponible, preparando petición')
         req = GetPositionIK.Request()
@@ -52,6 +52,33 @@ class IKGoalListener(Node):
         req.ik_request.timeout.sec = 0
         req.ik_request.timeout.nanosec = 0
         req.ik_request.ik_link_name = 'gripper_base'
+
+        # --- Constraints para solución aproximada ---
+        approx_constraints = Constraints()
+        # Tolerancia de posición (±2mm)
+        pos_constraint = PositionConstraint()
+        pos_constraint.header.frame_id = pose_stamped.header.frame_id
+        pos_constraint.link_name = 'gripper_base'
+        box = SolidPrimitive()
+        box.type = SolidPrimitive.BOX
+        box.dimensions = [0.004, 0.004, 0.004]  # 4mm box (±2mm)
+        pos_constraint.constraint_region.primitives.append(box)
+        pos_constraint.constraint_region.primitive_poses.append(pose_stamped.pose)
+        pos_constraint.weight = 1.0
+        approx_constraints.position_constraints.append(pos_constraint)
+        # Tolerancia de orientación (±0.05 rad)
+        ori_constraint = OrientationConstraint()
+        ori_constraint.header.frame_id = pose_stamped.header.frame_id
+        ori_constraint.link_name = 'gripper_base'
+        ori_constraint.orientation = pose_stamped.pose.orientation
+        ori_constraint.absolute_x_axis_tolerance = 0.05
+        ori_constraint.absolute_y_axis_tolerance = 0.05
+        ori_constraint.absolute_z_axis_tolerance = 0.05
+        ori_constraint.weight = 1.0
+        approx_constraints.orientation_constraints.append(ori_constraint)
+        req.ik_request.constraints = approx_constraints
+        # --- Fin constraints aproximados ---
+
         self.get_logger().info('Enviando robot_state vacío (sin current_joint_state)')
         self.get_logger().info(f'Enviando petición a /compute_ik: group={req.ik_request.group_name}, link={req.ik_request.ik_link_name}, timeout={req.ik_request.timeout.sec}, pose=({pose_stamped.pose.position.x}, {pose_stamped.pose.position.y}, {pose_stamped.pose.position.z})')
         future = self.ik_client.call_async(req)
@@ -60,12 +87,17 @@ class IKGoalListener(Node):
             result = fut.result()
             if result:
                 self.get_logger().info(f"Respuesta compute_ik: error_code={result.error_code.val}, solución encontrada={result.error_code.val == 1}")
+                # Intentar distinguir solución exacta vs aproximada (si el servicio lo soporta)
+                solution_type = None
+                if hasattr(result, 'solution_type'):
+                    solution_type = result.solution_type  # Solo si existe este campo
+                # Si no existe, usar solo success/fail
                 if callback:
-                    callback(result.error_code.val == 1)
+                    callback(result.error_code.val == 1, solution_type)
             else:
                 self.get_logger().warn('No se recibió respuesta del servicio compute_ik')
                 if callback:
-                    callback(False)
+                    callback(False, None)
         future.add_done_callback(done_cb)
         # No bloquear, el resultado se maneja en el callback
         return None
@@ -83,11 +115,17 @@ class IKGoalListener(Node):
                                f"x={pose_stamped.pose.position.x:.3f}, y={pose_stamped.pose.position.y:.3f}, z={pose_stamped.pose.position.z:.3f}, "
                                f"qx={pose_stamped.pose.orientation.x:.3f}, qy={pose_stamped.pose.orientation.y:.3f}, "
                                f"qz={pose_stamped.pose.orientation.z:.3f}, qw={pose_stamped.pose.orientation.w:.3f}")
-        def after_ik(is_reachable):
+        def after_ik(is_reachable, solution_type):
             if not is_reachable:
                 self.get_logger().warn('La pose objetivo NO es alcanzable por el robot. No se enviará el goal.')
                 self.publish_status("unreachable", "La pose objetivo no es alcanzable por el robot.")
                 return
+            # Si se puede distinguir solución exacta vs aproximada, reportar
+            if solution_type is not None:
+                if solution_type == 0:
+                    self.publish_status("reachable_exact", "La pose objetivo es alcanzable EXACTAMENTE. Planificando movimiento.")
+                else:
+                    self.publish_status("reachable_approx", "La pose objetivo es alcanzable APROXIMADAMENTE (usando tolerancias). Planificando movimiento.")
             else:
                 self.publish_status("reachable", "La pose objetivo es alcanzable. Planificando movimiento.")
             pos_constraint = PositionConstraint()

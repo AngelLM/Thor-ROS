@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useROS } from '../RosContext';
 import ROSLIB from 'roslib';
 
@@ -11,15 +11,42 @@ const jointConfigs = [
   { name: 'joint_6', label: 'Art 6', min: -170, max: 170 }
 ];
 
-function JointSliders() {
+function JointSliders({ onPreviewJointsChange, initialJoints }) {
   const { ros, connected } = useROS();
-
   const [sliderValues, setSliderValues] = useState(
     jointConfigs.reduce((acc, joint) => {
       acc[joint.name] = 0;
       return acc;
     }, {})
   );
+
+  // Inicializa los sliders SOLO cuando cambia initialJoints (sin lógica extra)
+  useEffect(() => {
+    if (initialJoints) {
+      setSliderValues(prev => {
+        const newVals = { ...prev };
+        jointConfigs.forEach(j => {
+          if (initialJoints[j.name] !== undefined) {
+            newVals[j.name] = Math.round((initialJoints[j.name] * 180) / Math.PI * 100) / 100;
+          }
+        });
+        return newVals;
+      });
+    }
+  }, [initialJoints]);
+
+  // Notifica cambios al padre para el ghost robot
+  useEffect(() => {
+    if (onPreviewJointsChange) {
+      // Pasa los valores articulares en radianes
+      const joints = {};
+      jointConfigs.forEach(j => {
+        joints[j.name] = (sliderValues[j.name] * Math.PI) / 180;
+      });
+      onPreviewJointsChange(joints);
+    }
+    // eslint-disable-next-line
+  }, [sliderValues]);
 
   const handleSliderChange = (name, value) => {
     setSliderValues(prev => ({
@@ -45,17 +72,14 @@ function JointSliders() {
       console.warn('ROS no está conectado.');
       return;
     }
-
     const topic = new ROSLIB.Topic({
       ros,
       name: '/joint_group_position_controller/command',
       messageType: 'std_msgs/Float64MultiArray',
     });
-
     const message = new ROSLIB.Message({
       data: jointConfigs.map(joint => (sliderValues[joint.name] * Math.PI) / 180),
     });
-
     topic.publish(message);
   };
 

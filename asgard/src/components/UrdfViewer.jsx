@@ -4,41 +4,38 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import URDFLoader from 'urdf-loader';
 import ROSLIB from 'roslib';
 
-const UrdfViewer = () => {
+const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true }) => {
   const mountRef = useRef(null);
   const rendererRef = useRef(null);
-  const robotRef = useRef(null);
+  const robotRef = useRef(null); // robot real
+  const ghostRef = useRef(null); // robot ghost
+  const sceneRef = useRef(null);
+  const urdfXmlRef = useRef(null);
 
+  // Cargar y mostrar ambos robots (real y ghost)
   useEffect(() => {
     if (!mountRef.current) return;
-
     const width = mountRef.current.offsetWidth;
     const height = mountRef.current.offsetHeight;
-
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
-
+    sceneRef.current = scene;
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
     camera.position.set(2, 2, 2);
     camera.lookAt(0, 0, 0);
-
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
     rendererRef.current = renderer;
-
     while (mountRef.current.firstChild) {
       mountRef.current.removeChild(mountRef.current.firstChild);
     }
     mountRef.current.appendChild(renderer.domElement);
-
     const light = new THREE.DirectionalLight(0xffffff, 1);
     light.position.set(5, 10, 7.5);
     scene.add(light);
-
     const ambientLight = new THREE.AmbientLight(0x404040);
     scene.add(ambientLight);
-
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
@@ -46,15 +43,26 @@ const UrdfViewer = () => {
     controls.minDistance = 0.5;
     controls.maxDistance = 10;
     controls.maxPolarAngle = Math.PI;
-
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
+      // Fuerza el material azul translúcido en todos los meshes del ghost en cada frame
+      if (ghostRef.current) {
+        ghostRef.current.traverse(obj => {
+          if (obj.isMesh) {
+            if (Array.isArray(obj.material)) {
+              obj.material = obj.material.map(() => new THREE.MeshPhongMaterial({ color: 0x2196f3, opacity: 0.4, transparent: true, depthWrite: false }));
+            } else {
+              obj.material = new THREE.MeshPhongMaterial({ color: 0x2196f3, opacity: 0.4, transparent: true, depthWrite: false });
+            }
+            obj.material.needsUpdate = true;
+            obj.material.vertexColors = false;
+          }
+        });
+      }
       renderer.render(scene, camera);
     };
-
     animate();
-
     const handleResize = () => {
       if (mountRef.current && rendererRef.current) {
         const width = mountRef.current.offsetWidth;
@@ -64,47 +72,63 @@ const UrdfViewer = () => {
         camera.updateProjectionMatrix();
       }
     };
-
     window.addEventListener('resize', handleResize);
-
+    // --- ROS y URDF ---
     const ros = new ROSLIB.Ros({ url: 'ws://localhost:9090' });
-
     ros.on('connection', () => {
-      console.log('[ROS] 🔌 Conectado');
-
       const service = new ROSLIB.Service({
         ros: ros,
         name: '/robot_state_publisher/get_parameters',
         serviceType: 'rcl_interfaces/srv/GetParameters',
       });
-
       const request = new ROSLIB.ServiceRequest({
         names: ['robot_description'],
       });
-
       service.callService(request, (result) => {
         const urdfXml = result.values[0].string_value;
-
+        urdfXmlRef.current = urdfXml;
         const loader = new URDFLoader();
         loader.workingPath = '/thor_urdf';
         loader.fetchOptions = { mode: 'cors' };
-
+        // Robot real
         const robot = loader.parse(urdfXml);
         robot.rotation.x = -Math.PI / 2;
         robot.rotation.z = Math.PI / 2;
         robot.scale.set(1, 1, 1);
         scene.add(robot);
         robotRef.current = robot;
-
+        // Ghost robot
+        const ghost = loader.parse(urdfXml);
+        ghost.rotation.x = -Math.PI / 2;
+        ghost.rotation.z = Math.PI / 2;
+        ghost.scale.set(1, 1, 1);
+        // Forzar material translúcido azul en todos los meshes del ghost (soporte para materiales múltiples, vertexColors y cualquier tipo)
+        ghost.traverse(obj => {
+          if (obj.isMesh) {
+            // Elimina vertex colors si existen
+            if (obj.geometry && obj.geometry.attributes && obj.geometry.attributes.color) {
+              delete obj.geometry.attributes.color;
+              obj.geometry.needsUpdate = true;
+            }
+            // Fuerza el renderOrder para que el ghost se dibuje encima
+            obj.renderOrder = 999;
+            // Asigna SIEMPRE un nuevo material azul translúcido
+            obj.material = new THREE.MeshPhongMaterial({ color: 0x2196f3, opacity: 0.4, transparent: true, depthWrite: false });
+            obj.material.needsUpdate = true;
+            // Desactiva vertexColors
+            obj.material.vertexColors = false;
+          }
+        });
+        scene.add(ghost);
+        ghostRef.current = ghost;
+        // Suscripción a joint_states para robot real
         const jointStateListener = new ROSLIB.Topic({
           ros: ros,
           name: '/joint_states',
           messageType: 'sensor_msgs/msg/JointState'
         });
-
         jointStateListener.subscribe((message) => {
           if (!robotRef.current) return;
-
           for (let i = 0; i < message.name.length; i++) {
             const jointName = message.name[i];
             const position = message.position[i];
@@ -113,15 +137,12 @@ const UrdfViewer = () => {
         });
       });
     });
-
     ros.on('error', (error) => {
       console.error('[ROS] ❌ Error de conexión ', error);
     });
-
     ros.on('close', () => {
       console.warn('[ROS] 🔌 Conexión cerrada');
     });
-
     return () => {
       window.removeEventListener('resize', handleResize);
       if (rendererRef.current) {
@@ -131,11 +152,34 @@ const UrdfViewer = () => {
     };
   }, []);
 
+  // Actualiza el ghost robot cuando cambian las articulaciones objetivo
+  useEffect(() => {
+    if (!ghostRef.current || !previewJoints) return;
+    const jointNames = ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6'];
+    if (previewJoints.joint_1 !== undefined) {
+      jointNames.forEach(j => {
+        if (previewJoints[j] !== undefined) {
+          ghostRef.current.setJointValue(j, previewJoints[j]);
+        }
+      });
+    } else {
+      jointNames.forEach(j => ghostRef.current.setJointValue(j, 0));
+    }
+  }, [previewJoints]);
+
+  // Mostrar/ocultar robots según props
+  useEffect(() => {
+    if (robotRef.current) robotRef.current.visible = !!showRealRobot;
+    if (ghostRef.current) ghostRef.current.visible = !!showGhostRobot;
+  }, [showRealRobot, showGhostRobot]);
+
   return (
-    <div
-      ref={mountRef}
-      style={{ width: '100%', height: '100vh', borderRadius: '12px', boxShadow: '0 0 20px rgba(0,0,0,0.2)', overflow: 'hidden' }}
-    />
+    <div>
+      <div
+        ref={mountRef}
+        style={{ width: '100%', height: '100vh', borderRadius: '12px', boxShadow: '0 0 20px rgba(0,0,0,0.2)', overflow: 'hidden' }}
+      />
+    </div>
   );
 };
 

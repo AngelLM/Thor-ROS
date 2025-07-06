@@ -32,7 +32,7 @@ const wristOptions = [
   { value: 'down', label: 'Muñeca abajo' }
 ];
 
-export default function IKSliders({ ikPose }) {
+export default function IKSliders({ ikPose, onPreviewJointsChange }) {
   const { ros, connected } = useROS();
   const [values, setValues] = useState({
     x: 200, y: 0, z: 300, roll: 0, pitch: 0, yaw: 0
@@ -43,6 +43,20 @@ export default function IKSliders({ ikPose }) {
     wrist: 'up'
   });
   const [statusMsg, setStatusMsg] = useState(null);
+
+  // Inicializa los sliders SOLO cuando cambia ikPose (sin lógica extra)
+  useEffect(() => {
+    if (ikPose) {
+      setValues({
+        x: Math.round(ikPose.x),
+        y: Math.round(ikPose.y),
+        z: Math.round(ikPose.z),
+        roll: (ikPose.roll * 180 / Math.PI),
+        pitch: (ikPose.pitch * 180 / Math.PI),
+        yaw: (ikPose.yaw * 180 / Math.PI)
+      });
+    }
+  }, [ikPose]);
 
   // Suscripción al status del IK
   useEffect(() => {
@@ -64,19 +78,70 @@ export default function IKSliders({ ikPose }) {
     return () => statusTopic.unsubscribe(cb);
   }, [ros, connected]);
 
-  // Actualiza los sliders si ikPose cambia
+  // Notifica cambios de sliders al padre para preview
   useEffect(() => {
-    if (ikPose) {
-      setValues({
-        x: Math.round(ikPose.x),
-        y: Math.round(ikPose.y),
-        z: Math.round(ikPose.z),
-        roll: (ikPose.roll * 180 / Math.PI),
-        pitch: (ikPose.pitch * 180 / Math.PI),
-        yaw: (ikPose.yaw * 180 / Math.PI)
+    if (onPreviewJointsChange) {
+      // Aquí deberías calcular las articulaciones objetivo a partir de los sliders
+      // Por simplicidad, pasamos los valores de los sliders en radianes
+      onPreviewJointsChange({
+        x: values.x,
+        y: values.y,
+        z: values.z,
+        roll: values.roll * Math.PI / 180,
+        pitch: values.pitch * Math.PI / 180,
+        yaw: values.yaw * Math.PI / 180
       });
     }
-  }, [ikPose]);
+  }, [values, onPreviewJointsChange]);
+
+  // --- NUEVO: Calcular IK en tiempo real para el ghost robot ---
+  useEffect(() => {
+    if (!ros || !connected || !onPreviewJointsChange) return;
+    // Construir la petición para /compute_ik
+    const service = new ROSLIB.Service({
+      ros,
+      name: '/compute_ik',
+      serviceType: 'moveit_msgs/srv/GetPositionIK'
+    });
+    const pose = {
+      header: { frame_id: 'base_link' },
+      pose: {
+        position: {
+          x: values.x / 1000,
+          y: values.y / 1000,
+          z: values.z / 1000
+        },
+        orientation: rpyToQuaternion(
+          values.roll * Math.PI / 180,
+          values.pitch * Math.PI / 180,
+          values.yaw * Math.PI / 180
+        )
+      }
+    };
+    const req = {
+      ik_request: {
+        group_name: 'arm_group',
+        pose_stamped: pose,
+        ik_link_name: 'gripper_base',
+        timeout: { sec: 0, nanosec: 0 },
+        constraints: {} // sin constraints extra para preview rápido
+      }
+    };
+    service.callService(req, (res) => {
+      if (res && res.solution && res.solution.joint_state && res.error_code && res.error_code.val === 1) {
+        // Mapear a objeto {joint_1: val, ...}
+        const joints = {};
+        res.solution.joint_state.name.forEach((name, i) => {
+          joints[name] = res.solution.joint_state.position[i];
+        });
+        onPreviewJointsChange(joints);
+      } else {
+        // Si no hay solución, ghost en posición neutra
+        onPreviewJointsChange({});
+      }
+    });
+    // eslint-disable-next-line
+  }, [values, ros, connected]);
 
   const handleChange = (name, value) => {
     setValues(prev => ({
@@ -191,10 +256,40 @@ export default function IKSliders({ ikPose }) {
       >
         Mover a posición
       </button>
-      {/* Mensaje de estado */}
+      {/* Mensaje de estado mejorado */}
       {statusMsg && (
-        <div style={{ marginTop: '1rem', color: statusMsg.status === "unreachable" ? "red" : "green" }}>
-          {statusMsg.detail}
+        <div
+          style={{
+            marginTop: '1rem',
+            padding: '0.75rem',
+            borderRadius: '6px',
+            fontWeight: 'bold',
+            background:
+              statusMsg.status === 'unreachable' ? '#ffeaea' :
+              statusMsg.status === 'reachable_exact' ? '#eaffea' :
+              statusMsg.status === 'reachable_approx' ? '#fffbe6' :
+              '#eaf4ff',
+            color:
+              statusMsg.status === 'unreachable' ? '#c00' :
+              statusMsg.status === 'reachable_exact' ? '#080' :
+              statusMsg.status === 'reachable_approx' ? '#b59a00' :
+              '#0057b8',
+            border:
+              statusMsg.status === 'unreachable' ? '1.5px solid #c00' :
+              statusMsg.status === 'reachable_exact' ? '1.5px solid #080' :
+              statusMsg.status === 'reachable_approx' ? '1.5px solid #b59a00' :
+              '1.5px solid #0057b8',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5em'
+          }}
+        >
+          {statusMsg.status === 'unreachable' && '❌'}
+          {statusMsg.status === 'reachable_exact' && '✅'}
+          {statusMsg.status === 'reachable_approx' && '🟡'}
+          {statusMsg.status === 'reachable' && '🟢'}
+          <span style={{fontSize: '1em'}}>{statusMsg.status.replace('_', ' ').toUpperCase()}</span>
+          <span style={{fontWeight: 'normal', marginLeft: '0.5em'}}>{statusMsg.detail}</span>
         </div>
       )}
     </div>
