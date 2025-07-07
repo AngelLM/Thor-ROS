@@ -102,23 +102,6 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
         ghost.rotation.x = -Math.PI / 2;
         ghost.rotation.z = Math.PI / 2;
         ghost.scale.set(1, 1, 1);
-        // Forzar material translúcido azul en todos los meshes del ghost (soporte para materiales múltiples, vertexColors y cualquier tipo)
-        ghost.traverse(obj => {
-          if (obj.isMesh) {
-            // Elimina vertex colors si existen
-            if (obj.geometry && obj.geometry.attributes && obj.geometry.attributes.color) {
-              delete obj.geometry.attributes.color;
-              obj.geometry.needsUpdate = true;
-            }
-            // Fuerza el renderOrder para que el ghost se dibuje encima
-            obj.renderOrder = 999;
-            // Asigna SIEMPRE un nuevo material azul translúcido
-            obj.material = new THREE.MeshPhongMaterial({ color: 0x2196f3, opacity: 0.4, transparent: true, depthWrite: false });
-            obj.material.needsUpdate = true;
-            // Desactiva vertexColors
-            obj.material.vertexColors = false;
-          }
-        });
         scene.add(ghost);
         ghostRef.current = ghost;
         // Suscripción a joint_states para robot real
@@ -162,9 +145,8 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
           ghostRef.current.setJointValue(j, previewJoints[j]);
         }
       });
-    } else {
-      jointNames.forEach(j => ghostRef.current.setJointValue(j, 0));
     }
+    // Eliminado el else que ponía todo a 0
   }, [previewJoints]);
 
   // Mostrar/ocultar robots según props

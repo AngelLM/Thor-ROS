@@ -32,7 +32,7 @@ const wristOptions = [
   { value: 'down', label: 'Muñeca abajo' }
 ];
 
-export default function IKSliders({ ikPose, onPreviewJointsChange }) {
+export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusChange }) {
   const { ros, connected } = useROS();
   const [values, setValues] = useState({
     x: 200, y: 0, z: 300, roll: 0, pitch: 0, yaw: 0
@@ -70,13 +70,17 @@ export default function IKSliders({ ikPose, onPreviewJointsChange }) {
       try {
         const data = JSON.parse(msg.data);
         setStatusMsg(data);
+        if (onIKStatusChange && data.status) {
+          onIKStatusChange(data.status);
+        }
       } catch {
         setStatusMsg({ status: "error", detail: "Error interpretando el mensaje de estado" });
+        if (onIKStatusChange) onIKStatusChange('error');
       }
     };
     statusTopic.subscribe(cb);
     return () => statusTopic.unsubscribe(cb);
-  }, [ros, connected]);
+  }, [ros, connected, onIKStatusChange]);
 
   // Notifica cambios de sliders al padre para preview
   useEffect(() => {

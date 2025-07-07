@@ -16,6 +16,7 @@ function App() {
   const [currentJoints, setCurrentJoints] = useState(null); // Estado articular actual del robot
   const [showRealRobot, setShowRealRobot] = useState(true);
   const [showGhostRobot, setShowGhostRobot] = useState(true);
+  const [ikStatus, setIkStatus] = useState('reachable');
   const rosRef = useRef(null);
   const lastJointsOnTabChange = useRef(null);
   const lastPoseOnTabChange = useRef(null);
@@ -137,8 +138,12 @@ function App() {
             {activeTab === 'inverse' && (
               <>
                 <h2>Inverse Kinematics</h2>
-                <IKViewer onCopyPose={setIkPose} />
-                <IKSliders ikPose={lastPoseOnTabChange.current} onPreviewJointsChange={setPreviewJoints} />
+                <IKViewer onCopyPose={pose => setIkPose({ ...pose, _ts: Date.now() })} />
+                <IKSliders
+                  ikPose={ikPose}
+                  onPreviewJointsChange={setPreviewJoints}
+                  onIKStatusChange={setIkStatus}
+                />
               </>
             )}
           </div>
@@ -163,7 +168,12 @@ function App() {
               Mostrar robot ghost (objetivo)
             </label>
           </div>
-          <UrdfViewer previewJoints={effectivePreviewJoints} showRealRobot={showRealRobot} showGhostRobot={showGhostRobot} />
+          <UrdfViewer
+            previewJoints={effectivePreviewJoints}
+            showRealRobot={showRealRobot}
+            showGhostRobot={showGhostRobot}
+            ikStatus={ikStatus}
+          />
         </div>
       </div>
     </RosProvider>
