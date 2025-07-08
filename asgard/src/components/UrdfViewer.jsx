@@ -11,6 +11,7 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
   const ghostRef = useRef(null); // robot ghost
   const sceneRef = useRef(null);
   const urdfXmlRef = useRef(null);
+  const cubeRef = useRef(null); // cubo amarillo
 
   // Cargar y mostrar ambos robots (real y ghost)
   useEffect(() => {
@@ -43,6 +44,16 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     controls.minDistance = 0.5;
     controls.maxDistance = 10;
     controls.maxPolarAngle = Math.PI;
+    // Cubo amarillo para el end effector del ghost
+    const cube = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 0.06, 0.06),
+      new THREE.MeshPhongMaterial({ color: 0xffeb3b })
+    );
+    cube.castShadow = false;
+    cube.receiveShadow = false;
+    scene.add(cube);
+    cubeRef.current = cube;
+    // Animación
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -59,6 +70,13 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
             obj.material.vertexColors = false;
           }
         });
+        // --- Cubo sigue al link gripper_base (o base_gripper) ---
+        let eeLink = ghostRef.current.getObjectByName('gripper_base') || ghostRef.current.getObjectByName('base_gripper');
+        if (eeLink && cubeRef.current) {
+          eeLink.updateWorldMatrix(true, false);
+          eeLink.getWorldPosition(cubeRef.current.position);
+          eeLink.getWorldQuaternion(cubeRef.current.quaternion);
+        }
       }
       renderer.render(scene, camera);
     };
