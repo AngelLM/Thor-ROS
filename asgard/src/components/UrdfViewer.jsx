@@ -44,15 +44,16 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     controls.minDistance = 0.5;
     controls.maxDistance = 10;
     controls.maxPolarAngle = Math.PI;
-    // Cubo amarillo para el end effector del ghost
-    const cube = new THREE.Mesh(
-      new THREE.BoxGeometry(0.06, 0.06, 0.06),
-      new THREE.MeshPhongMaterial({ color: 0xffeb3b })
-    );
-    cube.castShadow = false;
-    cube.receiveShadow = false;
-    scene.add(cube);
-    cubeRef.current = cube;
+    // Flechas para el end effector del ghost
+    const arrowLength = 0.12;
+    const arrowHeadLength = 0.04;
+    const arrowHeadWidth = 0.025;
+    const arrows = [
+      new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), arrowLength, 0xff0000, arrowHeadLength, arrowHeadWidth), // X rojo
+      new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), arrowLength, 0x00ff00, arrowHeadLength, arrowHeadWidth), // Y verde
+      new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), arrowLength, 0x0000ff, arrowHeadLength, arrowHeadWidth), // Z azul
+    ];
+    arrows.forEach(a => scene.add(a));
     // Animación
     const animate = () => {
       requestAnimationFrame(animate);
@@ -70,12 +71,18 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
             obj.material.vertexColors = false;
           }
         });
-        // --- Cubo sigue al link gripper_base (o base_gripper) ---
+        // --- Flechas siguen al link gripper_base (o base_gripper) ---
         let eeLink = ghostRef.current.getObjectByName('gripper_base') || ghostRef.current.getObjectByName('base_gripper');
-        if (eeLink && cubeRef.current) {
+        if (eeLink) {
           eeLink.updateWorldMatrix(true, false);
-          eeLink.getWorldPosition(cubeRef.current.position);
-          eeLink.getWorldQuaternion(cubeRef.current.quaternion);
+          const pos = new THREE.Vector3();
+          const quat = new THREE.Quaternion();
+          eeLink.getWorldPosition(pos);
+          eeLink.getWorldQuaternion(quat);
+          arrows.forEach((arrow, i) => {
+            arrow.position.copy(pos);
+            arrow.setDirection(new THREE.Vector3(i===0?1:0, i===1?1:0, i===2?1:0).applyQuaternion(quat).normalize());
+          });
         }
       }
       renderer.render(scene, camera);

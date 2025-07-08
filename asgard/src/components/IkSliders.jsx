@@ -44,6 +44,9 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
   });
   const [statusMsg, setStatusMsg] = useState(null);
 
+  // Estado para saber si la posición es alcanzable
+  const isUnreachable = statusMsg && (statusMsg.status === 'unreachable' || statusMsg.status === 'error');
+
   // Inicializa los sliders SOLO cuando cambia ikPose (sin lógica extra)
   useEffect(() => {
     if (ikPose) {
@@ -98,9 +101,9 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     }
   }, [values, onPreviewJointsChange]);
 
-  // --- NUEVO: Calcular IK en tiempo real para el ghost robot ---
+  // --- NUEVO: Calcular IK en tiempo real para el ghost robot y actualizar statusMsg ---
   useEffect(() => {
-    if (!ros || !connected || !onPreviewJointsChange) return;
+    if (!ros || !connected) return;
     // Construir la petición para /compute_ik
     const service = new ROSLIB.Service({
       ros,
@@ -128,7 +131,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
         pose_stamped: pose,
         ik_link_name: 'gripper_base',
         timeout: { sec: 0, nanosec: 0 },
-        constraints: {} // sin constraints extra para preview rápido
+        constraints: {}
       }
     };
     service.callService(req, (res) => {
@@ -138,14 +141,40 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
         res.solution.joint_state.name.forEach((name, i) => {
           joints[name] = res.solution.joint_state.position[i];
         });
-        onPreviewJointsChange(joints);
+        if (onPreviewJointsChange) onPreviewJointsChange(joints);
+        setStatusMsg({ status: 'reachable' });
       } else {
-        // Si no hay solución, ghost en posición neutra
-        onPreviewJointsChange({});
+        if (onPreviewJointsChange) onPreviewJointsChange({});
+        setStatusMsg({ status: 'unreachable' });
       }
     });
     // eslint-disable-next-line
   }, [values, ros, connected]);
+
+  // --- Botones de incremento/decremento con step configurable y repetición ---
+  const [moveStep, setMoveStep] = useState(1);
+  const step = { x: moveStep, y: moveStep, z: moveStep, roll: 1, pitch: 1, yaw: 1 };
+  const intervalRef = React.useRef(null);
+  const timeoutRef = React.useRef(null);
+
+  const handleStep = (name, dir) => {
+    setValues(prev => ({
+      ...prev,
+      [name]: parseFloat((parseFloat(prev[name]) + dir * step[name]).toFixed(3))
+    }));
+  };
+
+  // Repetición al mantener pulsado
+  const handleStepMouseDown = (name, dir) => {
+    handleStep(name, dir);
+    timeoutRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(() => handleStep(name, dir), 80);
+    }, 350);
+  };
+  const handleStepMouseUp = () => {
+    clearTimeout(timeoutRef.current);
+    clearInterval(intervalRef.current);
+  };
 
   const handleChange = (name, value) => {
     setValues(prev => ({
@@ -198,34 +227,52 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     <div style={{ marginTop: '2rem' }}>
       <h3>🎯 Cinemática inversa (IK)</h3>
       <div style={{ marginBottom: '1rem' }}>
+        <label>Incremento XYZ:&nbsp;</label>
+        <label style={{marginRight:'1em'}}>
+          <input type="radio" name="step" value={1} checked={moveStep===1} onChange={()=>setMoveStep(1)} /> 1 mm
+        </label>
+        <label style={{marginRight:'1em'}}>
+          <input type="radio" name="step" value={10} checked={moveStep===10} onChange={()=>setMoveStep(10)} /> 10 mm
+        </label>
+        <label>
+          <input type="radio" name="step" value={100} checked={moveStep===100} onChange={()=>setMoveStep(100)} /> 100 mm
+        </label>
+      </div>
+      <div style={{ marginBottom: '1rem' }}>
         <label>X:&nbsp;</label>
-        <input type="range" min="-400" max="400" step="1" value={values.x} onChange={e => handleChange('x', e.target.value)} />
+        <button onMouseDown={() => handleStepMouseDown('x', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
         <input type="number" min="-400" max="400" step="1" value={values.x} onChange={e => handleChange('x', e.target.value)} style={{ width: '60px' }} /> mm
+        <button onMouseDown={() => handleStepMouseDown('x', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
       </div>
       <div style={{ marginBottom: '1rem' }}>
         <label>Y:&nbsp;</label>
-        <input type="range" min="-400" max="400" step="1" value={values.y} onChange={e => handleChange('y', e.target.value)} />
+        <button onMouseDown={() => handleStepMouseDown('y', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
         <input type="number" min="-400" max="400" step="1" value={values.y} onChange={e => handleChange('y', e.target.value)} style={{ width: '60px' }} /> mm
+        <button onMouseDown={() => handleStepMouseDown('y', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
       </div>
       <div style={{ marginBottom: '1rem' }}>
         <label>Z:&nbsp;</label>
-        <input type="range" min="0" max="600" step="1" value={values.z} onChange={e => handleChange('z', e.target.value)} />
+        <button onMouseDown={() => handleStepMouseDown('z', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
         <input type="number" min="0" max="600" step="1" value={values.z} onChange={e => handleChange('z', e.target.value)} style={{ width: '60px' }} /> mm
+        <button onMouseDown={() => handleStepMouseDown('z', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
       </div>
       <div style={{ marginBottom: '1rem' }}>
         <label>Roll:&nbsp;</label>
-        <input type="range" min={-180} max={180} step={0.1} value={values.roll} onChange={e => handleChange('roll', e.target.value)} />
+        <button onMouseDown={() => handleStepMouseDown('roll', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
         <input type="number" min={-180} max={180} step={0.1} value={values.roll} onChange={e => handleChange('roll', e.target.value)} style={{ width: '60px' }} /> °
+        <button onMouseDown={() => handleStepMouseDown('roll', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
       </div>
       <div style={{ marginBottom: '1rem' }}>
         <label>Pitch:&nbsp;</label>
-        <input type="range" min={-180} max={180} step={0.1} value={values.pitch} onChange={e => handleChange('pitch', e.target.value)} />
+        <button onMouseDown={() => handleStepMouseDown('pitch', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
         <input type="number" min={-180} max={180} step={0.1} value={values.pitch} onChange={e => handleChange('pitch', e.target.value)} style={{ width: '60px' }} /> °
+        <button onMouseDown={() => handleStepMouseDown('pitch', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
       </div>
       <div style={{ marginBottom: '1rem' }}>
         <label>Yaw:&nbsp;</label>
-        <input type="range" min={-180} max={180} step={0.1} value={values.yaw} onChange={e => handleChange('yaw', e.target.value)} />
+        <button onMouseDown={() => handleStepMouseDown('yaw', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
         <input type="number" min={-180} max={180} step={0.1} value={values.yaw} onChange={e => handleChange('yaw', e.target.value)} style={{ width: '60px' }} /> °
+        <button onMouseDown={() => handleStepMouseDown('yaw', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
       </div>
       <h4 style={{ marginTop: '1.5rem' }}>Configuración preferida</h4>
       <div style={{ marginBottom: '1rem' }}>
@@ -248,54 +295,19 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
       </div>
       <button
         onClick={sendIKGoal}
+        disabled={isUnreachable}
         style={{
           marginTop: '1rem',
           padding: '0.5rem 1rem',
-          backgroundColor: '#007bff',
+          backgroundColor: isUnreachable ? '#aaa' : '#007bff',
           color: '#fff',
           border: 'none',
           borderRadius: '5px',
-          cursor: 'pointer'
+          cursor: isUnreachable ? 'not-allowed' : 'pointer'
         }}
       >
-        Mover a posición
+        {isUnreachable ? 'Position unreachable' : 'Enviar a posición'}
       </button>
-      {/* Mensaje de estado mejorado */}
-      {statusMsg && (
-        <div
-          style={{
-            marginTop: '1rem',
-            padding: '0.75rem',
-            borderRadius: '6px',
-            fontWeight: 'bold',
-            background:
-              statusMsg.status === 'unreachable' ? '#ffeaea' :
-              statusMsg.status === 'reachable_exact' ? '#eaffea' :
-              statusMsg.status === 'reachable_approx' ? '#fffbe6' :
-              '#eaf4ff',
-            color:
-              statusMsg.status === 'unreachable' ? '#c00' :
-              statusMsg.status === 'reachable_exact' ? '#080' :
-              statusMsg.status === 'reachable_approx' ? '#b59a00' :
-              '#0057b8',
-            border:
-              statusMsg.status === 'unreachable' ? '1.5px solid #c00' :
-              statusMsg.status === 'reachable_exact' ? '1.5px solid #080' :
-              statusMsg.status === 'reachable_approx' ? '1.5px solid #b59a00' :
-              '1.5px solid #0057b8',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5em'
-          }}
-        >
-          {statusMsg.status === 'unreachable' && '❌'}
-          {statusMsg.status === 'reachable_exact' && '✅'}
-          {statusMsg.status === 'reachable_approx' && '🟡'}
-          {statusMsg.status === 'reachable' && '🟢'}
-          <span style={{fontSize: '1em'}}>{statusMsg.status.replace('_', ' ').toUpperCase()}</span>
-          <span style={{fontWeight: 'normal', marginLeft: '0.5em'}}>{statusMsg.detail}</span>
-        </div>
-      )}
     </div>
   );
 }
