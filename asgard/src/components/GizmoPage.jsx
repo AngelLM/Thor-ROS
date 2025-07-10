@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { ViewportGizmo } from "three-viewport-gizmo";
 
 const GizmoPage = () => {
   const mountRef = useRef(null);
@@ -9,40 +10,48 @@ const GizmoPage = () => {
     const width = mountRef.current.offsetWidth;
     const height = mountRef.current.offsetHeight;
 
-    const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     camera.position.z = 5;
 
+    const scene = new THREE.Scene();
+    
+    const animate = () => {
+      requestAnimationFrame(animate);
+
+      // Render the scene
+      renderer.toneMapping = THREE.CineonToneMapping;
+      renderer.render(scene, camera);
+
+      // Render the gizmo
+      renderer.toneMapping = THREE.NoToneMapping;
+      gizmo.render();
+    };
+
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(width, height);
+    renderer.setAnimationLoop(animate);
     mountRef.current.appendChild(renderer.domElement);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = false;
-    controls.minDistance = 0.5;
-    controls.maxDistance = 10;
-    controls.maxPolarAngle = Math.PI;
 
     const geometry = new THREE.BoxGeometry();
     const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
     const cube = new THREE.Mesh(geometry, material);
     scene.add(cube);
 
-    const animate = () => {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    };
+    const gizmo = new ViewportGizmo(camera, renderer, { type: 'sphere' });
+    gizmo.attachControls(new OrbitControls(camera, renderer.domElement));
+    gizmo.target.set(0, 3, 0);
+    camera.lookAt(gizmo.target);
+
+
     animate();
 
     const handleResize = () => {
-      const width = mountRef.current.offsetWidth;
-      const height = mountRef.current.offsetHeight;
-      renderer.setSize(width, height);
-      camera.aspect = width / height;
+      camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      // Update the gizmo on resize
+      gizmo.update();
     };
     window.addEventListener('resize', handleResize);
 
