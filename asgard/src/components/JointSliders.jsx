@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useROS } from '../RosContext';
 import ROSLIB from 'roslib';
+import Slider from '@mui/material/Slider';
+import Button from '@mui/material/Button';
+import Input from '@mui/material/Input';
 
 const jointConfigs = [
   { name: 'joint_1', label: 'Art 1', min: -170, max: 170 },
@@ -51,7 +54,7 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
   const handleSliderChange = (name, value) => {
     setSliderValues(prev => ({
       ...prev,
-      [name]: parseFloat(value)
+      [name]: parseFloat(value.toFixed(1)) // Limit to 1 decimal place
     }));
   };
 
@@ -60,7 +63,7 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
     if (isNaN(num)) num = 0;
     if (num > max) num = max;
     if (num < min) num = min;
-    num = Math.round(num * 100) / 100;
+    num = parseFloat(num.toFixed(1)); // Limit to 1 decimal place
     setSliderValues(prev => ({
       ...prev,
       [name]: num
@@ -84,7 +87,7 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
   };
 
   return (
-    <div style={{ marginTop: '2rem' }}>
+    <div style={{ marginTop: '0' }}> {/* Removed top margin */}
       {jointConfigs.map(joint => (
         <div
           key={joint.name}
@@ -96,44 +99,40 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
           }}
         >
           <label htmlFor={joint.name} style={{ minWidth: '90px' }}>
-            {joint.label}:
+            {joint.label}
           </label>
-          <input
-            type="range"
+          <Slider
             id={joint.name}
             min={joint.min}
             max={joint.max}
-            step={0.01}
+            step={0.1} // Adjust step to match 1 decimal place
             value={sliderValues[joint.name]}
-            onChange={e => handleSliderChange(joint.name, e.target.value)}
-            style={{ flex: 1 }}
+            onChange={(e, value) => handleSliderChange(joint.name, value)}
+            style={{ flex: 1, marginLeft: '-30px' }} // Move slider closer to the label
           />
-          <input
-            type="number"
-            min={joint.min}
-            max={joint.max}
-            step={0.01}
+          <Input
             value={sliderValues[joint.name]}
             onChange={e => handleInputChange(joint.name, e.target.value, joint.min, joint.max)}
+            inputProps={{
+              step: 0.1, // Adjust step to match 1 decimal place
+              min: joint.min,
+              max: joint.max,
+              type: 'number',
+              'aria-labelledby': joint.name
+            }}
             style={{ width: '60px' }}
           />
-          <span>°</span>
+          <span>°</span> {/* Add degree symbol */}
         </div>
       ))}
-      <button
+      <Button
+        variant="contained"
+        color="primary"
         onClick={sendJointCommand}
-        style={{
-          marginTop: '1rem',
-          padding: '0.5rem 1rem',
-          backgroundColor: '#007bff',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer'
-        }}
+        style={{ marginTop: '1rem', display: 'block', marginLeft: 'auto', marginRight: 'auto', fontWeight: 'bold' }} // Centered and bold text
       >
         Move
-      </button>
+      </Button>
     </div>
   );
 }

@@ -121,14 +121,14 @@ function App() {
   // Rediseñar la página para mostrar únicamente UrdfViewer a pantalla completa y un div flotante con JointSliders
   return (
     <RosProvider>
-      <div style={{ position: 'relative', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+      <div className="app-container">
         {/* UrdfViewer a pantalla completa */}
         <UrdfViewer
           previewJoints={effectivePreviewJoints}
           showRealRobot={showRealRobot}
           showGhostRobot={showGhostRobot}
           ikStatus={ikStatus}
-          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+          className="urdf-viewer"
         />
 
         {/* Persistent Drawer */}
@@ -136,17 +136,9 @@ function App() {
           variant="persistent"
           anchor="left"
           open={isSidebarOpen}
-          sx={{
-            '& .MuiDrawer-paper': {
-              width: '450px', // Increased width by 50%
-              boxSizing: 'border-box',
-              padding: '1em',
-              backgroundColor: '#333333',
-              color: '#ffffff',
-            },
-          }}
+          className="persistent-drawer"
         >
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="drawer-header">
             <IconButton onClick={() => setIsSidebarOpen(false)}>
               <ChevronLeftIcon />
             </IconButton>
@@ -156,10 +148,19 @@ function App() {
           <Accordion
             expanded={activeTab === 'forward'}
             onChange={() => setActiveTab(activeTab === 'forward' ? '' : 'forward')}
-            sx={{ backgroundColor: '#444444', color: '#ffffff' }}
+            className="accordion forward-kinematics"
           >
-            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#ffffff' }} />}>
-              <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>Forward Kinematics</span>
+            <AccordionSummary
+              style={{
+                backgroundColor: '#555', // Slightly lighter color for Accordion titles
+                color: '#fff', // Ensure text is visible
+                padding: '0.5rem',
+                fontSize: '1rem',
+                fontWeight: 'bold'
+              }}
+              expandIcon={<ExpandMoreIcon className="expand-icon" />}
+            >
+              <span className="accordion-title">Forward Kinematics</span>
             </AccordionSummary>
             <AccordionDetails>
               <JointSliders onPreviewJointsChange={setFkJoints} initialJoints={lastJointsOnTabChange.current} />
@@ -169,10 +170,19 @@ function App() {
           <Accordion
             expanded={activeTab === 'inverse'}
             onChange={() => setActiveTab(activeTab === 'inverse' ? '' : 'inverse')}
-            sx={{ backgroundColor: '#444444', color: '#ffffff' }}
+            className="accordion inverse-kinematics"
           >
-            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#ffffff' }} />}>
-              <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>Inverse Kinematics</span>
+            <AccordionSummary
+              style={{
+                backgroundColor: '#555', // Slightly lighter color for Accordion titles
+                color: '#fff', // Ensure text is visible
+                padding: '0.5rem',
+                fontSize: '1rem',
+                fontWeight: 'bold'
+              }}
+              expandIcon={<ExpandMoreIcon className="expand-icon" />}
+            >
+              <span className="accordion-title">Inverse Kinematics</span>
             </AccordionSummary>
             <AccordionDetails>
               <IKSliders onPreviewPoseChange={setPreviewJoints} initialPose={lastPoseOnTabChange.current} />
@@ -183,15 +193,7 @@ function App() {
         {/* Hamburger Icon Button */}
         <IconButton
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          style={{
-            position: 'absolute',
-            top: '1em',
-            left: '1em',
-            zIndex: 1000,
-            backgroundColor: '#333333',
-            color: '#ffffff',
-            borderRadius: '50%',
-          }}
+          className="hamburger-button"
         >
           <MenuIcon />
         </IconButton>
