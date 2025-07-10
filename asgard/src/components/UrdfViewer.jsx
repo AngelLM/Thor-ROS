@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { ViewportGizmo } from "three-viewport-gizmo";
 import URDFLoader from 'urdf-loader';
 import ROSLIB from 'roslib';
 
@@ -11,19 +12,22 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
   const ghostRef = useRef(null); // robot ghost
   const sceneRef = useRef(null);
   const urdfXmlRef = useRef(null);
-  const cubeRef = useRef(null); // cubo amarillo
 
   // Cargar y mostrar ambos robots (real y ghost)
   useEffect(() => {
     if (!mountRef.current) return;
+
     const width = mountRef.current.offsetWidth;
     const height = mountRef.current.offsetHeight;
+
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(2, 2, 2);
+    // camera.lookAt(0, 0, 0);
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
     sceneRef.current = scene;
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(2, 2, 2);
-    camera.lookAt(0, 0, 0);
+    
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -32,18 +36,13 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
       mountRef.current.removeChild(mountRef.current.firstChild);
     }
     mountRef.current.appendChild(renderer.domElement);
+
     const light = new THREE.DirectionalLight(0xffffff, 1);
     light.position.set(5, 10, 7.5);
     scene.add(light);
     const ambientLight = new THREE.AmbientLight(0x404040);
     scene.add(ambientLight);
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = false;
-    controls.minDistance = 0.5;
-    controls.maxDistance = 10;
-    controls.maxPolarAngle = Math.PI;
+
     // Flechas para el end effector del ghost
     const arrowLength = 0.12;
     const arrowHeadLength = 0.04;
@@ -54,10 +53,16 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
       new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), arrowLength, 0x0000ff, arrowHeadLength, arrowHeadWidth), // Z azul
     ];
     arrows.forEach(a => scene.add(a));
+
+    // Gizmo
+    const gizmo = new ViewportGizmo(camera, renderer, { type: 'sphere' });
+    gizmo.attachControls(new OrbitControls(camera, renderer.domElement));
+    gizmo.target.set(0, 0, 0);
+    camera.lookAt(gizmo.target);
+
     // Animación
     const animate = () => {
       requestAnimationFrame(animate);
-      controls.update();
       // Fuerza el material azul translúcido en todos los meshes del ghost en cada frame
       if (ghostRef.current) {
         ghostRef.current.traverse(obj => {
@@ -85,9 +90,17 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
           });
         }
       }
+      // Render the scene
+      renderer.toneMapping = THREE.CineonToneMapping;
       renderer.render(scene, camera);
+
+      // Render the gizmo
+      renderer.toneMapping = THREE.NoToneMapping;
+      gizmo.render();
     };
+    renderer.setAnimationLoop(animate);
     animate();
+
     const handleResize = () => {
       if (mountRef.current && rendererRef.current) {
         const width = mountRef.current.offsetWidth;
@@ -95,6 +108,8 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
         rendererRef.current.setSize(width, height);
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
+        // Update the gizmo on resize
+        gizmo.update();
       }
     };
     window.addEventListener('resize', handleResize);
@@ -184,7 +199,7 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     <div>
       <div
         ref={mountRef}
-        style={{ width: '100%', height: '100vh', borderRadius: '12px', boxShadow: '0 0 20px rgba(0,0,0,0.2)', overflow: 'hidden' }}
+        style={{ width: '100%', height: '100%', margin: '0', padding: '0', position: 'absolute', top: '0', left: '0', overflow: 'hidden' }}
       />
     </div>
   );

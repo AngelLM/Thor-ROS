@@ -1224,7 +1224,12 @@ supports-color@^7.1.0:
   dependencies:
     has-flag "^4.0.0"
 
-three@^0.177.0, three@>=0.152.0:
+three-viewport-gizmo@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.npmjs.org/three-viewport-gizmo/-/three-viewport-gizmo-2.2.0.tgz"
+  integrity sha512-Jo9Liur1rUmdKk75FZumLU/+hbF+RtJHi1qsKZpntjKlCYScK6tjbYoqvJ9M+IJphrlQJF5oReFW7Sambh0N4Q==
+
+three@^0.177.0, three@>=0.152.0, "three@>=0.162.0 <1.0.0":
   version "0.177.0"
   resolved "https://registry.npmjs.org/three/-/three-0.177.0.tgz"
   integrity sha512-EiXv5/qWAaGI+Vz2A+JfavwYCMdGjxVsrn3oBwllUoqYeaBO75J63ZfyaQKoiLrqNHoTlUc6PFgMXnS0kI45zg==

@@ -15,6 +15,7 @@
     "react-router-dom": "^7.6.3",
     "roslib": "^1.4.1",
     "three": "^0.177.0",
+    "three-viewport-gizmo": "^2.2.0",
     "urdf-loader": "^0.12.6"
   },
   "devDependencies": {

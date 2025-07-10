@@ -7,11 +7,14 @@ const GizmoPage = () => {
   const mountRef = useRef(null);
 
   useEffect(() => {
-    const width = mountRef.current.offsetWidth;
-    const height = mountRef.current.offsetHeight;
+    // const width = mountRef.current.offsetWidth;
+    // const height = mountRef.current.offsetHeight;
 
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.z = 5;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(2, 2, 2);
 
     const scene = new THREE.Scene();
     
@@ -39,7 +42,7 @@ const GizmoPage = () => {
 
     const gizmo = new ViewportGizmo(camera, renderer, { type: 'sphere' });
     gizmo.attachControls(new OrbitControls(camera, renderer.domElement));
-    gizmo.target.set(0, 3, 0);
+    gizmo.target.set(0, 0, 0);
     camera.lookAt(gizmo.target);
 
 
@@ -66,7 +69,7 @@ const GizmoPage = () => {
     };
   }, []);
 
-  return <div ref={mountRef} style={{ width: '100%', height: '100%', margin: '0', padding: '0', position: 'absolute', top: '0', left: '0', overflow: 'hidden' }} />;
+  return <div ref={mountRef} style={{ width: '100%', height: '100vh', margin: '0', padding: '0', position: 'absolute', top: '0', left: '0', overflow: 'hidden' }} />;
 };
 
 export default GizmoPage;
