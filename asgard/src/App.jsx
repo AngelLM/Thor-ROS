@@ -7,6 +7,14 @@ import JointSliders from './components/JointSliders';
 import IKViewer from './components/IKViewer';
 import IKSliders from './components/IkSliders';
 import ROSLIB from 'roslib';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 function App() {
   const [activeTab, setActiveTab] = useState('forward');
@@ -123,45 +131,70 @@ function App() {
           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
         />
 
-        {/* Div flotante con JointSliders */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: isSidebarOpen ? 0 : '-300px',
-            width: '300px',
-            height: '100%',
-            backgroundColor: '#f0f0f0',
-            boxShadow: '2px 0 5px rgba(0,0,0,0.3)',
-            transition: 'left 0.3s ease',
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '1em',
-            boxSizing: 'border-box',
+        {/* Persistent Drawer */}
+        <Drawer
+          variant="persistent"
+          anchor="left"
+          open={isSidebarOpen}
+          sx={{
+            '& .MuiDrawer-paper': {
+              width: '450px', // Increased width by 50%
+              boxSizing: 'border-box',
+              padding: '1em',
+              backgroundColor: '#333333',
+              color: '#ffffff',
+            },
           }}
         >
-          <JointSliders onPreviewJointsChange={setFkJoints} initialJoints={lastJointsOnTabChange.current} />
-        </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <IconButton onClick={() => setIsSidebarOpen(false)}>
+              <ChevronLeftIcon />
+            </IconButton>
+          </div>
 
-        {/* Botón de alternancia */}
-        <button
+          {/* Accordions */}
+          <Accordion
+            expanded={activeTab === 'forward'}
+            onChange={() => setActiveTab(activeTab === 'forward' ? '' : 'forward')}
+            sx={{ backgroundColor: '#444444', color: '#ffffff' }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#ffffff' }} />}>
+              <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>Forward Kinematics</span>
+            </AccordionSummary>
+            <AccordionDetails>
+              <JointSliders onPreviewJointsChange={setFkJoints} initialJoints={lastJointsOnTabChange.current} />
+            </AccordionDetails>
+          </Accordion>
+
+          <Accordion
+            expanded={activeTab === 'inverse'}
+            onChange={() => setActiveTab(activeTab === 'inverse' ? '' : 'inverse')}
+            sx={{ backgroundColor: '#444444', color: '#ffffff' }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#ffffff' }} />}>
+              <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>Inverse Kinematics</span>
+            </AccordionSummary>
+            <AccordionDetails>
+              <IKSliders onPreviewPoseChange={setPreviewJoints} initialPose={lastPoseOnTabChange.current} />
+            </AccordionDetails>
+          </Accordion>
+        </Drawer>
+
+        {/* Hamburger Icon Button */}
+        <IconButton
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           style={{
             position: 'absolute',
-            top: '50%',
-            left: isSidebarOpen ? '300px' : '0',
-            transform: 'translateY(-50%)',
-            padding: '0.5em 1em',
-            cursor: 'pointer',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            transition: 'left 0.3s ease',
+            top: '1em',
+            left: '1em',
+            zIndex: 1000,
+            backgroundColor: '#333333',
+            color: '#ffffff',
+            borderRadius: '50%',
           }}
         >
-          {isSidebarOpen ? 'Ocultar' : 'Mostrar'}
-        </button>
+          <MenuIcon />
+        </IconButton>
       </div>
     </RosProvider>
   );
