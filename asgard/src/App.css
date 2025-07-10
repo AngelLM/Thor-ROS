@@ -122,17 +122,20 @@ html, body, #root {
 
 /* Accordion styles */
 .accordion {
-  background-color: #444444;
-  color: #ffffff;
+  background-color: #444;
+  color: #fff;
 }
 
 .accordion-title {
   font-weight: bold;
-  font-size: 1.2em;
+  font-size: 1rem;
+  padding: 0.5rem;
+  background-color: #555;
+  color: #fff;
 }
 
 .expand-icon {
-  color: #ffffff;
+  color: #fff;
 }
 
 /* Hamburger Icon Button styles */

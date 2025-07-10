@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useROS } from '../RosContext';
 import ROSLIB from 'roslib';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Radio from '@mui/material/Radio';
+import FormLabel from '@mui/material/FormLabel';
+import { styled } from '@mui/system';
+import RemoveIcon from '@mui/icons-material/Remove';
+import AddIcon from '@mui/icons-material/Add';
+import AccordionSummary from '@mui/material/AccordionSummary';
 
 // Utilidad para convertir RPY a quaternion
 function rpyToQuaternion(roll, pitch, yaw) {
@@ -32,6 +40,146 @@ const wristOptions = [
   { value: 'down', label: 'Muñeca abajo' }
 ];
 
+const blue = {
+  100: '#daecff',
+  200: '#b6daff',
+  300: '#66b2ff',
+  400: '#3399ff',
+  500: '#007fff',
+  600: '#0072e5',
+  700: '#0059B2',
+  800: '#004c99',
+};
+
+const grey = {
+  50: '#F3F6F9',
+  100: '#E5EAF2',
+  200: '#DAE2ED',
+  300: '#C7D0DD',
+  400: '#B0B8C4',
+  500: '#9DA8B7',
+  600: '#6B7A90',
+  700: '#434D5B',
+  800: '#303740',
+  900: '#1C2025',
+};
+
+const StyledInput = styled('input')(
+  ({ theme }) => `
+  font-size: 0.875rem;
+  font-family: inherit;
+  font-weight: 400;
+  line-height: 1.375;
+  color: ${theme.palette.mode === 'dark' ? grey[300] : grey[900]};
+  background: ${theme.palette.mode === 'dark' ? grey[900] : '#fff'};
+  border: 1px solid ${theme.palette.mode === 'dark' ? grey[700] : grey[200]};
+  box-shadow: 0 2px 4px ${
+    theme.palette.mode === 'dark' ? 'rgba(0,0,0, 0.5)' : 'rgba(0,0,0, 0.05)'
+  };
+  border-radius: 8px;
+  margin: 0 8px;
+  padding: 10px 12px;
+  outline: 0;
+  min-width: 0;
+  width: 4rem;
+  text-align: center;
+  appearance: textfield;
+
+  &:hover {
+    border-color: ${blue[400]};
+  }
+
+  &:focus {
+    border-color: ${blue[400]};
+    box-shadow: 0 0 0 3px ${theme.palette.mode === 'dark' ? blue[700] : blue[200]};
+  }
+
+  &:focus-visible {
+    outline: 0;
+  }
+
+  &::-webkit-inner-spin-button, &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+`,
+);
+
+const StyledButton = styled('button')(
+  ({ theme }) => `
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+  line-height: 1.5;
+  border: 1px solid;
+  border-radius: 999px;
+  border-color: ${theme.palette.mode === 'dark' ? grey[800] : grey[200]};
+  background: ${theme.palette.mode === 'dark' ? grey[900] : grey[50]};
+  color: ${theme.palette.mode === 'dark' ? grey[200] : grey[900]};
+  width: 32px;
+  height: 32px;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: center;
+  align-items: center;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 120ms;
+
+  &:hover {
+    cursor: pointer;
+    background: ${theme.palette.mode === 'dark' ? blue[700] : blue[500]};
+    border-color: ${theme.palette.mode === 'dark' ? blue[500] : blue[400]};
+    color: ${grey[50]};
+  }
+
+  &:focus-visible {
+    outline: 0;
+  }
+
+  &.increment {
+    order: 1;
+  }
+`,
+);
+
+const NumberInput = React.forwardRef(function CustomNumberInput(props, ref) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <label style={{ marginBottom: '4px' }}>{props.label}</label>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <StyledButton
+          onClick={() => props.onChange(props.value - props.increment)}
+          disabled={props.value <= props.min}
+        >
+          <RemoveIcon fontSize="small" />
+        </StyledButton>
+        <StyledInput
+          type="number"
+          value={props.value}
+          onChange={(e) => {
+            const newValue = parseFloat(e.target.value);
+            if (!isNaN(newValue)) {
+              props.onChange(Math.min(Math.max(newValue, props.min), props.max));
+            }
+          }}
+          min={props.min}
+          max={props.max}
+          step={props.step}
+          ref={ref}
+          style={{ textAlign: 'center', width: '4rem', margin: '0 8px' }}
+        />
+        <StyledButton
+          onClick={() => props.onChange(props.value + props.increment)}
+          disabled={props.value >= props.max}
+        >
+          <AddIcon fontSize="small" />
+        </StyledButton>
+      </div>
+    </div>
+  );
+});
+
 export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusChange }) {
   const { ros, connected } = useROS();
   const [values, setValues] = useState({
@@ -43,6 +191,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     wrist: 'up'
   });
   const [statusMsg, setStatusMsg] = useState(null);
+  const [moveStep, setMoveStep] = useState(1);
 
   // Estado para saber si la posición es alcanzable
   const isUnreachable = statusMsg && (statusMsg.status === 'unreachable' || statusMsg.status === 'error');
@@ -152,8 +301,6 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
   }, [values, ros, connected]);
 
   // --- Botones de incremento/decremento con step configurable y repetición ---
-  const [moveStep, setMoveStep] = useState(1);
-  const step = { x: moveStep, y: moveStep, z: moveStep, roll: 1, pitch: 1, yaw: 1 };
   const intervalRef = React.useRef(null);
   const timeoutRef = React.useRef(null);
 
@@ -164,16 +311,8 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     }));
   };
 
-  // Repetición al mantener pulsado
-  const handleStepMouseDown = (name, dir) => {
-    handleStep(name, dir);
-    timeoutRef.current = setTimeout(() => {
-      intervalRef.current = setInterval(() => handleStep(name, dir), 80);
-    }, 350);
-  };
-  const handleStepMouseUp = () => {
-    clearTimeout(timeoutRef.current);
-    clearInterval(intervalRef.current);
+  const handleValueChange = (key, newValue) => {
+    setValues((prevValues) => ({ ...prevValues, [key]: newValue }));
   };
 
   const handleChange = (name, value) => {
@@ -224,57 +363,92 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
   };
 
   return (
-    <div style={{ marginTop: '2rem' }}>
-      <h3>🎯 Cinemática inversa (IK)</h3>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}> {/* Center all content */}
       <div style={{ marginBottom: '1rem' }}>
-        <label>Incremento XYZ:&nbsp;</label>
-        <label style={{marginRight:'1em'}}>
-          <input type="radio" name="step" value={1} checked={moveStep===1} onChange={()=>setMoveStep(1)} /> 1 mm
-        </label>
-        <label style={{marginRight:'1em'}}>
-          <input type="radio" name="step" value={10} checked={moveStep===10} onChange={()=>setMoveStep(10)} /> 10 mm
-        </label>
-        <label>
-          <input type="radio" name="step" value={100} checked={moveStep===100} onChange={()=>setMoveStep(100)} /> 100 mm
-        </label>
+        <NumberInput
+          value={values.x}
+          onChange={(newValue) => handleValueChange('x', newValue)}
+          unit="mm"
+          min={-500}
+          max={500}
+          step={1}
+          increment={moveStep}
+          label={<strong>X</strong>}
+        />
       </div>
       <div style={{ marginBottom: '1rem' }}>
-        <label>X:&nbsp;</label>
-        <button onMouseDown={() => handleStepMouseDown('x', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
-        <input type="number" min="-400" max="400" step="1" value={values.x} onChange={e => handleChange('x', e.target.value)} style={{ width: '60px' }} /> mm
-        <button onMouseDown={() => handleStepMouseDown('x', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
+        <NumberInput
+          value={values.y}
+          onChange={(newValue) => handleValueChange('y', newValue)}
+          unit="mm"
+          min={-500}
+          max={500}
+          step={1}
+          increment={moveStep}
+          label={<strong>Y</strong>}
+        />
       </div>
       <div style={{ marginBottom: '1rem' }}>
-        <label>Y:&nbsp;</label>
-        <button onMouseDown={() => handleStepMouseDown('y', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
-        <input type="number" min="-400" max="400" step="1" value={values.y} onChange={e => handleChange('y', e.target.value)} style={{ width: '60px' }} /> mm
-        <button onMouseDown={() => handleStepMouseDown('y', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
+        <NumberInput
+          value={values.z}
+          onChange={(newValue) => handleValueChange('z', newValue)}
+          unit="mm"
+          min={0}
+          max={1000}
+          step={1}
+          increment={moveStep}
+          label={<strong>Z</strong>}
+        />
       </div>
       <div style={{ marginBottom: '1rem' }}>
-        <label>Z:&nbsp;</label>
-        <button onMouseDown={() => handleStepMouseDown('z', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
-        <input type="number" min="0" max="600" step="1" value={values.z} onChange={e => handleChange('z', e.target.value)} style={{ width: '60px' }} /> mm
-        <button onMouseDown={() => handleStepMouseDown('z', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
+        <NumberInput
+          value={values.roll}
+          onChange={(newValue) => handleValueChange('roll', newValue)}
+          unit="°"
+          min={-180}
+          max={180}
+          step={0.1}
+          increment={moveStep}
+          label={<strong>Roll</strong>}
+        />
       </div>
       <div style={{ marginBottom: '1rem' }}>
-        <label>Roll:&nbsp;</label>
-        <button onMouseDown={() => handleStepMouseDown('roll', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
-        <input type="number" min={-180} max={180} step={0.1} value={values.roll} onChange={e => handleChange('roll', e.target.value)} style={{ width: '60px' }} /> °
-        <button onMouseDown={() => handleStepMouseDown('roll', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
+        <NumberInput
+          value={values.pitch}
+          onChange={(newValue) => handleValueChange('pitch', newValue)}
+          unit="°"
+          min={-180}
+          max={180}
+          step={0.1}
+          increment={moveStep}
+          label={<strong>Pitch</strong>}
+        />
       </div>
       <div style={{ marginBottom: '1rem' }}>
-        <label>Pitch:&nbsp;</label>
-        <button onMouseDown={() => handleStepMouseDown('pitch', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
-        <input type="number" min={-180} max={180} step={0.1} value={values.pitch} onChange={e => handleChange('pitch', e.target.value)} style={{ width: '60px' }} /> °
-        <button onMouseDown={() => handleStepMouseDown('pitch', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
+        <NumberInput
+          value={values.yaw}
+          onChange={(newValue) => handleValueChange('yaw', newValue)}
+          unit="°"
+          min={-180}
+          max={180}
+          step={0.1}
+          increment={moveStep}
+          label={<strong>Yaw</strong>}
+        />
       </div>
       <div style={{ marginBottom: '1rem' }}>
-        <label>Yaw:&nbsp;</label>
-        <button onMouseDown={() => handleStepMouseDown('yaw', -1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>-</button>
-        <input type="number" min={-180} max={180} step={0.1} value={values.yaw} onChange={e => handleChange('yaw', e.target.value)} style={{ width: '60px' }} /> °
-        <button onMouseDown={() => handleStepMouseDown('yaw', 1)} onMouseUp={handleStepMouseUp} onMouseLeave={handleStepMouseUp}>+</button>
+        <FormLabel component="legend">Increment (mm/º)</FormLabel>
+        <RadioGroup
+          row
+          value={moveStep}
+          onChange={(e) => setMoveStep(parseInt(e.target.value))}
+        >
+          <FormControlLabel value={1} control={<Radio />} label="1" />
+          <FormControlLabel value={10} control={<Radio />} label="10" />
+          <FormControlLabel value={100} control={<Radio />} label="100" />
+        </RadioGroup>
       </div>
-      <h4 style={{ marginTop: '1.5rem' }}>Configuración preferida</h4>
+      <h4 style={{ marginTop: '1.5rem', textAlign: 'center' }}>Configuración preferida</h4> {/* Centered title */}
       <div style={{ marginBottom: '1rem' }}>
         <label>Codo:&nbsp;</label>
         <select value={ikConfig.elbow} onChange={e => handleConfigChange('elbow', e.target.value)}>
