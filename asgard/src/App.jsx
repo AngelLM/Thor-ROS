@@ -17,6 +17,7 @@ function App() {
   const [showRealRobot, setShowRealRobot] = useState(true);
   const [showGhostRobot, setShowGhostRobot] = useState(true);
   const [ikStatus, setIkStatus] = useState('reachable');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const rosRef = useRef(null);
   const lastJointsOnTabChange = useRef(null);
   const lastPoseOnTabChange = useRef(null);
@@ -109,72 +110,58 @@ function App() {
   // Determina qué preview mostrar
   const effectivePreviewJoints = activeTab === 'forward' ? fkJoints : previewJoints;
 
+  // Rediseñar la página para mostrar únicamente UrdfViewer a pantalla completa y un div flotante con JointSliders
   return (
     <RosProvider>
-      <div className="app-layout">
-        <div className="sidebar">
-          <div className="tabs">
-            <button
-              className={`tab-btn${activeTab === 'forward' ? ' active' : ''}`}
-              onClick={() => setActiveTab('forward')}
-            >
-              Forward Kinematics
-            </button>
-            <button
-              className={`tab-btn${activeTab === 'inverse' ? ' active' : ''}`}
-              onClick={() => setActiveTab('inverse')}
-            >
-              Inverse Kinematics
-            </button>
-          </div>
-          <div className="tab-content">
-            {activeTab === 'forward' && (
-              <>
-                <h2>Forward Kinematics</h2>
-                <JointStateViewer />
-                <JointSliders onPreviewJointsChange={setFkJoints} initialJoints={lastJointsOnTabChange.current} />
-              </>
-            )}
-            {activeTab === 'inverse' && (
-              <>
-                <h2>Inverse Kinematics</h2>
-                <IKViewer onCopyPose={pose => setIkPose({ ...pose, _ts: Date.now() })} />
-                <IKSliders
-                  ikPose={ikPose}
-                  onPreviewJointsChange={setPreviewJoints}
-                  onIKStatusChange={setIkStatus}
-                />
-              </>
-            )}
-          </div>
+      <div style={{ position: 'relative', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+        {/* UrdfViewer a pantalla completa */}
+        <UrdfViewer
+          previewJoints={effectivePreviewJoints}
+          showRealRobot={showRealRobot}
+          showGhostRobot={showGhostRobot}
+          ikStatus={ikStatus}
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+        />
+
+        {/* Div flotante con JointSliders */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: isSidebarOpen ? 0 : '-300px',
+            width: '300px',
+            height: '100%',
+            backgroundColor: '#f0f0f0',
+            boxShadow: '2px 0 5px rgba(0,0,0,0.3)',
+            transition: 'left 0.3s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '1em',
+            boxSizing: 'border-box',
+          }}
+        >
+          <JointSliders onPreviewJointsChange={setFkJoints} initialJoints={lastJointsOnTabChange.current} />
         </div>
-        <div className="main-content">
-          <h2>🤖 Visor 3D del robot</h2>
-          <div style={{ marginBottom: '0.5em' }}>
-            <label>
-              <input
-                type="checkbox"
-                checked={showRealRobot}
-                onChange={e => setShowRealRobot(e.target.checked)}
-              />
-              Mostrar robot real
-            </label>
-            <label style={{ marginLeft: '1em' }}>
-              <input
-                type="checkbox"
-                checked={showGhostRobot}
-                onChange={e => setShowGhostRobot(e.target.checked)}
-              />
-              Mostrar robot ghost (objetivo)
-            </label>
-          </div>
-          <UrdfViewer
-            previewJoints={effectivePreviewJoints}
-            showRealRobot={showRealRobot}
-            showGhostRobot={showGhostRobot}
-            ikStatus={ikStatus}
-          />
-        </div>
+
+        {/* Botón de alternancia */}
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: isSidebarOpen ? '300px' : '0',
+            transform: 'translateY(-50%)',
+            padding: '0.5em 1em',
+            cursor: 'pointer',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            transition: 'left 0.3s ease',
+          }}
+        >
+          {isSidebarOpen ? 'Ocultar' : 'Mostrar'}
+        </button>
       </div>
     </RosProvider>
   );
