@@ -62,44 +62,50 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
 
     // Animación
     const animate = () => {
-      requestAnimationFrame(animate);
-      // Fuerza el material azul translúcido en todos los meshes del ghost en cada frame
-      if (ghostRef.current) {
-        ghostRef.current.traverse(obj => {
-          if (obj.isMesh) {
-            if (Array.isArray(obj.material)) {
-              obj.material = obj.material.map(() => new THREE.MeshPhongMaterial({ color: 0x2196f3, opacity: 0.4, transparent: true, depthWrite: false }));
-            } else {
-              obj.material = new THREE.MeshPhongMaterial({ color: 0x2196f3, opacity: 0.4, transparent: true, depthWrite: false });
+      setTimeout(() => {
+        requestAnimationFrame(animate);
+        // Fuerza el material azul translúcido en todos los meshes del ghost en cada frame
+        if (ghostRef.current) {
+          ghostRef.current.traverse(obj => {
+            if (obj.isMesh) {
+              if (Array.isArray(obj.material)) {
+                obj.material = obj.material.map(() => new THREE.MeshPhongMaterial({ color: 0x2196f3, opacity: 0.4, transparent: true, depthWrite: false }));
+              } else {
+                obj.material = new THREE.MeshPhongMaterial({ color: 0x2196f3, opacity: 0.4, transparent: true, depthWrite: false });
+              }
+              obj.material.needsUpdate = true;
+              obj.material.vertexColors = false;
             }
-            obj.material.needsUpdate = true;
-            obj.material.vertexColors = false;
-          }
-        });
-        // --- Flechas siguen al link gripper_base (o base_gripper) ---
-        let eeLink = ghostRef.current.getObjectByName('gripper_base') || ghostRef.current.getObjectByName('base_gripper');
-        if (eeLink) {
-          eeLink.updateWorldMatrix(true, false);
-          const pos = new THREE.Vector3();
-          const quat = new THREE.Quaternion();
-          eeLink.getWorldPosition(pos);
-          eeLink.getWorldQuaternion(quat);
-          arrows.forEach((arrow, i) => {
-            arrow.position.copy(pos);
-            arrow.setDirection(new THREE.Vector3(i===0?1:0, i===1?1:0, i===2?1:0).applyQuaternion(quat).normalize());
           });
+          // --- Flechas siguen al link gripper_base (o base_gripper) ---
+          let eeLink = ghostRef.current.getObjectByName('gripper_base') || ghostRef.current.getObjectByName('base_gripper');
+          if (eeLink) {
+            eeLink.updateWorldMatrix(true, false);
+            const pos = new THREE.Vector3();
+            const quat = new THREE.Quaternion();
+            eeLink.getWorldPosition(pos);
+            eeLink.getWorldQuaternion(quat);
+            arrows.forEach((arrow, i) => {
+              arrow.position.copy(pos);
+              arrow.setDirection(new THREE.Vector3(i===0?1:0, i===1?1:0, i===2?1:0).applyQuaternion(quat).normalize());
+            });
+          }
         }
-      }
-      // Render the scene
-      renderer.toneMapping = THREE.CineonToneMapping;
-      renderer.render(scene, camera);
+        // Render the scene
+        renderer.toneMapping = THREE.CineonToneMapping;
+        renderer.render(scene, camera);
 
-      // Render the gizmo
-      renderer.toneMapping = THREE.NoToneMapping;
-      gizmo.render();
+        // Render the gizmo
+        renderer.toneMapping = THREE.NoToneMapping;
+        gizmo.render();
+      }, 1000 / 30); // Limit to 60 FPS
     };
+
     renderer.setAnimationLoop(animate);
-    animate();
+
+    // Optimized renderer settings
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = false; // Disable shadows for performance
 
     const handleResize = () => {
       if (mountRef.current && rendererRef.current) {
