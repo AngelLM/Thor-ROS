@@ -21,7 +21,7 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     const height = mountRef.current.offsetHeight;
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(2, 2, 2);
+    camera.position.set(2.13, 0.8, 2.33);
     // camera.lookAt(0, 0, 0);
 
     const scene = new THREE.Scene();
@@ -57,7 +57,7 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     // Gizmo
     const gizmo = new ViewportGizmo(camera, renderer, { type: 'sphere' });
     gizmo.attachControls(new OrbitControls(camera, renderer.domElement));
-    gizmo.target.set(0, 0, 0);
+    gizmo.target.set(-0.55, 0, 0.3);
     camera.lookAt(gizmo.target);
 
     // Animación
