@@ -15,6 +15,7 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import Settings from './components/Settings';
 
 function App() {
   const [activeTab, setActiveTab] = useState('forward');
@@ -180,6 +181,27 @@ function App() {
             </AccordionSummary>
             <AccordionDetails>
               <IKSliders onPreviewJointsChange={setPreviewJoints} initialPose={ikPose} />
+            </AccordionDetails>
+          </Accordion>
+
+          <Accordion
+            expanded={activeTab === 'settings'}
+            onChange={() => setActiveTab(activeTab === 'settings' ? '' : 'settings')}
+            className="accordion settings"
+          >
+            <AccordionSummary
+              className='accordion-summary'
+              expandIcon={<ExpandMoreIcon className="expand-icon" />}
+            >
+              <span className="accordion-title">Settings</span>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Settings
+                showRealRobot={showRealRobot}
+                setShowRealRobot={setShowRealRobot}
+                showGhostRobot={showGhostRobot}
+                setShowGhostRobot={setShowGhostRobot}
+              />
             </AccordionDetails>
           </Accordion>
         </Drawer>
