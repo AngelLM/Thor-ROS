@@ -99,7 +99,7 @@ const NumberInput = React.forwardRef(function CustomNumberInput(props, ref) {
         }}
         min={props.min}
         max={props.max}
-        step={props.increment} // Use increment value for step
+        step={props.step} // Use step directly
         ref={ref}
         axis={props.axis} // Pass axis prop for background color
         style={{ textAlign: 'center', width: '4rem', margin: '0 8px' }}
@@ -119,7 +119,6 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     wrist: 'any' // Default values set to 'any'
   });
   const [statusMsg, setStatusMsg] = useState(null);
-  const [moveStep, setMoveStep] = useState(1);
 
   // Estado para saber si la posición es alcanzable
   const isUnreachable = statusMsg && (statusMsg.status === 'unreachable' || statusMsg.status === 'error');
@@ -300,7 +299,6 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
           min={-500}
           max={500}
           step={1}
-          increment={moveStep}
           label={<strong>X</strong>}
           axis="x"        />
         <NumberInput
@@ -310,7 +308,6 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
           min={-500}
           max={500}
           step={1}
-          increment={moveStep}
           label={<strong>Y</strong>}
           axis="y"        />
         <NumberInput
@@ -320,7 +317,6 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
           min={0}
           max={1000}
           step={1}
-          increment={moveStep}
           label={<strong>Z</strong>}
           axis="z"        />
       </div>
@@ -331,8 +327,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
           unit="°"
           min={-180}
           max={180}
-          step={0.1}
-          increment={moveStep}
+          step={1}
           label={<strong>Roll</strong>}
           axis="x"
         />
@@ -342,8 +337,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
           unit="°"
           min={-180}
           max={180}
-          step={0.1}
-          increment={moveStep}
+          step={1}
           label={<strong>Pitch</strong>}
           axis="y"
         />
@@ -353,8 +347,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
           unit="°"
           min={-180}
           max={180}
-          step={0.1}
-          increment={moveStep}
+          step={1}
           label={<strong>Yaw</strong>}
           axis="z"
         />
@@ -367,9 +360,9 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
             value={ikConfig.shoulder}
             onChange={(e) => handleConfigChange('shoulder', e.target.value)}
           >
-            <FormControlLabel value="left" control={<Radio />} label="Left" />
-            <FormControlLabel value="right" control={<Radio />} label="Right" />
-            <FormControlLabel value="any" control={<Radio />} label="Any" />
+            <FormControlLabel value="left" control={<Radio disabled />} label="Left" />
+            <FormControlLabel value="right" control={<Radio disabled />} label="Right" />
+            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
           </RadioGroup>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Elbow group */}
@@ -378,9 +371,9 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
             value={ikConfig.elbow}
             onChange={(e) => handleConfigChange('elbow', e.target.value)}
           >
-            <FormControlLabel value="above" control={<Radio />} label="Above" />
-            <FormControlLabel value="below" control={<Radio />} label="Below" />
-            <FormControlLabel value="any" control={<Radio />} label="Any" />
+            <FormControlLabel value="above" control={<Radio disabled />} label="Above" />
+            <FormControlLabel value="below" control={<Radio disabled />} label="Below" />
+            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
           </RadioGroup>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Wrist group */}
@@ -389,9 +382,9 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
             value={ikConfig.wrist}
             onChange={(e) => handleConfigChange('wrist', e.target.value)}
           >
-            <FormControlLabel value="up" control={<Radio />} label="Up" />
-            <FormControlLabel value="down" control={<Radio />} label="Down" />
-            <FormControlLabel value="any" control={<Radio />} label="Any" />
+            <FormControlLabel value="up" control={<Radio disabled />} label="Up" />
+            <FormControlLabel value="down" control={<Radio disabled />} label="Down" />
+            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
           </RadioGroup>
         </div>
       </div>
