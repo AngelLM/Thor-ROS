@@ -102,7 +102,7 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
         // Render the gizmo
         renderer.toneMapping = THREE.NoToneMapping;
         gizmo.render();
-      }, 1000 / 30); // Limit to 60 FPS
+      }, 1000 / 30); // Limit to 30 FPS
     };
 
     renderer.setAnimationLoop(animate);

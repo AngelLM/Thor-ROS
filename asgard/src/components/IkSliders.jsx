@@ -7,6 +7,7 @@ import Radio from '@mui/material/Radio';
 import FormLabel from '@mui/material/FormLabel';
 import { styled } from '@mui/system';
 import Button from '@mui/material/Button';
+import * as THREE from 'three';
 
 // Utilidad para convertir RPY a quaternion
 function rpyToQuaternion(roll, pitch, yaw) {
@@ -289,6 +290,151 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     });
   };
 
+const handleTCPMove = (axis, increment) => {
+  console.log(`Moving TCP for axis: ${axis}, increment: ${increment}`);
+
+  // 1. Delta pose
+  const deltaPose = { x: 0, y: 0, z: 0, roll: 0, pitch: 0, yaw: 0 };
+  if (axis === 'x' || axis === 'y' || axis === 'z') {
+    deltaPose[axis] = increment / 1000; // mm -> m
+  } else {
+    deltaPose[axis] = increment * Math.PI / 180; // deg -> rad
+  }
+
+  // 2. Pose actual del TCP respecto al Origen
+  const currentPose = {
+    x: values.x * 0.001,
+    y: values.y * 0.001,
+    z: values.z * 0.001,
+    roll: values.roll * Math.PI / 180,
+    pitch: values.pitch * Math.PI / 180,
+    yaw: values.yaw * Math.PI / 180
+  };
+
+  // 3. Matriz actual
+  const currentPosition = new THREE.Vector3(currentPose.x, currentPose.y, currentPose.z);
+  const currentEuler = new THREE.Euler(currentPose.roll, currentPose.pitch, currentPose.yaw, 'XYZ');
+  const currentMatrix = new THREE.Matrix4();
+  currentMatrix.makeRotationFromEuler(currentEuler);
+  currentMatrix.setPosition(currentPosition);
+
+  // 4. Matriz de incremento en el sistema del TCP
+  const deltaPosition = new THREE.Vector3(deltaPose.x, deltaPose.y, deltaPose.z);
+  const deltaEuler = new THREE.Euler(deltaPose.roll, deltaPose.pitch, deltaPose.yaw, 'XYZ');
+  const deltaMatrix = new THREE.Matrix4();
+  deltaMatrix.makeRotationFromEuler(deltaEuler);
+  deltaMatrix.setPosition(deltaPosition);
+
+  // 5. Multiplicación: nueva pose = current * delta (incremento en sistema TCP)
+  const newMatrix = currentMatrix.clone().multiply(deltaMatrix);
+
+  // 6. Descomposición de la nueva matriz
+  const newPosition = new THREE.Vector3();
+  const newQuaternion = new THREE.Quaternion();
+  const newScale = new THREE.Vector3();
+  newMatrix.decompose(newPosition, newQuaternion, newScale);
+
+  // 7. Extraer Euler desde Quaternion (orden XYZ)
+  const newEuler = new THREE.Euler().setFromQuaternion(newQuaternion, 'XYZ');
+
+  // ⚠️ Normaliza ángulos a [-180, 180] grados
+  const normalizeAngleDeg = rad => {
+    let deg = rad * 180 / Math.PI;
+    while (deg > 180) deg -= 360;
+    while (deg < -180) deg += 360;
+    return deg;
+  };
+
+  // 8. Actualizar estado
+  const updatedPose = {
+    x: newPosition.x * 1000,
+    y: newPosition.y * 1000,
+    z: newPosition.z * 1000,
+    roll: normalizeAngleDeg(newEuler.x),
+    pitch: normalizeAngleDeg(newEuler.y),
+    yaw: normalizeAngleDeg(newEuler.z)
+  };
+
+  console.log('Updated pose:', updatedPose);
+  setValues(updatedPose);
+};
+
+
+
+
+  const handleTCPAdjustment = (axis, increment) => {
+    console.log(`Adjusting TCP for axis: ${axis}, increment: ${increment}`);
+
+    // Step 1: Initialize point with default values
+    const point = { x: 0, y: 0, z: 0, roll: 0, pitch: 0, yaw: 0 };
+    point[axis] = increment; // Modify the specific axis
+    console.log(`Initialized point:`, point);
+
+    // Step 2: Build TCP coordinate system using current gripper_base pose
+    const gripperBasePose = {
+      x: values.x * 0.001, // Convert mm to meters
+      y: values.y * 0.001,
+      z: values.z * 0.001,
+      roll: values.roll * Math.PI / 180, // Convert degrees to radians
+      pitch: values.pitch * Math.PI / 180,
+      yaw: values.yaw * Math.PI / 180
+    };
+    console.log(`GripperBase pose:`, gripperBasePose);
+
+    // Step 3: Transform point from TCP to origin coordinate system
+    const transformedPoint = transformPointToOrigin(point, gripperBasePose);
+    console.log(`Transformed point:`, transformedPoint);
+
+    // Step 4: Update NumberInputs with transformed values
+    setValues((prevValues) => {
+      const updatedValues = {
+        ...prevValues,
+        x: transformedPoint.x * 1000, // Convert back to mm
+        y: transformedPoint.y * 1000,
+        z: transformedPoint.z * 1000,
+        roll: transformedPoint.roll * 180 / Math.PI, // Convert radians to degrees
+        pitch: transformedPoint.pitch * 180 / Math.PI,
+        yaw: transformedPoint.yaw * 180 / Math.PI
+      };
+      console.log(`Updated values:`, updatedValues);
+      return updatedValues;
+    });
+  };
+
+  const transformPointToOrigin = (point, gripperBasePose) => {
+    console.log(`Transforming point:`, point, `using GripperBase pose:`, gripperBasePose);
+
+    const { x, y, z, roll, pitch, yaw } = gripperBasePose;
+
+    // Create rotation matrix from roll, pitch, yaw
+    const cosRoll = Math.cos(roll * Math.PI / 180);
+    const sinRoll = Math.sin(roll * Math.PI / 180);
+    const cosPitch = Math.cos(pitch * Math.PI / 180);
+    const sinPitch = Math.sin(pitch * Math.PI / 180);
+    const cosYaw = Math.cos(yaw * Math.PI / 180);
+    const sinYaw = Math.sin(yaw * Math.PI / 180);
+
+    const rotationMatrix = [
+      [cosYaw * cosPitch, cosYaw * sinPitch * sinRoll - sinYaw * cosRoll, cosYaw * sinPitch * cosRoll + sinYaw * sinRoll],
+      [sinYaw * cosPitch, sinYaw * sinPitch * sinRoll + cosYaw * cosRoll, sinYaw * sinPitch * cosRoll - cosYaw * sinRoll],
+      [-sinPitch, cosPitch * sinRoll, cosPitch * cosRoll]
+    ];
+    console.log(`Rotation matrix:`, rotationMatrix);
+
+    // Apply rotation and translation to the point
+    const transformedPoint = {
+      x: rotationMatrix[0][0] * point.x + rotationMatrix[0][1] * point.y + rotationMatrix[0][2] * point.z + x,
+      y: rotationMatrix[1][0] * point.x + rotationMatrix[1][1] * point.y + rotationMatrix[1][2] * point.z + y,
+      z: rotationMatrix[2][0] * point.x + rotationMatrix[2][1] * point.y + rotationMatrix[2][2] * point.z + z,
+      roll: point.roll + roll, // Orientation adjustments
+      pitch: point.pitch + pitch,
+      yaw: point.yaw + yaw
+    };
+    console.log(`Transformed point after applying rotation and translation:`, transformedPoint);
+
+    return transformedPoint;
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}> {/* Center all content */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z */}
@@ -397,6 +543,34 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
       >
         Move
       </Button>
+      {/* Added buttons for TCP coordinate adjustments */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}> {/* TCP Buttons */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for X adjustments */}
+          <Button variant="contained" onClick={() => handleTCPMove('x', 1)}>TCP X+</Button>
+          <Button variant="contained" onClick={() => handleTCPMove('x', -1)}>TCP X-</Button>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for Y adjustments */}
+          <Button variant="contained" onClick={() => handleTCPMove('y', 1)}>TCP Y+</Button>
+          <Button variant="contained" onClick={() => handleTCPMove('y', -1)}>TCP Y-</Button>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for Z adjustments */}
+          <Button variant="contained" onClick={() => handleTCPMove('z', 1)}>TCP Z+</Button>
+          <Button variant="contained" onClick={() => handleTCPMove('z', -1)}>TCP Z-</Button>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for Roll adjustments */}
+          <Button variant="contained" onClick={() => handleTCPMove('roll', 1)}>TCP Roll+</Button>
+          <Button variant="contained" onClick={() => handleTCPMove('roll', -1)}>TCP Roll-</Button>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for Pitch adjustments */}
+          <Button variant="contained" onClick={() => handleTCPMove('yaw', 1)}>TCP Pitch+</Button>
+          <Button variant="contained" onClick={() => handleTCPMove('yaw', -1)}>TCP Pitch-</Button>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for Yaw adjustments */}
+          <Button variant="contained" onClick={() => handleTCPMove('pitch', 1)}>TCP Yaw+</Button>
+          <Button variant="contained" onClick={() => handleTCPMove('pitch', -1)}>TCP Yaw-</Button>
+        </div>
+      </div>
+
     </div>
   );
 }
