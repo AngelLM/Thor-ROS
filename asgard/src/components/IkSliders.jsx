@@ -7,6 +7,7 @@ import Radio from '@mui/material/Radio';
 import FormLabel from '@mui/material/FormLabel';
 import { styled } from '@mui/system';
 import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
 import * as THREE from 'three';
 
 // Utilidad para convertir RPY a quaternion
@@ -176,11 +177,8 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     return () => statusTopic.unsubscribe(cb);
   }, [ros, connected, onIKStatusChange]);
 
-  // Notifica cambios de sliders al padre para preview
   useEffect(() => {
     if (onPreviewJointsChange) {
-      // Aquí deberías calcular las articulaciones objetivo a partir de los sliders
-      // Por simplicidad, pasamos los valores de los sliders en radianes
       onPreviewJointsChange({
         x: values.x,
         y: values.y,
@@ -192,7 +190,6 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     }
   }, [values, onPreviewJointsChange]);
 
-  // --- NUEVO: Calcular IK en tiempo real para el ghost robot y actualizar statusMsg ---
   useEffect(() => {
     if (!ros || !connected) return;
     console.log('Sending IK request with values:', values);
@@ -337,7 +334,7 @@ const handleTCPMove = (axis, increment) => {
   // 7. Extraer Euler desde Quaternion (orden XYZ)
   const newEuler = new THREE.Euler().setFromQuaternion(newQuaternion, 'XYZ');
 
-  // ⚠️ Normaliza ángulos a [-180, 180] grados
+  // Normaliza ángulos a [-180, 180] grados
   const normalizeAngleDeg = rad => {
     let deg = rad * 180 / Math.PI;
     while (deg > 180) deg -= 360;
@@ -358,7 +355,6 @@ const handleTCPMove = (axis, increment) => {
   console.log('Updated pose:', updatedPose);
   setValues(updatedPose);
 };
-
 
 
 
@@ -545,29 +541,51 @@ const handleTCPMove = (axis, increment) => {
       </Button>
       {/* Added buttons for TCP coordinate adjustments */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}> {/* TCP Buttons */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for X adjustments */}
-          <Button variant="contained" onClick={() => handleTCPMove('x', 1)}>TCP X+</Button>
-          <Button variant="contained" onClick={() => handleTCPMove('x', -1)}>TCP X-</Button>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* X group */}
+            <label style={{ marginBottom: '4px' }}><strong>X</strong></label>
+            <ButtonGroup>
+              <Button variant="contained" onClick={() => handleTCPMove('x', -1)} style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}>-</Button>
+              <Button variant="contained" onClick={() => handleTCPMove('x', 1)} style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}>+</Button>
+            </ButtonGroup>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* Y group */}
+            <label style={{ marginBottom: '4px' }}><strong>Y</strong></label>
+            <ButtonGroup>
+              <Button variant="contained" onClick={() => handleTCPMove('y', -1)} style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}>-</Button>
+              <Button variant="contained" onClick={() => handleTCPMove('y', 1)} style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}>+</Button>
+            </ButtonGroup>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Z group */}
+            <label style={{ marginBottom: '4px' }}><strong>Z</strong></label>
+            <ButtonGroup>
+              <Button variant="contained" onClick={() => handleTCPMove('z', -1)} style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}>-</Button>
+              <Button variant="contained" onClick={() => handleTCPMove('z', 1)} style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}>+</Button>
+            </ButtonGroup>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for Y adjustments */}
-          <Button variant="contained" onClick={() => handleTCPMove('y', 1)}>TCP Y+</Button>
-          <Button variant="contained" onClick={() => handleTCPMove('y', -1)}>TCP Y-</Button>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for Z adjustments */}
-          <Button variant="contained" onClick={() => handleTCPMove('z', 1)}>TCP Z+</Button>
-          <Button variant="contained" onClick={() => handleTCPMove('z', -1)}>TCP Z-</Button>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for Roll adjustments */}
-          <Button variant="contained" onClick={() => handleTCPMove('roll', 1)}>TCP Roll+</Button>
-          <Button variant="contained" onClick={() => handleTCPMove('roll', -1)}>TCP Roll-</Button>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for Pitch adjustments */}
-          <Button variant="contained" onClick={() => handleTCPMove('yaw', 1)}>TCP Pitch+</Button>
-          <Button variant="contained" onClick={() => handleTCPMove('yaw', -1)}>TCP Pitch-</Button>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}> {/* Row for Yaw adjustments */}
-          <Button variant="contained" onClick={() => handleTCPMove('pitch', 1)}>TCP Yaw+</Button>
-          <Button variant="contained" onClick={() => handleTCPMove('pitch', -1)}>TCP Yaw-</Button>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for Roll, Pitch, Yaw */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* Roll group */}
+            <label style={{ marginBottom: '4px' }}><strong>Roll</strong></label>
+            <ButtonGroup>
+              <Button variant="contained" onClick={() => handleTCPMove('roll', -1)} style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}>-</Button>
+              <Button variant="contained" onClick={() => handleTCPMove('roll', 1)} style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}>+</Button>
+            </ButtonGroup>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* Pitch group */}
+            <label style={{ marginBottom: '4px' }}><strong>Pitch</strong></label>
+            <ButtonGroup>
+              <Button variant="contained" onClick={() => handleTCPMove('yaw', -1)} style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}>-</Button>
+              <Button variant="contained" onClick={() => handleTCPMove('yaw', 1)} style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}>+</Button>
+            </ButtonGroup>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Yaw group */}
+            <label style={{ marginBottom: '4px' }}><strong>Yaw</strong></label>
+            <ButtonGroup>
+              <Button variant="contained" onClick={() => handleTCPMove('pitch', -1)} style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}>-</Button>
+              <Button variant="contained" onClick={() => handleTCPMove('pitch', 1)} style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}>+</Button>
+            </ButtonGroup>
+          </div>
         </div>
       </div>
 
