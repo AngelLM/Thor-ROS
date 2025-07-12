@@ -90,7 +90,7 @@ const NumberInput = React.forwardRef(function CustomNumberInput(props, ref) {
       <label style={{ marginBottom: '4px' }}>{props.label}</label>
       <StyledInput
         type="number"
-        value={props.value}
+        value={props.value.toFixed(1)} // Ensure displayed value is limited to one decimal place
         onChange={(e) => {
           const newValue = parseFloat(e.target.value);
           if (!isNaN(newValue)) {
@@ -108,7 +108,7 @@ const NumberInput = React.forwardRef(function CustomNumberInput(props, ref) {
   );
 });
 
-export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusChange }) {
+export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusChange, initialPose }) {
   const { ros, connected } = useROS();
   const [values, setValues] = useState({
     x: 200, y: 0, z: 300, roll: 0, pitch: 0, yaw: 0
@@ -137,6 +137,20 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
       });
     }
   }, [ikPose]);
+
+  // Asegura que los inputs se actualicen cuando cambia initialPose
+  useEffect(() => {
+    if (initialPose) {
+      setValues({
+        x: initialPose.x || 0,
+        y: initialPose.y || 0,
+        z: initialPose.z || 0,
+        roll: initialPose.roll || 0,
+        pitch: initialPose.pitch || 0,
+        yaw: initialPose.yaw || 0,
+      });
+    }
+  }, [initialPose]);
 
   // Suscripción al status del IK
   useEffect(() => {
@@ -181,7 +195,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
   // --- NUEVO: Calcular IK en tiempo real para el ghost robot y actualizar statusMsg ---
   useEffect(() => {
     if (!ros || !connected) return;
-    // Construir la petición para /compute_ik
+    console.log('Sending IK request with values:', values);
     const service = new ROSLIB.Service({
       ros,
       name: '/compute_ik',
@@ -212,21 +226,25 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
       }
     };
     service.callService(req, (res) => {
+      console.log('Received IK response:', res);
       if (res && res.solution && res.solution.joint_state && res.error_code && res.error_code.val === 1) {
-        // Mapear a objeto {joint_1: val, ...}
         const joints = {};
         res.solution.joint_state.name.forEach((name, i) => {
           joints[name] = res.solution.joint_state.position[i];
         });
-        if (onPreviewJointsChange) onPreviewJointsChange(joints);
+        if (onPreviewJointsChange) {
+          onPreviewJointsChange(joints);
+        }
         setStatusMsg({ status: 'reachable' });
       } else {
-        if (onPreviewJointsChange) onPreviewJointsChange({});
+        console.warn('IK response indicates unreachable or error:', res);
+        if (onPreviewJointsChange) {
+          onPreviewJointsChange({});
+        }
         setStatusMsg({ status: 'unreachable' });
       }
     });
-    // eslint-disable-next-line
-  }, [values, ros, connected]);
+  }, [values, ros, connected, onPreviewJointsChange]);
 
   const handleValueChange = (key, newValue) => {
     setValues((prevValues) => ({ ...prevValues, [key]: newValue }));

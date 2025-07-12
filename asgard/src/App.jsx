@@ -103,9 +103,9 @@ function App() {
             x: t.x * 1000,
             y: t.y * 1000,
             z: t.z * 1000,
-            roll: rpy.roll,
-            pitch: rpy.pitch,
-            yaw: rpy.yaw
+            roll: rpy.roll * 180 / Math.PI,
+            pitch: rpy.pitch * 180 / Math.PI,
+            yaw: rpy.yaw * 180 / Math.PI
           };
           lastPoseOnTabChange.current = poseObj;
           setIkPose(poseObj);
@@ -163,7 +163,13 @@ function App() {
 
           <Accordion
             expanded={activeTab === 'inverse'}
-            onChange={() => setActiveTab(activeTab === 'inverse' ? '' : 'inverse')}
+            onChange={() => {
+              const newTab = activeTab === 'inverse' ? '' : 'inverse';
+              setActiveTab(newTab);
+              if (newTab === 'inverse' && lastPoseOnTabChange.current) {
+                setIkPose(lastPoseOnTabChange.current);
+              }
+            }}
             className="accordion inverse-kinematics"
           >
             <AccordionSummary
@@ -173,7 +179,7 @@ function App() {
               <span className="accordion-title">Inverse Kinematics</span>
             </AccordionSummary>
             <AccordionDetails>
-              <IKSliders onPreviewPoseChange={setPreviewJoints} initialPose={lastPoseOnTabChange.current} />
+              <IKSliders onPreviewJointsChange={setPreviewJoints} initialPose={ikPose} />
             </AccordionDetails>
           </Accordion>
         </Drawer>
