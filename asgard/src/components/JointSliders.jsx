@@ -98,7 +98,7 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
             gap: '0.5rem'
           }}
         >
-          <label htmlFor={joint.name} style={{ minWidth: '90px' }}>
+          <label htmlFor={joint.name} style={{ minWidth: '90px', fontWeight: 'bold' }}> {/* Added fontWeight: bold */}
             {joint.label}
           </label>
           <Slider
@@ -120,7 +120,7 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
               type: 'number',
               'aria-labelledby': joint.name
             }}
-            style={{ width: '60px' }}
+            style={{ width: '80px' }} // Increased width from 60px to 80px
           />
           <span>°</span> {/* Add degree symbol */}
         </div>

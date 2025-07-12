@@ -151,13 +151,7 @@ function App() {
             className="accordion forward-kinematics"
           >
             <AccordionSummary
-              style={{
-                backgroundColor: '#555', // Slightly lighter color for Accordion titles
-                color: '#fff', // Ensure text is visible
-                padding: '0.5rem',
-                fontSize: '1rem',
-                fontWeight: 'bold'
-              }}
+              className='accordion-summary'
               expandIcon={<ExpandMoreIcon className="expand-icon" />}
             >
               <span className="accordion-title">Forward Kinematics</span>
@@ -173,13 +167,7 @@ function App() {
             className="accordion inverse-kinematics"
           >
             <AccordionSummary
-              style={{
-                backgroundColor: '#555', // Slightly lighter color for Accordion titles
-                color: '#fff', // Ensure text is visible
-                padding: '0.5rem',
-                fontSize: '1rem',
-                fontWeight: 'bold'
-              }}
+              className='accordion-summary'
               expandIcon={<ExpandMoreIcon className="expand-icon" />}
             >
               <span className="accordion-title">Inverse Kinematics</span>

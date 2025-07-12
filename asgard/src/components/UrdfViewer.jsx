@@ -21,7 +21,8 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     const height = mountRef.current.offsetHeight;
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(2.13, 0.8, 2.33);
+    camera.up.set(0, 0, 1); // Set Z-UP system
+    camera.position.set(-1, 1, 1);
     // camera.lookAt(0, 0, 0);
 
     const scene = new THREE.Scene();
@@ -57,8 +58,11 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     // Gizmo
     const gizmo = new ViewportGizmo(camera, renderer, { type: 'sphere' });
     gizmo.attachControls(new OrbitControls(camera, renderer.domElement));
-    gizmo.target.set(-0.55, 0, 0.3);
+    gizmo.target.set(0.6, 0, 0);
     camera.lookAt(gizmo.target);
+
+    // Forced initial update of gizmo to ensure correct position
+    gizmo.update(); // Force initial update of gizmo
 
     // Animación
     const animate = () => {
@@ -138,18 +142,20 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
         loader.fetchOptions = { mode: 'cors' };
         // Robot real
         const robot = loader.parse(urdfXml);
-        robot.rotation.x = -Math.PI / 2;
-        robot.rotation.z = Math.PI / 2;
+        robot.rotation.x = 0; // Reset X rotation
+        robot.rotation.z = 0; // Reset Z rotation
         robot.scale.set(1, 1, 1);
         scene.add(robot);
         robotRef.current = robot;
+
         // Ghost robot
         const ghost = loader.parse(urdfXml);
-        ghost.rotation.x = -Math.PI / 2;
-        ghost.rotation.z = Math.PI / 2;
+        ghost.rotation.x = 0; // Reset X rotation
+        ghost.rotation.z = 0; // Reset Z rotation
         ghost.scale.set(1, 1, 1);
         scene.add(ghost);
         ghostRef.current = ghost;
+
         // Suscripción a joint_states para robot real
         const jointStateListener = new ROSLIB.Topic({
           ros: ros,
