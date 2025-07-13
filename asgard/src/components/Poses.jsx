@@ -70,8 +70,6 @@ export default function Poses({ ghostRef, onPreviewJointsChange }) {
     }
   };
 
-  console.log('Poses component rendered');
-
   return (
     <div style={{ padding: '0.5rem' }}>
       {poses.length === 0 ? (

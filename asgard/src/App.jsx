@@ -54,13 +54,19 @@ function App() {
       name: '/joint_states',
       messageType: 'sensor_msgs/msg/JointState'
     });
+    let previousJoints = null; // Variable para almacenar el valor anterior de joints
     jointStateListener.subscribe((msg) => {
-      // Mapear a objeto {joint_1: val, ...}
+      // Mapear a objeto {joint_1: val, ...} con precisión de 4 decimales
       const joints = {};
       msg.name.forEach((name, i) => {
-        joints[name] = msg.position[i];
+        joints[name] = parseFloat(msg.position[i].toFixed(4));
       });
-      setCurrentJoints(joints);
+
+      // Comprobar si los valores de joints son distintos a los anteriores antes de asignar
+      if (JSON.stringify(previousJoints) !== JSON.stringify(joints)) {
+        setCurrentJoints(joints);
+        previousJoints = joints; // Actualizar el valor anterior
+      }
     });
     return () => {
       jointStateListener.unsubscribe();
