@@ -83,6 +83,8 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
     const message = new ROSLIB.Message({
       data: jointConfigs.map(joint => (sliderValues[joint.name] * Math.PI) / 180),
     });
+    // print log for debugging
+    console.log('Sending joint command:', message.data);
     topic.publish(message);
   };
 

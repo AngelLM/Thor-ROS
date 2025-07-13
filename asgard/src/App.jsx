@@ -14,8 +14,19 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
+import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Settings from './components/Settings';
+import Fab from '@mui/material/Fab';
+import AddIcon from '@mui/icons-material/Add';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Poses from './components/Poses';
 
 function App() {
   const [activeTab, setActiveTab] = useState('forward');
@@ -27,9 +38,12 @@ function App() {
   const [showGhostRobot, setShowGhostRobot] = useState(true);
   const [ikStatus, setIkStatus] = useState('reachable');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [poseName, setPoseName] = useState('');
   const rosRef = useRef(null);
   const lastJointsOnTabChange = useRef(null);
   const lastPoseOnTabChange = useRef(null);
+  const ghostRef = useRef(null); // Referencia para el robot fantasma
 
   // Suscribirse a /joint_states para obtener la posición actual
   useEffect(() => {
@@ -119,7 +133,48 @@ function App() {
   // Determina qué preview mostrar
   const effectivePreviewJoints = activeTab === 'forward' ? fkJoints : previewJoints;
 
+  const handleFabClick = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+  };
+
+  const handleSavePose = () => {
+    if (poseName.trim() === '') {
+      alert('Pose name is required!');
+      return;
+    }
+
+    const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
+
+    // Check for duplicate pose name
+    const isDuplicate = savedPoses.some(pose => pose.name === poseName.trim());
+    if (isDuplicate) {
+      alert('A pose with this name already exists. Please choose a different name.');
+      return;
+    }
+
+    const poseData = {
+      name: poseName,
+      joints: Object.fromEntries(
+        ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6'].map(jointName => [jointName, currentJoints[jointName]])
+      ),
+      gripperBase: ikPose
+    };
+
+    savedPoses.push(poseData);
+    localStorage.setItem('savedPoses', JSON.stringify(savedPoses));
+
+    console.log('Pose saved:', poseData);
+    setIsDialogOpen(false);
+    setPoseName('');
+  };
+
   // Rediseñar la página para mostrar únicamente UrdfViewer a pantalla completa y un div flotante con JointSliders
+  const memoizedOnPreviewJointsChange = React.useCallback((joints) => setPreviewJoints(joints), []);
+
   return (
     <RosProvider>
       <div className="app-container">
@@ -129,6 +184,7 @@ function App() {
           showRealRobot={showRealRobot}
           showGhostRobot={showGhostRobot}
           ikStatus={ikStatus}
+          ghostRef={ghostRef} // Asegurar que ghostRef se pase correctamente
           className="urdf-viewer"
         />
 
@@ -204,6 +260,23 @@ function App() {
               />
             </AccordionDetails>
           </Accordion>
+
+          <Accordion
+            expanded={activeTab === 'poses'}
+            onChange={() => setActiveTab(activeTab === 'poses' ? '' : 'poses')}
+            className="accordion poses"
+          >
+            <AccordionSummary
+              className='accordion-summary'
+              expandIcon={<ExpandMoreIcon className="expand-icon" />}
+            >
+              <span className="accordion-title">Poses</span>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Poses ghostRef={ghostRef} onPreviewJointsChange={memoizedOnPreviewJointsChange} />
+            </AccordionDetails>
+          </Accordion>
+
         </Drawer>
 
         {/* Hamburger Icon Button */}
@@ -213,6 +286,45 @@ function App() {
         >
           <MenuIcon />
         </IconButton>
+
+        {/* Floating Action Button */}
+        <Fab
+          color="primary"
+          aria-label="add"
+          style={{ position: 'absolute', bottom: '16px', right: '16px', zIndex: 10 }}
+          onClick={handleFabClick}
+        >
+          <AddIcon />
+        </Fab>
+
+        {/* Form Dialog */}
+        <Dialog open={isDialogOpen} onClose={handleDialogClose}>
+          <DialogTitle>Save Pose</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Enter a name for the pose:
+            </DialogContentText>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Pose Name"
+              type="text"
+              fullWidth
+              inputProps={{ maxLength: 12 }}
+              value={poseName}
+              onChange={(e) => setPoseName(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDialogClose} color="secondary">
+              Cancel
+            </Button>
+            <Button onClick={handleSavePose} color="primary">
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+
       </div>
     </RosProvider>
   );
