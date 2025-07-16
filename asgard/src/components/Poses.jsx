@@ -7,8 +7,9 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { useROS } from '../RosContext';
 import ROSLIB from 'roslib';
+import { useImperativeHandle, forwardRef } from 'react';
 
-export default function Poses({ ghostRef, onPreviewJointsChange }) {
+function Poses({ ghostRef, onPreviewJointsChange }, ref) {
   const { ros, connected } = useROS();
   const [poses, setPoses] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -17,7 +18,17 @@ export default function Poses({ ghostRef, onPreviewJointsChange }) {
   useEffect(() => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     setPoses(savedPoses);
+
   }, []);
+
+  const updatePoses = () => {
+    const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
+    setPoses(savedPoses);
+  };
+
+  useImperativeHandle(ref, () => ({
+    updatePoses
+  }));
 
   const handleOpenDialog = (poseName) => {
     setPoseToDelete(poseName);
@@ -130,3 +141,5 @@ export default function Poses({ ghostRef, onPreviewJointsChange }) {
     </div>
   );
 }
+
+export default forwardRef(Poses);

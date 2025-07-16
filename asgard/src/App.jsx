@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, use } from 'react';
 import './App.css';
 import { RosProvider } from './RosContext';
-import JointStateViewer from './components/JointStateViewer';
 import UrdfViewer from './components/UrdfViewer';
 import JointSliders from './components/JointSliders';
-import IKViewer from './components/IKViewer';
 import IKSliders from './components/IkSliders';
 import ROSLIB from 'roslib';
 import Drawer from '@mui/material/Drawer';
@@ -14,7 +12,6 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
-import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Settings from './components/Settings';
 import Fab from '@mui/material/Fab';
@@ -44,6 +41,8 @@ function App() {
   const lastJointsOnTabChange = useRef(null);
   const lastPoseOnTabChange = useRef(null);
   const ghostRef = useRef(null); // Referencia para el robot fantasma
+  const poseRef = useRef(null); // Referencia para el componente Poses
+  const randomRef = useRef(); // Referencia para el componente Random
 
   // Suscribirse a /joint_states para obtener la posición actual
   useEffect(() => {
@@ -172,8 +171,13 @@ function App() {
 
     savedPoses.push(poseData);
     localStorage.setItem('savedPoses', JSON.stringify(savedPoses));
-
     console.log('Pose saved:', poseData);
+
+    if (poseRef.current) {
+      poseRef.current.updatePoses();
+      console.log('Poses updated in Poses component');
+    }
+
     setIsDialogOpen(false);
     setPoseName('');
   };
@@ -279,7 +283,7 @@ function App() {
               <span className="accordion-title">Poses</span>
             </AccordionSummary>
             <AccordionDetails>
-              <Poses ghostRef={ghostRef} onPreviewJointsChange={memoizedOnPreviewJointsChange} />
+              <Poses ref={poseRef} ghostRef={ghostRef} onPreviewJointsChange={memoizedOnPreviewJointsChange} />
             </AccordionDetails>
           </Accordion>
 
