@@ -84,7 +84,7 @@ function Poses({ ghostRef, onPreviewJointsChange }, ref) {
   return (
     <div style={{ padding: '0.5rem' }}>
       {poses.length === 0 ? (
-        <p>There are no saved poses to show yet.</p>
+        <p>There are no saved poses to show yet</p>
       ) : (
         <ul style={{ listStyleType: 'none', padding: 0 }}>
           {poses.map((pose) => (

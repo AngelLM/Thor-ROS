@@ -24,6 +24,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Poses from './components/Poses';
+import Program from './components/Program';
 
 function App() {
   const [activeTab, setActiveTab] = useState('forward');
@@ -284,6 +285,22 @@ function App() {
             </AccordionSummary>
             <AccordionDetails>
               <Poses ref={poseRef} ghostRef={ghostRef} onPreviewJointsChange={memoizedOnPreviewJointsChange} />
+            </AccordionDetails>
+          </Accordion>
+
+          <Accordion
+            expanded={activeTab === 'program'}
+            onChange={() => setActiveTab(activeTab === 'program' ? '' : 'program')}
+            className="accordion program"
+          >
+            <AccordionSummary
+              className='accordion-summary'
+              expandIcon={<ExpandMoreIcon className="expand-icon" />}
+            >
+              <span className="accordion-title">Program</span>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Program />
             </AccordionDetails>
           </Accordion>
 
