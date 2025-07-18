@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, use } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { RosProvider } from './RosContext';
 import UrdfViewer from './components/UrdfViewer';
@@ -38,6 +38,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [poseName, setPoseName] = useState('');
+  const [isMoving, setIsMoving] = useState(false);
   const rosRef = useRef(null);
   const lastJointsOnTabChange = useRef(null);
   const lastPoseOnTabChange = useRef(null);
@@ -66,6 +67,9 @@ function App() {
       if (JSON.stringify(previousJoints) !== JSON.stringify(joints)) {
         setCurrentJoints(joints);
         previousJoints = joints; // Actualizar el valor anterior
+        setIsMoving(true); // Set isMoving to true when joints change
+      } else {
+        setIsMoving(false); // Set isMoving to false when joints stop changing
       }
     });
     return () => {
@@ -300,7 +304,7 @@ function App() {
               <span className="accordion-title">Program</span>
             </AccordionSummary>
             <AccordionDetails>
-              <Program />
+              <Program isMoving={isMoving} />
             </AccordionDetails>
           </Accordion>
 

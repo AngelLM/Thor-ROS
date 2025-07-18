@@ -7,7 +7,7 @@ import TextField from '@mui/material/TextField';
 import { useROS } from '../RosContext';
 import ROSLIB from 'roslib';
 
-function Program() {
+function Program({ isMoving }) {
   const [movements, setMovements] = useState([]);
   const [poseNames, setPoseNames] = useState([]);
   const [currentStep, setCurrentStep] = useState(null);
@@ -23,6 +23,13 @@ function Program() {
     const savedProgram = JSON.parse(localStorage.getItem('program')) || [];
     setMovements(savedProgram);
   }, []);
+
+  useEffect(() => {
+    console.log('isMoving', isMoving);
+    if (!isMoving) {
+      setIsStepDisabled(false); // Re-enable step buttons when robot stops moving
+    }
+  }, [isMoving]);
 
   const saveProgramToLocalStorage = (updatedMovements) => {
     localStorage.setItem('program', JSON.stringify(updatedMovements));
@@ -131,6 +138,13 @@ function Program() {
 
     setCurrentStep(nextStep);
     executeMovement(nextStep);
+
+    // Force re-evaluation of isMoving
+    setTimeout(() => {
+      if (!isMoving) {
+        setIsStepDisabled(false); // Re-enable step buttons when robot stops moving
+      }
+    }, 1000);
   };
 
   const handleStepBW = () => {
@@ -146,6 +160,13 @@ function Program() {
 
     setCurrentStep(prevStep);
     executeMovement(prevStep);
+
+    // Force re-evaluation of isMoving
+    setTimeout(() => {
+      if (!isMoving) {
+        setIsStepDisabled(false); // Re-enable step buttons when robot stops moving
+      }
+    }, 1000);
   };
 
   const executeMovement = async (step) => {
@@ -179,11 +200,6 @@ function Program() {
 
     topic.publish(message);
     console.log(`Executing movement: ${step}`, movement);
-
-    // Simulate waiting for the robot to finish the movement
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    setIsStepDisabled(false); // Re-enable step buttons
   };
 
   const handleResetPointer = () => {
@@ -308,7 +324,7 @@ function Program() {
               style={{ backgroundColor: 'gray', color: 'white', fontSize: '1rem', fontWeight: 'bold' }}
               onClick={handleResetPointer}
             >
-              Reset Pointer
+              Reset
             </Button>
           </div>
 
