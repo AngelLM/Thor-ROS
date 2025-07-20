@@ -4,14 +4,28 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import { useROS } from '../RosContext';
 import ROSLIB from 'roslib';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
 function Program({ isMoving }) {
   const [movements, setMovements] = useState([]);
   const [poseNames, setPoseNames] = useState([]);
   const [currentStep, setCurrentStep] = useState(null);
   const [isStepDisabled, setIsStepDisabled] = useState(false);
+  const [selectedMovement, setSelectedMovement] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [pendingSelection, setPendingSelection] = useState(null);
   const { ros, connected } = useROS();
 
   useEffect(() => {
@@ -30,6 +44,12 @@ function Program({ isMoving }) {
       setIsStepDisabled(false); // Re-enable step buttons when robot stops moving
     }
   }, [isMoving]);
+
+  useEffect(() => {
+    if (movements.length > 0 && selectedMovement === null) {
+      setSelectedMovement(0); // Select the first Radio Button by default
+    }
+  }, [movements]);
 
   const saveProgramToLocalStorage = (updatedMovements) => {
     localStorage.setItem('program', JSON.stringify(updatedMovements));
@@ -207,8 +227,41 @@ function Program({ isMoving }) {
     console.log('Pointer reset to initial state.');
   };
 
+  const handleSelectMovement = (index) => {
+    setPendingSelection(index);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = (confirm) => {
+    setDialogOpen(false);
+    if (confirm) {
+      setSelectedMovement(pendingSelection);
+    }
+    setPendingSelection(null);
+  };
+
   return (
     <div style={{ padding: '0.25rem' }}>
+      <Dialog open={dialogOpen} onClose={() => handleDialogClose(false)}>
+        <DialogTitle>Caution!</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            The robot may move unexpectedly when starting execution from an intermediate position in the program.
+            Make sure the path is clear and there are no obstacles in the work area.
+            Verify that the target positions and surroundings are correct before proceeding.
+            Do you want to continue?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleDialogClose(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={() => handleDialogClose(true)} color="primary" autoFocus>
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {movements.length === 0 ? (
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
           <p style={{ fontSize: '1.2rem', color: '#555' }}>There are no movements programmed yet</p>
@@ -230,6 +283,24 @@ function Program({ isMoving }) {
                 backgroundColor: currentStep === index ? 'lightyellow' : 'transparent',
               }}
             >
+              <RadioGroup
+                value={selectedMovement}
+                onChange={() => handleSelectMovement(index)}
+                style={{ borderRadius: '50%' }}
+              >
+                <FormControlLabel
+                  value={index}
+                  control={
+                    <Radio
+                      style={{ backgroundColor: selectedMovement === index ? 'yellow' : 'transparent', borderRadius: '50%' }}
+                      icon={<ArrowForwardIosIcon style={{ color: selectedMovement === index ? 'black' : 'lightgray' }} />}
+                      checkedIcon={<ArrowForwardIosIcon style={{ color: 'black' }} />}
+                    />
+                  }
+                  label=""
+                />
+              </RadioGroup>
+
               <div style={{ display: 'flex', flexDirection: 'column', marginRight: '0.3rem' }}>
                 <Button
                   variant="contained"
@@ -277,14 +348,17 @@ function Program({ isMoving }) {
                 )}
               />
 
-              <Select
-                value={movement.type}
-                onChange={(e) => handleChangeMovement(index, 'type', e.target.value)}
-                style={{ marginLeft: '0.5rem', width: '92px', minWidth: '92px' }}
-              >
-                <MenuItem value="Joint">Joint</MenuItem>
-                <MenuItem value="Linear">Linear</MenuItem>
-              </Select>
+              <FormControl style={{ marginLeft: '0.5rem', width: '60px', minWidth: '60px' }} variant="outlined">
+                <InputLabel>Type</InputLabel>
+                <Select
+                  value={movement.type}
+                  onChange={(e) => handleChangeMovement(index, 'type', e.target.value)}
+                  label="Type"
+                >
+                  <MenuItem value="J">J</MenuItem>
+                  <MenuItem value="L">L</MenuItem>
+                </Select>
+              </FormControl>
             </div>
           ))}
 
