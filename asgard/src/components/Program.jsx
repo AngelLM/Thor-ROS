@@ -26,6 +26,7 @@ function Program({ isMoving }) {
   const [selectedMovement, setSelectedMovement] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingSelection, setPendingSelection] = useState(null);
+  const [currentRobotPose, setCurrentRobotPose] = useState(null);
   const { ros, connected } = useROS();
 
   useEffect(() => {
@@ -50,6 +51,78 @@ function Program({ isMoving }) {
       setSelectedMovement(0); // Select the first Radio Button by default
     }
   }, [movements]);
+
+  useEffect(() => {
+    if (!connected || !ros) {
+      console.warn('ROS no está conectado.');
+      return;
+    }
+
+    console.log('Suscribiéndose al tópico /joint_states...');
+
+    const jointStateListener = new ROSLIB.Topic({
+      ros,
+      name: '/joint_states', // Tópico que publica los estados de las articulaciones
+      messageType: 'sensor_msgs/JointState',
+    });
+
+    const updateRobotPose = (message) => {
+      // console.log('Mensaje recibido de /joint_states:', message);
+
+      const jointPositions = {};
+      message.name.forEach((name, index) => {
+        jointPositions[name] = parseFloat(message.position[index].toFixed(4)); // Redondear a 4 decimales
+      });
+
+      // console.log('Posiciones articulares procesadas:', jointPositions);
+
+      setCurrentRobotPose(jointPositions);
+    };
+
+    jointStateListener.subscribe(updateRobotPose);
+
+    return () => {
+      console.log('Desuscribiéndose del tópico /joint_states...');
+      jointStateListener.unsubscribe();
+    };
+  }, [connected, ros]);
+
+  const isPoseCurrent = (poseName) => {
+    if (!currentRobotPose) {
+      console.warn('No se ha recibido la posición actual del robot.');
+      return false;
+    }
+
+    console.log('Posiciones actuales del robot:', currentRobotPose);
+
+    const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
+    const targetPose = savedPoses.find(p => p.name === poseName);
+
+    if (!targetPose) {
+      console.warn(`La pose objetivo ${poseName} no se encuentra en las poses guardadas.`);
+      return false;
+    }
+
+    console.log('Pose objetivo:', targetPose);
+
+    const tolerance = 0.0001; // Tolerancia para la comparación (4 decimales)
+
+    const isMatch = Object.keys(targetPose.joints).every(joint => {
+      const currentAngle = currentRobotPose[joint];
+      const targetAngle = targetPose.joints[joint];
+
+      if (currentAngle === undefined || targetAngle === undefined) {
+        console.warn(`El ángulo de la articulación ${joint} no está definido en la pose actual o en la pose objetivo.`);
+        return false;
+      }
+
+      const match = Math.abs(currentAngle - targetAngle) < tolerance;
+      console.log(`Comparación para ${joint}: actual=${currentAngle}, objetivo=${targetAngle}, match=${match}`);
+      return match;
+    });
+
+    return isMatch;
+  };
 
   const saveProgramToLocalStorage = (updatedMovements) => {
     localStorage.setItem('program', JSON.stringify(updatedMovements));
@@ -146,47 +219,31 @@ function Program({ isMoving }) {
   };
 
   const handleStepFW = () => {
-    const nextStep = currentStep === null ? 0 : currentStep + 1;
+    const nextStep = selectedMovement === null ? 0 : selectedMovement;
 
-    if (nextStep >= movements.length) {
-      if (window.confirm('You have reached the last movement. Do you want to start from the beginning?')) {
-        setCurrentStep(0);
-        executeMovement(0);
-      }
-      return;
-    }
-
-    setCurrentStep(nextStep);
     executeMovement(nextStep);
 
-    // Force re-evaluation of isMoving
-    setTimeout(() => {
-      if (!isMoving) {
-        setIsStepDisabled(false); // Re-enable step buttons when robot stops moving
-      }
-    }, 1000);
+    const newPointer = nextStep + 1 >= movements.length ? 0 : nextStep + 1;
+    setSelectedMovement(newPointer);
+    setCurrentStep(nextStep); // Highlight the executed movement
   };
 
   const handleStepBW = () => {
-    const prevStep = currentStep === null ? movements.length - 1 : currentStep - 1;
+    const lastExecutedStep = currentStep;
+    const prevStep = lastExecutedStep !== null ? lastExecutedStep - 1 : selectedMovement;
 
     if (prevStep < 0) {
       if (window.confirm('You have reached the first movement. Do you want to go to the last movement?')) {
-        setCurrentStep(movements.length - 1);
         executeMovement(movements.length - 1);
+        setCurrentStep(movements.length - 1); // Highlight the executed movement
+        setSelectedMovement(0); // Pointer always points to the next movement
       }
       return;
     }
 
-    setCurrentStep(prevStep);
     executeMovement(prevStep);
-
-    // Force re-evaluation of isMoving
-    setTimeout(() => {
-      if (!isMoving) {
-        setIsStepDisabled(false); // Re-enable step buttons when robot stops moving
-      }
-    }, 1000);
+    setCurrentStep(prevStep); // Highlight the executed movement
+    setSelectedMovement(prevStep + 1 >= movements.length ? 0 : prevStep + 1); // Pointer always points to the next movement
   };
 
   const executeMovement = async (step) => {
@@ -220,6 +277,15 @@ function Program({ isMoving }) {
 
     topic.publish(message);
     console.log(`Executing movement: ${step}`, movement);
+
+    // Activate the RadioButton of the next movement
+    const nextStep = step + 1 >= movements.length ? 0 : step + 1;
+    setSelectedMovement(nextStep);
+
+    if (isPoseCurrent(poseName)) {
+      console.log('El robot ya está en la pose objetivo después de ejecutar el movimiento. Habilitando botones.');
+      setIsStepDisabled(false);
+    }
   };
 
   const handleResetPointer = () => {
