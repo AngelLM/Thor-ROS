@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -18,6 +18,8 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
+let isRunAllInProgress = false; // Variable global para controlar el estado de ejecución de Run All
+
 function Program({ isMoving }) {
   const [movements, setMovements] = useState([]);
   const [poseNames, setPoseNames] = useState([]);
@@ -26,7 +28,9 @@ function Program({ isMoving }) {
   const [selectedMovement, setSelectedMovement] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingSelection, setPendingSelection] = useState(null);
-  const [currentRobotPose, setCurrentRobotPose] = useState(null);
+  const previousRobotPoseRef = useRef(null); // Usar useRef para almacenar la pose anterior del robot
+  const currentRobotPoseRef = useRef(null); // Usar useRef para almacenar la pose actual del robot
+  const [robotMoving, setRobotMoving] = useState(false); // Estado para indicar si el robot está en movimiento
   const { ros, connected } = useROS();
 
   useEffect(() => {
@@ -40,11 +44,10 @@ function Program({ isMoving }) {
   }, []);
 
   useEffect(() => {
-    console.log('isMoving', isMoving);
-    if (!isMoving) {
+    if (!robotMoving && !isRunAllInProgress) {
       setIsStepDisabled(false); // Re-enable step buttons when robot stops moving
     }
-  }, [isMoving]);
+  }, [robotMoving]);
 
   useEffect(() => {
     if (movements.length > 0 && selectedMovement === null) {
@@ -66,17 +69,29 @@ function Program({ isMoving }) {
       messageType: 'sensor_msgs/JointState',
     });
 
+    // Modificar updateRobotPose para comparar con la pose anterior
     const updateRobotPose = (message) => {
-      // console.log('Mensaje recibido de /joint_states:', message);
-
       const jointPositions = {};
       message.name.forEach((name, index) => {
         jointPositions[name] = parseFloat(message.position[index].toFixed(4)); // Redondear a 4 decimales
       });
 
-      // console.log('Posiciones articulares procesadas:', jointPositions);
+      if (previousRobotPoseRef.current) {
+        const isSamePose = Object.keys(jointPositions).every(joint => {
+          const currentAngle = jointPositions[joint];
+          const previousAngle = previousRobotPoseRef.current[joint];
 
-      setCurrentRobotPose(jointPositions);
+          if (currentAngle === undefined || previousAngle === undefined) {
+            return false;
+          }
+
+          return Math.abs(currentAngle - previousAngle) < 0.0001; // Comparación con tolerancia de 4 decimales
+        });
+
+        setRobotMoving(!isSamePose); // Si la pose es la misma, el robot no se está moviendo
+      }
+      previousRobotPoseRef.current = jointPositions; // Actualizar la pose anterior en useRef
+      currentRobotPoseRef.current = jointPositions; // Actualizar la pose actual en useRef
     };
 
     jointStateListener.subscribe(updateRobotPose);
@@ -88,12 +103,10 @@ function Program({ isMoving }) {
   }, [connected, ros]);
 
   const isPoseCurrent = (poseName) => {
-    if (!currentRobotPose) {
+    if (!currentRobotPoseRef.current) {
       console.warn('No se ha recibido la posición actual del robot.');
       return false;
     }
-
-    console.log('Posiciones actuales del robot:', currentRobotPose);
 
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     const targetPose = savedPoses.find(p => p.name === poseName);
@@ -103,21 +116,18 @@ function Program({ isMoving }) {
       return false;
     }
 
-    console.log('Pose objetivo:', targetPose);
-
     const tolerance = 0.0001; // Tolerancia para la comparación (4 decimales)
 
     const isMatch = Object.keys(targetPose.joints).every(joint => {
-      const currentAngle = currentRobotPose[joint];
+      const currentAngle = currentRobotPoseRef.current[joint];
       const targetAngle = targetPose.joints[joint];
 
       if (currentAngle === undefined || targetAngle === undefined) {
-        console.warn(`El ángulo de la articulación ${joint} no está definido en la pose actual o en la pose objetivo.`);
+        console.warn('The angle of joint', joint, 'is not defined in the current or target pose.');
         return false;
       }
 
       const match = Math.abs(currentAngle - targetAngle) < tolerance;
-      console.log(`Comparación para ${joint}: actual=${currentAngle}, objetivo=${targetAngle}, match=${match}`);
       return match;
     });
 
@@ -171,47 +181,42 @@ function Program({ isMoving }) {
     const updatedMovements = [...movements];
     [updatedMovements[index + 1], updatedMovements[index]] = [updatedMovements[index], updatedMovements[index + 1]];
     setMovements(updatedMovements);
-    saveProgramToLocalStorage(updatedMovements);
+    saveProgramToLocalStorage(updatedMovements); // Fix incorrect syntax
   };
 
-  const handleRunAll = () => {
-    console.log('Run All');
-  };
+  const handleRunAll = async () => {
+    isRunAllInProgress = true; // Marcar que Run All está en progreso
+    setIsStepDisabled(true); // Disable the Start button at the beginning
 
-  const handleRunStep = () => {
-    const nextStep = currentStep === null ? 0 : currentStep + 1;
-    if (nextStep >= movements.length) return; // No more steps to run
+    if (selectedMovement !== 0) {
+      const userResponse = window.confirm(
+        'The pointer is not at the first movement. Do you want to execute the program from the beginning?'
+      );
 
-    const movement = movements[nextStep];
-    const poseName = movement.pose;
-
-    if (!connected || !ros) {
-      console.warn('ROS is not connected.');
-      return;
+      if (userResponse) {
+        setSelectedMovement(0);
+        setCurrentStep(0);
+      }
     }
 
-    const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
-    const pose = savedPoses.find(p => p.name === poseName);
-
-    if (!pose) {
-      console.warn(`Pose ${poseName} not found.`);
-      return;
+    for (let i = selectedMovement; i < movements.length; i++) {
+      executeMovement(i); // Usar la función executeMovement para ejecutar cada movimiento
+      const newPointer = i + 1 >= movements.length ? 0 : i + 1;
+      setSelectedMovement(newPointer);
+      setCurrentStep(i); // Highlight the executed movement
+      // Esperar a que el movimiento se complete antes de continuar con un bucle de espera
+      // Wait until the robot reaches the target pose
+      while(!isPoseCurrent(movements[i].pose)) {
+        console.log(`Waiting for robot to reach pose: ${movements[i].pose}`);
+        // Esperar un breve período para evitar un bucle infinito
+        await new Promise(resolve => setTimeout(resolve, 100));  
+      }
+      
     }
 
-    const topic = new ROSLIB.Topic({
-      ros,
-      name: '/joint_group_position_controller/command',
-      messageType: 'std_msgs/Float64MultiArray',
-    });
-
-    const message = new ROSLIB.Message({
-      data: Object.values(pose.joints).slice(0, 6),
-    });
-
-    topic.publish(message);
-    console.log(`Running step: ${nextStep}`, movement);
-
-    setCurrentStep(nextStep);
+    isRunAllInProgress = false; // Marcar que Run All ha terminado
+    setIsStepDisabled(false); // Re-enable the Start button after all movements are executed
+    console.log('All movements executed.');
   };
 
   const handleStop = () => {
@@ -220,6 +225,15 @@ function Program({ isMoving }) {
 
   const handleStepFW = () => {
     const nextStep = selectedMovement === null ? 0 : selectedMovement;
+
+    if (currentStep === movements.length - 1) {
+      if (window.confirm('You have reached the last movement. Do you want to go to the first movement?')) {
+        executeMovement(0);
+        setCurrentStep(0); // Highlight the executed movement
+        setSelectedMovement(1); // Pointer always points to the next movement
+      }
+      return;
+    }
 
     executeMovement(nextStep);
 
@@ -282,7 +296,7 @@ function Program({ isMoving }) {
     const nextStep = step + 1 >= movements.length ? 0 : step + 1;
     setSelectedMovement(nextStep);
 
-    if (isPoseCurrent(poseName)) {
+    if (isPoseCurrent(poseName) && !isRunAllInProgress) {
       console.log('El robot ya está en la pose objetivo después de ejecutar el movimiento. Habilitando botones.');
       setIsStepDisabled(false);
     }
@@ -461,8 +475,15 @@ function Program({ isMoving }) {
             </Button>
             <Button
               variant="contained"
-              style={{ backgroundColor: 'gray', color: 'white', fontSize: '1rem', fontWeight: 'bold' }}
+              style={{
+                backgroundColor: isStepDisabled ? 'lightgray' : 'gray',
+                color: isStepDisabled ? 'darkgray' : 'white',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                cursor: isStepDisabled ? 'not-allowed' : 'pointer'
+              }}
               onClick={handleResetPointer}
+              disabled={isStepDisabled} // Disable button when step is in progress
             >
               Reset
             </Button>
@@ -471,8 +492,16 @@ function Program({ isMoving }) {
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
             <Button
               variant="contained"
-              style={{ backgroundColor: 'green', color: 'white', marginRight: '0.5rem', fontSize: '1rem', fontWeight: 'bold' }}
+              style={{
+                backgroundColor: isStepDisabled ? 'lightgray' : 'green',
+                color: isStepDisabled ? 'darkgray' : 'white',
+                marginRight: '0.5rem',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                cursor: isStepDisabled ? 'not-allowed' : 'pointer'
+              }}
               onClick={handleRunAll}
+              disabled={isStepDisabled} // Disable button when step is in progress
             >
               Run All
             </Button>
