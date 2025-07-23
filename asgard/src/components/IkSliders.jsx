@@ -110,7 +110,7 @@ const NumberInput = React.forwardRef(function CustomNumberInput(props, ref) {
   );
 });
 
-export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusChange, initialPose }) {
+export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusChange, initialPose, ghostJoints }) {
   const { ros, connected } = useROS();
   const [values, setValues] = useState({
     x: 200, y: 0, z: 300, roll: 0, pitch: 0, yaw: 0
@@ -190,14 +190,17 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     }
   }, [values, onPreviewJointsChange]);
 
+  // Peticiones IK solo cuando cambian los values (NumberInputs)
   useEffect(() => {
     if (!ros || !connected) return;
     console.log('Sending IK request with values:', values);
+    
     const service = new ROSLIB.Service({
       ros,
       name: '/compute_ik',
       serviceType: 'moveit_msgs/srv/GetPositionIK'
     });
+    
     const pose = {
       header: { frame_id: 'base_link' },
       pose: {
@@ -213,13 +216,45 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
         )
       }
     };
+
+    // Construir robot_state con ghostJoints si están disponibles
+    let robotState = {};
+    if (ghostJoints && Object.keys(ghostJoints).length > 0) {
+      // Filtrar solo las joints principales y del gripper que necesitamos
+      const jointNames = [
+        'joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6',
+        'gripperbase_to_armgearright'
+      ];
+      
+      const filteredNames = [];
+      const filteredPositions = [];
+      
+      jointNames.forEach(jointName => {
+        if (ghostJoints[jointName] !== undefined) {
+          filteredNames.push(jointName);
+          filteredPositions.push(ghostJoints[jointName]);
+        }
+      });
+      
+      if (filteredNames.length > 0) {
+        robotState = {
+          joint_state: {
+            name: filteredNames,
+            position: filteredPositions
+          }
+        };
+      }
+    }
+    
     const req = {
       ik_request: {
         group_name: 'arm_group',
         pose_stamped: pose,
         ik_link_name: 'gripper_base',
         timeout: { sec: 0, nanosec: 0 },
-        constraints: {}
+        constraints: {},
+        robot_state: robotState,
+        avoid_collisions: false
       }
     };
     service.callService(req, (res) => {
@@ -241,7 +276,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
         setStatusMsg({ status: 'unreachable' });
       }
     });
-  }, [values, ros, connected, onPreviewJointsChange]);
+  }, [values, ros, connected, onPreviewJointsChange]); // Solo cuando cambian values, NO ghostJoints
 
   const handleValueChange = (key, newValue) => {
     setValues((prevValues) => ({ ...prevValues, [key]: newValue }));

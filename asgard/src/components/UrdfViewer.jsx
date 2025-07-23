@@ -5,7 +5,7 @@ import { ViewportGizmo } from "three-viewport-gizmo";
 import URDFLoader from 'urdf-loader';
 import ROSLIB from 'roslib';
 
-const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true }) => {
+const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true, onGhostJointsChange }) => {
   const mountRef = useRef(null);
   const rendererRef = useRef(null);
   const robotRef = useRef(null); // robot real
@@ -64,12 +64,36 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     // Forced initial update of gizmo to ensure correct position
     gizmo.update(); // Force initial update of gizmo
 
-    // Animación
-    const animate = () => {
-      setTimeout(() => {
+    // Animación con limitador de FPS efectivo
+    let lastTime = 0;
+    const targetFPS = 15;
+    const frameInterval = 1000 / targetFPS; // 33.33ms between frames
+
+    const animate = (currentTime) => {
+      // Controlar el tiempo transcurrido para limitar a los FPS objetivo
+      if (currentTime - lastTime >= frameInterval) {
         requestAnimationFrame(animate);
         // Fuerza el material azul translúcido en todos los meshes del ghost en cada frame
         if (ghostRef.current) {
+          // Obtener los valores actuales de las joints del ghost robot
+          const jointValues = {};
+          
+          if (ghostRef.current.joints) {
+            // Leer todas las joints disponibles del robot en lugar de hardcodear
+            Object.keys(ghostRef.current.joints).forEach(jointName => {
+              const joint = ghostRef.current.joints[jointName];
+              if (joint && joint.angle !== undefined) {
+                jointValues[jointName] = joint.angle;
+              }
+            });
+          }
+          
+          // console.log('Ghost Robot Joint Values (URDFVIEWER):', jointValues);
+          
+          // Enviar los valores al componente padre si hay callback
+          if (onGhostJointsChange) {
+            onGhostJointsChange(jointValues);
+          }
           ghostRef.current.traverse(obj => {
             if (obj.isMesh) {
               if (Array.isArray(obj.material)) {
@@ -102,10 +126,16 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
         // Render the gizmo
         renderer.toneMapping = THREE.NoToneMapping;
         gizmo.render();
-      }, 1000 / 30); // Limit to 30 FPS
+        
+        lastTime = currentTime;
+      } else {
+        // Si no ha pasado suficiente tiempo, programa la próxima verificación
+        requestAnimationFrame(animate);
+      }
     };
 
-    renderer.setAnimationLoop(animate);
+    // Iniciar el loop de animación
+    requestAnimationFrame(animate);
 
     // Optimized renderer settings
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));

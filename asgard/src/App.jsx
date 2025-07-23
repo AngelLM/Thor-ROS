@@ -32,6 +32,7 @@ function App() {
   const [previewJoints, setPreviewJoints] = useState(null); // Estado para las articulaciones objetivo (IK)
   const [fkJoints, setFkJoints] = useState(null); // Estado para las articulaciones objetivo (FK)
   const [currentJoints, setCurrentJoints] = useState(null); // Estado articular actual del robot
+  const [ghostJoints, setGhostJoints] = useState(null); // Estado para las articulaciones del ghost robot
   const [showRealRobot, setShowRealRobot] = useState(true);
   const [showGhostRobot, setShowGhostRobot] = useState(true);
   const [ikStatus, setIkStatus] = useState('reachable');
@@ -140,6 +141,13 @@ function App() {
     // eslint-disable-next-line
   }, [activeTab]);
 
+  // Console log para verificar el estado de los joints del ghost robot
+  useEffect(() => {
+    if (ghostRef.current) {
+      console.log('Ghost Robot Joints:', ghostRef.current.getJointValues());
+    }
+  }, [ghostRef.current]); 
+
   // Determina qué preview mostrar
   const effectivePreviewJoints = activeTab === 'forward' ? fkJoints : previewJoints;
 
@@ -200,6 +208,7 @@ function App() {
           showGhostRobot={showGhostRobot}
           ikStatus={ikStatus}
           ghostRef={ghostRef} // Asegurar que ghostRef se pase correctamente
+          onGhostJointsChange={setGhostJoints} // Callback para recibir valores del ghost
           className="urdf-viewer"
         />
 
@@ -251,7 +260,11 @@ function App() {
               <span className="accordion-title">Inverse Kinematics</span>
             </AccordionSummary>
             <AccordionDetails>
-              <IKSliders onPreviewJointsChange={setPreviewJoints} initialPose={ikPose} />
+              <IKSliders 
+                onPreviewJointsChange={setPreviewJoints} 
+                initialPose={ikPose}
+                ghostJoints={ghostJoints} // Pasar los valores del ghost a IKSliders
+              />
             </AccordionDetails>
           </Accordion>
 
