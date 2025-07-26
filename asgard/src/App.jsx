@@ -41,6 +41,7 @@ function App() {
   const [poseName, setPoseName] = useState('');
   const [isMoving, setIsMoving] = useState(false);
   const [showFPS, setShowFPS] = useState(true); // Estado para controlar la visibilidad de los FPS
+  const [showGhostRobotCoordinates, setShowGhostRobotCoordinates] = useState(true); // Estado para controlar la visibilidad de las flechas
   const [poses, setPoses] = useState(() => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     return savedPoses;
@@ -215,6 +216,7 @@ function App() {
           onGhostJointsChange={setGhostJoints} // Callback para recibir valores del ghost
           className="urdf-viewer"
           showFPS={showFPS} // Pasar el estado showFPS
+          showGhostRobotCoordinates={showGhostRobotCoordinates} // Pasar el estado showGhostRobotCoordinates
         />
 
         {/* Persistent Drawer */}
@@ -292,6 +294,8 @@ function App() {
                 setShowGhostRobot={setShowGhostRobot}
                 showFPS={showFPS} // Pasar el estado showFPS
                 setShowFPS={setShowFPS} // Pasar el setter de showFPS
+                showGhostRobotCoordinates={showGhostRobotCoordinates} // Pasar el estado showGhostRobotCoordinates
+                setShowGhostRobotCoordinates={setShowGhostRobotCoordinates} // Pasar el setter de showGhostRobotCoordinates
               />
             </AccordionDetails>
           </Accordion>

@@ -5,13 +5,14 @@ import { ViewportGizmo } from "three-viewport-gizmo";
 import URDFLoader from 'urdf-loader';
 import ROSLIB from 'roslib';
 
-const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true, onGhostJointsChange, showFPS = true }) => {
+const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true, onGhostJointsChange, showFPS = true, showGhostRobotCoordinates = true }) => {
   const mountRef = useRef(null);
   const rendererRef = useRef(null);
   const robotRef = useRef(null); // robot real
   const ghostRef = useRef(null); // robot ghost
   const sceneRef = useRef(null);
   const urdfXmlRef = useRef(null);
+  const arrowsRef = useRef([]); // Store ArrowHelpers
   const [fps, setFps] = useState(0); // Estado para los FPS
 
   // Cargar y mostrar ambos robots (real y ghost)
@@ -54,7 +55,11 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
       new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), arrowLength, 0x00ff00, arrowHeadLength, arrowHeadWidth), // Y verde
       new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), arrowLength, 0x0000ff, arrowHeadLength, arrowHeadWidth), // Z azul
     ];
-    arrows.forEach(a => scene.add(a));
+    arrows.forEach((arrow) => {
+      arrow.visible = showGhostRobotCoordinates; // Set initial visibility
+      scene.add(arrow);
+    });
+    arrowsRef.current = arrows; // Store arrows in ref
 
     // Gizmo
     const gizmo = new ViewportGizmo(camera, renderer, { type: 'sphere' });
@@ -217,6 +222,7 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
       console.warn('[ROS] 🔌 Conexión cerrada');
     });
     return () => {
+      arrows.forEach((arrow) => scene.remove(arrow)); // Cleanup arrows
       window.removeEventListener('resize', handleResize);
       if (rendererRef.current) {
         rendererRef.current.dispose();
@@ -244,6 +250,15 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     if (robotRef.current) robotRef.current.visible = !!showRealRobot;
     if (ghostRef.current) ghostRef.current.visible = !!showGhostRobot;
   }, [showRealRobot, showGhostRobot]);
+
+  // Mostrar/ocultar flechas según showGhostRobotCoordinates
+  useEffect(() => {
+    if (arrowsRef.current.length > 0) {
+      arrowsRef.current.forEach((arrow) => {
+        arrow.visible = showGhostRobotCoordinates;
+      });
+    }
+  }, [showGhostRobotCoordinates]);
 
   return (
     <div>
