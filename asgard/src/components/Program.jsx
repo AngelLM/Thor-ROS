@@ -32,6 +32,8 @@ function Program({ isMoving, poses }) {
   const currentRobotPoseRef = useRef(null); // Usar useRef para almacenar la pose actual del robot
   const [robotMoving, setRobotMoving] = useState(false); // Estado para indicar si el robot está en movimiento
   const { ros, connected } = useROS();
+  const [runAllDialogOpen, setRunAllDialogOpen] = useState(false);
+  const [runAllFromBeginning, setRunAllFromBeginning] = useState(false);
 
   useEffect(() => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
@@ -192,30 +194,42 @@ function Program({ isMoving, poses }) {
       return;
     }
 
+    if (selectedMovement !== 0) {
+      setRunAllDialogOpen(true);
+      return; // Wait for user input from the dialog
+    }
+
+    await executeRunAll();
+  };
+
+  const executeRunAll = async (startIndex = 0) => {
     isRunAllInProgress = true; // Mark that Run All is in progress
     setIsStepDisabled(true); // Disable the Start button at the beginning
 
-    if (selectedMovement !== 0) {
-      const userResponse = window.confirm(
-        'The pointer is not at the first movement. Do you want to execute the program from the beginning?'
-      );
+    // if (runAllFromBeginning) {
+    //   console.log('Running all movements from the beginning.');
+    //   setSelectedMovement(0);
+    //   setCurrentStep(0);
+    // }
 
-      if (userResponse) {
-        setSelectedMovement(0);
-        setCurrentStep(0);
-      }
-    }
-
-    for (let i = selectedMovement; i < movements.length; i++) {
+    for (let i = startIndex; i < movements.length; i++) {
       executeMovement(i); // Use the executeMovement function to execute each movement
       const newPointer = i + 1 >= movements.length ? 0 : i + 1;
       setSelectedMovement(newPointer);
       setCurrentStep(i); // Highlight the executed movement
+
       // Wait until the robot reaches the target pose before continuing with a wait loop
       while (!isPoseCurrent(movements[i].pose)) {
+        if (!isRunAllInProgress) {
+          console.log('Execution interrupted by Stop command.');
+          break; // Exit wait loop if Stop is pressed
+        }
         console.log(`Waiting for robot to reach pose: ${movements[i].pose}`);
-        // Wait a short period to avoid an infinite loop
         await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      if (!isRunAllInProgress) {
+        break; // Exit the main loop if Stop is pressed
       }
     }
 
@@ -225,7 +239,29 @@ function Program({ isMoving, poses }) {
   };
 
   const handleStop = () => {
-    console.log('Stop');
+    // Stop the Run All process
+    isRunAllInProgress = false;
+    setIsStepDisabled(false); // Re-enable buttons
+
+    if (!connected || !ros) {
+      console.warn('ROS is not connected. Cannot send stop command.');
+      return;
+    }
+
+    // Send a stop command to la /trajectory_execution_event
+    const stopTopic = new ROSLIB.Topic({
+      ros,
+      name: '/trajectory_execution_event', // Updated topic name
+      messageType: 'std_msgs/String', // Updated message type
+    });
+
+    const stopMessage = new ROSLIB.Message({
+      data: 'stop', // Message content
+    });
+
+    stopTopic.publish(stopMessage);
+
+    console.log('Stop command sent to /trajectory_execution_event.');
   };
 
   const handleStepFW = () => {
@@ -370,6 +406,41 @@ function Program({ isMoving, poses }) {
           </Button>
           <Button onClick={() => handleDialogClose(true)} color="primary" autoFocus>
             Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={runAllDialogOpen} onClose={() => setRunAllDialogOpen(false)}>
+        <DialogTitle>Run All</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            The pointer is not at the first movement. Do you want to execute the program from the beginning or from the pointer?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              console.log('Running all movements from the beginning.');
+              setSelectedMovement(0);
+              setCurrentStep(0);
+              setRunAllDialogOpen(false);
+
+              // Pasar el índice inicial explícitamente a executeRunAll
+              executeRunAll(0);
+            }}
+            color="primary"
+          >
+            Execute from the beginning
+          </Button>
+          <Button
+            onClick={() => {
+              // setRunAllFromBeginning(false);
+              setRunAllDialogOpen(false);
+              executeRunAll(selectedMovement);
+            }}
+            color="secondary"
+          >
+            Execute from the pointer
           </Button>
         </DialogActions>
       </Dialog>
@@ -525,8 +596,15 @@ function Program({ isMoving, poses }) {
             </Button>
             <Button
               variant="contained"
-              style={{ backgroundColor: 'red', color: 'white', fontSize: '1rem', fontWeight: 'bold' }}
+              style={{
+                backgroundColor: isStepDisabled ? 'red' : 'lightgray', // Red when enabled, gray when disabled
+                color: isStepDisabled ? 'white' : 'darkgray', // White text when enabled, dark gray when disabled
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                cursor: isStepDisabled ? 'pointer' : 'not-allowed', // Pointer when enabled, not-allowed when disabled
+              }}
               onClick={handleStop}
+              disabled={!isStepDisabled} // Enable Stop only when Step and Run All are disabled
             >
               Stop
             </Button>
