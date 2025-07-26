@@ -203,6 +203,9 @@ function App() {
       <div className="app-container" style={{ display: 'flex', height: '100vh' }}>
         {/* Menú lateral fijo */}
         <div className="sidebar">
+          <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+            <img src="/images/thor_logo.png" alt="Thor Logo" style={{ maxWidth: '20%', height: 'auto' }} />
+          </div>
           {/* Accordions */}
           <Accordion
             expanded={activeTab === 'forward'}
