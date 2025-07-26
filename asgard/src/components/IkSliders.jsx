@@ -484,6 +484,7 @@ const handleTCPMove = (axis, increment) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}> {/* Center all content */}
+      <h4 style={{ marginTop: '1.5rem', textAlign: 'center' }}>World Frame</h4>
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z */}
         <NumberInput
           value={values.x}
@@ -545,53 +546,10 @@ const handleTCPMove = (axis, increment) => {
           axis="z"
         />
       </div>
-      <h4 style={{ marginTop: '1.5rem', textAlign: 'center' }}>Robot Configuration</h4>
-      <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '70%', margin: '0 auto', gap: '2rem' }}> {/* Container for radio groups */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Shoulder group */}
-          <FormLabel component="legend" style={{ fontWeight: 'bold' }}>Shoulder</FormLabel>
-          <RadioGroup
-            value={ikConfig.shoulder}
-            onChange={(e) => handleConfigChange('shoulder', e.target.value)}
-          >
-            <FormControlLabel value="left" control={<Radio disabled />} label="Left" />
-            <FormControlLabel value="right" control={<Radio disabled />} label="Right" />
-            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
-          </RadioGroup>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Elbow group */}
-          <FormLabel component="legend" style={{ fontWeight: 'bold' }}>Elbow</FormLabel>
-          <RadioGroup
-            value={ikConfig.elbow}
-            onChange={(e) => handleConfigChange('elbow', e.target.value)}
-          >
-            <FormControlLabel value="above" control={<Radio disabled />} label="Above" />
-            <FormControlLabel value="below" control={<Radio disabled />} label="Below" />
-            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
-          </RadioGroup>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Wrist group */}
-          <FormLabel component="legend" style={{ fontWeight: 'bold' }}>Wrist</FormLabel>
-          <RadioGroup
-            value={ikConfig.wrist}
-            onChange={(e) => handleConfigChange('wrist', e.target.value)}
-          >
-            <FormControlLabel value="up" control={<Radio disabled />} label="Up" />
-            <FormControlLabel value="down" control={<Radio disabled />} label="Down" />
-            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
-          </RadioGroup>
-        </div>
-      </div>
-      <Button
-        onClick={sendIKGoal}
-        disabled={isUnreachable}
-        variant="contained"
-        color={isUnreachable ? "secondary" : "primary"}
-        style={{ marginTop: '1rem', fontWeight: 'bold' }}
-      >
-        Move
-      </Button>
+      
       {/* Added buttons for TCP coordinate adjustments */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}> {/* TCP Buttons */}
+        <h4 style={{ marginTop: '1.5rem', textAlign: 'center' }}>TCP Frame</h4>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* X group */}
             <label style={{ marginBottom: '4px' }}><strong>X</strong></label>
@@ -735,6 +693,52 @@ const handleTCPMove = (axis, increment) => {
           </div>
         </div>
       </div>
+
+      <h4 style={{ marginTop: '1.5rem', textAlign: 'center' }}>Robot Configuration</h4>
+      <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '70%', margin: '0 auto', gap: '2rem' }}> {/* Container for radio groups */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Shoulder group */}
+          <FormLabel component="legend" style={{ fontWeight: 'bold' }}>Shoulder</FormLabel>
+          <RadioGroup
+            value={ikConfig.shoulder}
+            onChange={(e) => handleConfigChange('shoulder', e.target.value)}
+          >
+            <FormControlLabel value="left" control={<Radio disabled />} label="Left" />
+            <FormControlLabel value="right" control={<Radio disabled />} label="Right" />
+            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
+          </RadioGroup>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Elbow group */}
+          <FormLabel component="legend" style={{ fontWeight: 'bold' }}>Elbow</FormLabel>
+          <RadioGroup
+            value={ikConfig.elbow}
+            onChange={(e) => handleConfigChange('elbow', e.target.value)}
+          >
+            <FormControlLabel value="above" control={<Radio disabled />} label="Above" />
+            <FormControlLabel value="below" control={<Radio disabled />} label="Below" />
+            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
+          </RadioGroup>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Wrist group */}
+          <FormLabel component="legend" style={{ fontWeight: 'bold' }}>Wrist</FormLabel>
+          <RadioGroup
+            value={ikConfig.wrist}
+            onChange={(e) => handleConfigChange('wrist', e.target.value)}
+          >
+            <FormControlLabel value="up" control={<Radio disabled />} label="Up" />
+            <FormControlLabel value="down" control={<Radio disabled />} label="Down" />
+            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
+          </RadioGroup>
+        </div>
+      </div>
+      <Button
+        onClick={sendIKGoal}
+        disabled={isUnreachable}
+        variant="contained"
+        color={isUnreachable ? "secondary" : "primary"}
+        style={{ marginTop: '1rem', fontWeight: 'bold' }}
+      >
+        Move
+      </Button>
 
     </div>
   );
