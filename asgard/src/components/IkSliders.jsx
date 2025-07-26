@@ -484,7 +484,7 @@ const handleTCPMove = (axis, increment) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}> {/* Center all content */}
-      <h4 style={{ marginTop: '1.5rem', textAlign: 'center' }}>World Frame</h4>
+      <h3 style={{ marginTop: '1.5rem', textAlign: 'center' }}>World Frame</h3>
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z */}
         <NumberInput
           value={values.x}
@@ -549,7 +549,7 @@ const handleTCPMove = (axis, increment) => {
       
       {/* Added buttons for TCP coordinate adjustments */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}> {/* TCP Buttons */}
-        <h4 style={{ marginTop: '1.5rem', textAlign: 'center' }}>TCP Frame</h4>
+        <h3 style={{ marginTop: '1.5rem', textAlign: 'center' }}>TCP Frame</h3>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* X group */}
             <label style={{ marginBottom: '4px' }}><strong>X</strong></label>
