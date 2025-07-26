@@ -1,17 +1,18 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { ViewportGizmo } from "three-viewport-gizmo";
 import URDFLoader from 'urdf-loader';
 import ROSLIB from 'roslib';
 
-const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true, onGhostJointsChange }) => {
+const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true, onGhostJointsChange, showFPS = true }) => {
   const mountRef = useRef(null);
   const rendererRef = useRef(null);
   const robotRef = useRef(null); // robot real
   const ghostRef = useRef(null); // robot ghost
   const sceneRef = useRef(null);
   const urdfXmlRef = useRef(null);
+  const [fps, setFps] = useState(0); // Estado para los FPS
 
   // Cargar y mostrar ambos robots (real y ghost)
   useEffect(() => {
@@ -66,12 +67,19 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
 
     // Animación con limitador de FPS efectivo
     let lastTime = 0;
-    const targetFPS = 15;
+    const targetFPS = 30;
     const frameInterval = 1000 / targetFPS; // 33.33ms between frames
+    let frameCount = 0;
+
+    const logFPS = setInterval(() => {
+      setFps(frameCount); // Actualizar el estado con el valor actual de FPS
+      frameCount = 0; // Reiniciar el contador
+    }, 1000); // Cada segundo
 
     const animate = (currentTime) => {
       // Controlar el tiempo transcurrido para limitar a los FPS objetivo
       if (currentTime - lastTime >= frameInterval) {
+        frameCount++; // Incrementar el contador de frames
         requestAnimationFrame(animate);
         // Fuerza el material azul translúcido en todos los meshes del ghost en cada frame
         if (ghostRef.current) {
@@ -243,6 +251,22 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
         ref={mountRef}
         style={{ width: '100%', height: '100%', margin: '0', padding: '0', position: 'absolute', top: '0', left: '0', overflow: 'hidden' }}
       />
+      {showFPS && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '5px',
+            right: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            color: 'white',
+            padding: '5px',
+            borderRadius: '5px',
+            fontSize: '12px',
+          }}
+        >
+          FPS: {fps}
+        </div>
+      )}
     </div>
   );
 };

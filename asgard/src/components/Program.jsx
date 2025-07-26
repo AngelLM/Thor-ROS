@@ -20,9 +20,9 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
 let isRunAllInProgress = false; // Variable global para controlar el estado de ejecución de Run All
 
-function Program({ isMoving }) {
+function Program({ isMoving, poses }) {
   const [movements, setMovements] = useState([]);
-  const [poseNames, setPoseNames] = useState([]);
+  const [poseNames, setPoseNames] = useState(poses.map(pose => pose.name));
   const [currentStep, setCurrentStep] = useState(null);
   const [isStepDisabled, setIsStepDisabled] = useState(false);
   const [selectedMovement, setSelectedMovement] = useState(null);
@@ -319,6 +319,21 @@ function Program({ isMoving }) {
     }
     setPendingSelection(null);
   };
+
+  useEffect(() => {
+    setPoseNames(poses.map(pose => pose.name));
+  }, [poses]);
+
+  useEffect(() => {
+    const updatedMovements = movements.map(movement => {
+      if (!poseNames.includes(movement.pose)) {
+        return { ...movement, pose: '' }; // Reset pose if it no longer exists
+      }
+      return movement;
+    });
+    setMovements(updatedMovements);
+    saveProgramToLocalStorage(updatedMovements);
+  }, [poseNames]);
 
   return (
     <div style={{ padding: '0.25rem' }}>

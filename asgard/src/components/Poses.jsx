@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -9,17 +9,16 @@ import { useROS } from '../RosContext';
 import ROSLIB from 'roslib';
 import { useImperativeHandle, forwardRef } from 'react';
 
-function Poses({ ghostRef, onPreviewJointsChange }, ref) {
+function Poses({ ghostRef, onPreviewJointsChange, poses, setPoses }, ref) {
   const { ros, connected } = useROS();
-  const [poses, setPoses] = useState([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [poseToDelete, setPoseToDelete] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [poseToDelete, setPoseToDelete] = React.useState(null);
 
   useEffect(() => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     setPoses(savedPoses);
 
-  }, []);
+  }, [setPoses]);
 
   const updatePoses = () => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];

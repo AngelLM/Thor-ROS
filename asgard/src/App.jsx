@@ -40,6 +40,11 @@ function App() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [poseName, setPoseName] = useState('');
   const [isMoving, setIsMoving] = useState(false);
+  const [showFPS, setShowFPS] = useState(true); // Estado para controlar la visibilidad de los FPS
+  const [poses, setPoses] = useState(() => {
+    const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
+    return savedPoses;
+  });
   const rosRef = useRef(null);
   const lastJointsOnTabChange = useRef(null);
   const lastPoseOnTabChange = useRef(null);
@@ -165,10 +170,8 @@ function App() {
       return;
     }
 
-    const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
-
     // Check for duplicate pose name
-    const isDuplicate = savedPoses.some(pose => pose.name === poseName.trim());
+    const isDuplicate = poses.some(pose => pose.name === poseName.trim());
     if (isDuplicate) {
       alert('A pose with this name already exists. Please choose a different name.');
       return;
@@ -182,8 +185,9 @@ function App() {
       gripperBase: ikPose
     };
 
-    savedPoses.push(poseData);
-    localStorage.setItem('savedPoses', JSON.stringify(savedPoses));
+    const updatedPoses = [...poses, poseData];
+    setPoses(updatedPoses);
+    localStorage.setItem('savedPoses', JSON.stringify(updatedPoses));
     console.log('Pose saved:', poseData);
 
     if (poseRef.current) {
@@ -210,6 +214,7 @@ function App() {
           ghostRef={ghostRef} // Asegurar que ghostRef se pase correctamente
           onGhostJointsChange={setGhostJoints} // Callback para recibir valores del ghost
           className="urdf-viewer"
+          showFPS={showFPS} // Pasar el estado showFPS
         />
 
         {/* Persistent Drawer */}
@@ -285,6 +290,8 @@ function App() {
                 setShowRealRobot={setShowRealRobot}
                 showGhostRobot={showGhostRobot}
                 setShowGhostRobot={setShowGhostRobot}
+                showFPS={showFPS} // Pasar el estado showFPS
+                setShowFPS={setShowFPS} // Pasar el setter de showFPS
               />
             </AccordionDetails>
           </Accordion>
@@ -301,7 +308,7 @@ function App() {
               <span className="accordion-title">Poses</span>
             </AccordionSummary>
             <AccordionDetails>
-              <Poses ref={poseRef} ghostRef={ghostRef} onPreviewJointsChange={memoizedOnPreviewJointsChange} />
+              <Poses ref={poseRef} ghostRef={ghostRef} onPreviewJointsChange={memoizedOnPreviewJointsChange} poses={poses} setPoses={setPoses} />
             </AccordionDetails>
           </Accordion>
 
@@ -317,7 +324,7 @@ function App() {
               <span className="accordion-title">Program</span>
             </AccordionSummary>
             <AccordionDetails>
-              <Program isMoving={isMoving} />
+              <Program isMoving={isMoving} poses={poses} />
             </AccordionDetails>
           </Accordion>
 
@@ -332,13 +339,14 @@ function App() {
         </IconButton>
 
         {/* Floating Action Button */}
-        <Fab
+        <Fab variant="extended"
           color="primary"
           aria-label="add"
-          style={{ position: 'absolute', bottom: '16px', right: '16px', zIndex: 10 }}
+          style={{ position: 'absolute', bottom: '35px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem' }}
           onClick={handleFabClick}
         >
           <AddIcon />
+          Pose
         </Fab>
 
         {/* Form Dialog */}

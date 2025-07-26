@@ -2,7 +2,7 @@ import React from 'react';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
-export default function Settings({ showRealRobot, setShowRealRobot, showGhostRobot, setShowGhostRobot }) {
+export default function Settings({ showRealRobot, setShowRealRobot, showGhostRobot, setShowGhostRobot, showFPS, setShowFPS }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <FormControlLabel
@@ -12,6 +12,10 @@ export default function Settings({ showRealRobot, setShowRealRobot, showGhostRob
       <FormControlLabel
         control={<Checkbox checked={showGhostRobot} onChange={(e) => setShowGhostRobot(e.target.checked)} />}
         label="Show Ghost Robot"
+      />
+      <FormControlLabel
+        control={<Checkbox checked={showFPS} onChange={(e) => setShowFPS(e.target.checked)} />}
+        label="Show FPS"
       />
     </div>
   );

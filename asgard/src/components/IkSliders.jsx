@@ -325,70 +325,72 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
 const handleTCPMove = (axis, increment) => {
   console.log(`Moving TCP for axis: ${axis}, increment: ${increment}`);
 
-  // 1. Delta pose
-  const deltaPose = { x: 0, y: 0, z: 0, roll: 0, pitch: 0, yaw: 0 };
-  if (axis === 'x' || axis === 'y' || axis === 'z') {
-    deltaPose[axis] = increment / 1000; // mm -> m
-  } else {
-    deltaPose[axis] = increment * Math.PI / 180; // deg -> rad
-  }
+  setValues((prevValues) => {
+    // 1. Delta pose
+    const deltaPose = { x: 0, y: 0, z: 0, roll: 0, pitch: 0, yaw: 0 };
+    if (axis === 'x' || axis === 'y' || axis === 'z') {
+      deltaPose[axis] = increment / 1000; // mm -> m
+    } else {
+      deltaPose[axis] = increment * Math.PI / 180; // deg -> rad
+    }
 
-  // 2. Pose actual del TCP respecto al Origen
-  const currentPose = {
-    x: values.x * 0.001,
-    y: values.y * 0.001,
-    z: values.z * 0.001,
-    roll: values.roll * Math.PI / 180,
-    pitch: values.pitch * Math.PI / 180,
-    yaw: values.yaw * Math.PI / 180
-  };
+    // 2. Pose actual del TCP respecto al Origen
+    const currentPose = {
+      x: prevValues.x * 0.001,
+      y: prevValues.y * 0.001,
+      z: prevValues.z * 0.001,
+      roll: prevValues.roll * Math.PI / 180,
+      pitch: prevValues.pitch * Math.PI / 180,
+      yaw: prevValues.yaw * Math.PI / 180
+    };
 
-  // 3. Matriz actual
-  const currentPosition = new THREE.Vector3(currentPose.x, currentPose.y, currentPose.z);
-  const currentEuler = new THREE.Euler(currentPose.roll, currentPose.pitch, currentPose.yaw, 'XYZ');
-  const currentMatrix = new THREE.Matrix4();
-  currentMatrix.makeRotationFromEuler(currentEuler);
-  currentMatrix.setPosition(currentPosition);
+    // 3. Matriz actual
+    const currentPosition = new THREE.Vector3(currentPose.x, currentPose.y, currentPose.z);
+    const currentEuler = new THREE.Euler(currentPose.roll, currentPose.pitch, currentPose.yaw, 'XYZ');
+    const currentMatrix = new THREE.Matrix4();
+    currentMatrix.makeRotationFromEuler(currentEuler);
+    currentMatrix.setPosition(currentPosition);
 
-  // 4. Matriz de incremento en el sistema del TCP
-  const deltaPosition = new THREE.Vector3(deltaPose.x, deltaPose.y, deltaPose.z);
-  const deltaEuler = new THREE.Euler(deltaPose.roll, deltaPose.pitch, deltaPose.yaw, 'XYZ');
-  const deltaMatrix = new THREE.Matrix4();
-  deltaMatrix.makeRotationFromEuler(deltaEuler);
-  deltaMatrix.setPosition(deltaPosition);
+    // 4. Matriz de incremento en el sistema del TCP
+    const deltaPosition = new THREE.Vector3(deltaPose.x, deltaPose.y, deltaPose.z);
+    const deltaEuler = new THREE.Euler(deltaPose.roll, deltaPose.pitch, deltaPose.yaw, 'XYZ');
+    const deltaMatrix = new THREE.Matrix4();
+    deltaMatrix.makeRotationFromEuler(deltaEuler);
+    deltaMatrix.setPosition(deltaPosition);
 
-  // 5. Multiplicación: nueva pose = current * delta (incremento en sistema TCP)
-  const newMatrix = currentMatrix.clone().multiply(deltaMatrix);
+    // 5. Multiplicación: nueva pose = current * delta (incremento en sistema TCP)
+    const newMatrix = currentMatrix.clone().multiply(deltaMatrix);
 
-  // 6. Descomposición de la nueva matriz
-  const newPosition = new THREE.Vector3();
-  const newQuaternion = new THREE.Quaternion();
-  const newScale = new THREE.Vector3();
-  newMatrix.decompose(newPosition, newQuaternion, newScale);
+    // 6. Descomposición de la nueva matriz
+    const newPosition = new THREE.Vector3();
+    const newQuaternion = new THREE.Quaternion();
+    const newScale = new THREE.Vector3();
+    newMatrix.decompose(newPosition, newQuaternion, newScale);
 
-  // 7. Extraer Euler desde Quaternion (orden XYZ)
-  const newEuler = new THREE.Euler().setFromQuaternion(newQuaternion, 'XYZ');
+    // 7. Extraer Euler desde Quaternion (orden XYZ)
+    const newEuler = new THREE.Euler().setFromQuaternion(newQuaternion, 'XYZ');
 
-  // Normaliza ángulos a [-180, 180] grados
-  const normalizeAngleDeg = rad => {
-    let deg = rad * 180 / Math.PI;
-    while (deg > 180) deg -= 360;
-    while (deg < -180) deg += 360;
-    return deg;
-  };
+    // Normaliza ángulos a [-180, 180] grados
+    const normalizeAngleDeg = (rad) => {
+      let deg = rad * 180 / Math.PI;
+      while (deg > 180) deg -= 360;
+      while (deg < -180) deg += 360;
+      return deg;
+    };
 
-  // 8. Actualizar estado
-  const updatedPose = {
-    x: newPosition.x * 1000,
-    y: newPosition.y * 1000,
-    z: newPosition.z * 1000,
-    roll: normalizeAngleDeg(newEuler.x),
-    pitch: normalizeAngleDeg(newEuler.y),
-    yaw: normalizeAngleDeg(newEuler.z)
-  };
+    // 8. Actualizar estado
+    const updatedPose = {
+      x: newPosition.x * 1000,
+      y: newPosition.y * 1000,
+      z: newPosition.z * 1000,
+      roll: normalizeAngleDeg(newEuler.x),
+      pitch: normalizeAngleDeg(newEuler.y),
+      yaw: normalizeAngleDeg(newEuler.z)
+    };
 
-  console.log('Updated pose:', updatedPose);
-  setValues(updatedPose);
+    console.log('Updated pose:', updatedPose);
+    return updatedPose;
+  });
 };
 
 
@@ -464,6 +466,20 @@ const handleTCPMove = (axis, increment) => {
     console.log(`Transformed point after applying rotation and translation:`, transformedPoint);
 
     return transformedPoint;
+  };
+
+  const [activeInterval, setActiveInterval] = useState(null);
+
+  const handleMouseDown = (axis, increment) => {
+    const intervalId = setInterval(() => handleTCPMove(axis, increment), 100); // Ejecuta cada 100ms
+    setActiveInterval(intervalId);
+  };
+
+  const handleMouseUp = () => {
+    if (activeInterval) {
+      clearInterval(activeInterval);
+      setActiveInterval(null);
+    }
   };
 
   return (
@@ -580,22 +596,70 @@ const handleTCPMove = (axis, increment) => {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* X group */}
             <label style={{ marginBottom: '4px' }}><strong>X</strong></label>
             <ButtonGroup>
-              <Button variant="contained" onClick={() => handleTCPMove('x', -1)} style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}>-</Button>
-              <Button variant="contained" onClick={() => handleTCPMove('x', 1)} style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}>+</Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('x', -1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp} // Asegura que se detenga si el mouse sale del botón
+                style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
+              >
+                -
+              </Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('x', 1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
+              >
+                +
+              </Button>
             </ButtonGroup>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* Y group */}
             <label style={{ marginBottom: '4px' }}><strong>Y</strong></label>
             <ButtonGroup>
-              <Button variant="contained" onClick={() => handleTCPMove('y', -1)} style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}>-</Button>
-              <Button variant="contained" onClick={() => handleTCPMove('y', 1)} style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}>+</Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('y', -1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
+              >
+                -
+              </Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('y', 1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
+              >
+                +
+              </Button>
             </ButtonGroup>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Z group */}
             <label style={{ marginBottom: '4px' }}><strong>Z</strong></label>
             <ButtonGroup>
-              <Button variant="contained" onClick={() => handleTCPMove('z', -1)} style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}>-</Button>
-              <Button variant="contained" onClick={() => handleTCPMove('z', 1)} style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}>+</Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('z', -1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
+              >
+                -
+              </Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('z', 1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
+              >
+                +
+              </Button>
             </ButtonGroup>
           </div>
         </div>
@@ -603,22 +667,70 @@ const handleTCPMove = (axis, increment) => {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* Roll group */}
             <label style={{ marginBottom: '4px' }}><strong>Roll</strong></label>
             <ButtonGroup>
-              <Button variant="contained" onClick={() => handleTCPMove('roll', -1)} style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}>-</Button>
-              <Button variant="contained" onClick={() => handleTCPMove('roll', 1)} style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}>+</Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('roll', -1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
+              >
+                -
+              </Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('roll', 1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
+              >
+                +
+              </Button>
             </ButtonGroup>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* Pitch group */}
             <label style={{ marginBottom: '4px' }}><strong>Pitch</strong></label>
             <ButtonGroup>
-              <Button variant="contained" onClick={() => handleTCPMove('yaw', -1)} style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}>-</Button>
-              <Button variant="contained" onClick={() => handleTCPMove('yaw', 1)} style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}>+</Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('yaw', -1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
+              >
+                -
+              </Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('yaw', 1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
+              >
+                +
+              </Button>
             </ButtonGroup>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Yaw group */}
             <label style={{ marginBottom: '4px' }}><strong>Yaw</strong></label>
             <ButtonGroup>
-              <Button variant="contained" onClick={() => handleTCPMove('pitch', -1)} style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}>-</Button>
-              <Button variant="contained" onClick={() => handleTCPMove('pitch', 1)} style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}>+</Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('pitch', -1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
+              >
+                -
+              </Button>
+              <Button
+                variant="contained"
+                onMouseDown={() => handleMouseDown('pitch', 1)}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
+              >
+                +
+              </Button>
             </ButtonGroup>
           </div>
         </div>
