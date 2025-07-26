@@ -139,7 +139,7 @@ function Program({ isMoving, poses }) {
   };
 
   const handleAddMovement = () => {
-    const updatedMovements = [...movements, { pose: '', type: 'Joint' }];
+    const updatedMovements = [...movements, { pose: '', type: 'J' }]; // Default type set to 'J'
     setMovements(updatedMovements);
     saveProgramToLocalStorage(updatedMovements);
   };
@@ -147,7 +147,7 @@ function Program({ isMoving, poses }) {
   const handleAddMovementBelow = (index) => {
     const updatedMovements = [
       ...movements.slice(0, index + 1),
-      { pose: '', type: 'Joint' },
+      { pose: '', type: 'J' }, // Default type set to 'J'
       ...movements.slice(index + 1)
     ];
     setMovements(updatedMovements);
@@ -325,6 +325,8 @@ function Program({ isMoving, poses }) {
   }, [poses]);
 
   useEffect(() => {
+    if (movements.length === 0) return; // Prevent overwriting movements loaded from localStorage
+
     const updatedMovements = movements.map(movement => {
       if (!poseNames.includes(movement.pose)) {
         return { ...movement, pose: '' }; // Reset pose if it no longer exists
