@@ -388,6 +388,24 @@ function Program({ isMoving, poses }) {
     saveProgramToLocalStorage(updatedMovements);
   }, [poseNames]);
 
+  useEffect(() => {
+    if (currentStep !== null) {
+      const currentElement = document.querySelector(`.scrollable-container > div:nth-child(${currentStep + 1})`);
+      if (currentElement) {
+        currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [currentStep]);
+
+  useEffect(() => {
+    if (!isRunAllInProgress) {
+      const scrollableContainer = document.querySelector('.scrollable-container');
+      if (scrollableContainer) {
+        scrollableContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }, [isRunAllInProgress]);
+
   return (
     <div style={{ padding: '0.25rem' }}>
       <Dialog open={dialogOpen} onClose={() => handleDialogClose(false)}>
@@ -454,96 +472,98 @@ function Program({ isMoving, poses }) {
         </div>
       ) : (
         <div style={{ marginTop: '0.25rem' }}>
-          {movements.map((movement, index) => (
-            <div
-              key={index}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginBottom: '1rem',
-                marginLeft: '0.3rem',
-                marginRight: '0.3rem',
-                backgroundColor: currentStep === index ? 'lightyellow' : 'transparent',
-              }}
-            >
-              <RadioGroup
-                value={selectedMovement}
-                onChange={() => handleSelectMovement(index)}
-                style={{ borderRadius: '50%' }}
+          <div className="scrollable-container">
+            {movements.map((movement, index) => (
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginBottom: '1rem',
+                  marginLeft: '0.3rem',
+                  marginRight: '0.3rem',
+                  backgroundColor: currentStep === index ? 'lightyellow' : 'transparent',
+                }}
               >
-                <FormControlLabel
-                  value={index}
-                  control={
-                    <Radio
-                      style={{ backgroundColor: selectedMovement === index ? 'yellow' : 'transparent', borderRadius: '50%' }}
-                      icon={<ArrowForwardIosIcon style={{ color: selectedMovement === index ? 'black' : 'lightgray' }} />}
-                      checkedIcon={<ArrowForwardIosIcon style={{ color: 'black' }} />}
-                    />
-                  }
-                  label=""
+                <RadioGroup
+                  value={selectedMovement}
+                  onChange={() => handleSelectMovement(index)}
+                  style={{ borderRadius: '50%' }}
+                >
+                  <FormControlLabel
+                    value={index}
+                    control={
+                      <Radio
+                        style={{ backgroundColor: selectedMovement === index ? 'yellow' : 'transparent', borderRadius: '50%' }}
+                        icon={<ArrowForwardIosIcon style={{ color: selectedMovement === index ? 'black' : 'lightgray' }} />}
+                        checkedIcon={<ArrowForwardIosIcon style={{ color: 'black' }} />}
+                      />
+                    }
+                    label=""
+                  />
+                </RadioGroup>
+
+                <div style={{ display: 'flex', flexDirection: 'column', marginRight: '0.3rem' }}>
+                  <Button
+                    variant="contained"
+                    style={{ backgroundColor: 'green', color: 'white', padding: '0.3rem', minWidth: '36px', marginBottom: '0.2rem' }}
+                    onClick={() => handleAddMovementBelow(index)}
+                  >
+                    <span className="material-icons" style={{ fontSize: '20px' }}>add</span>
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={() => handleDeleteMovement(index)}
+                    style={{ padding: '0.3rem', minWidth: '36px' }}
+                  >
+                    <span className="material-icons" style={{ fontSize: '20px' }}>delete</span>
+                  </Button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', marginRight: '0.3rem' }}>
+                  <Button
+                    variant="contained"
+                    style={{ backgroundColor: 'blue', color: 'white', padding: '0.3rem', minWidth: '36px', marginBottom: '0.2rem' }}
+                    onClick={() => handleMoveUp(index)}
+                    disabled={index === 0}
+                  >
+                    <span className="material-icons" style={{ fontSize: '20px' }}>arrow_upward</span>
+                  </Button>
+
+                  <Button
+                    variant="contained"
+                    style={{ backgroundColor: 'blue', color: 'white', padding: '0.3rem', minWidth: '36px' }}
+                    onClick={() => handleMoveDown(index)}
+                    disabled={index === movements.length - 1}
+                  >
+                    <span className="material-icons" style={{ fontSize: '20px' }}>arrow_downward</span>
+                  </Button>
+                </div>
+
+                <Autocomplete
+                  options={poseNames}
+                  value={movement.pose}
+                  onChange={(event, newValue) => handleChangeMovement(index, 'pose', newValue)}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Pose" variant="outlined" style={{ marginLeft: '0.5rem', width: '180px', paddingTop: '0', paddingBottom: '0' }} />
+                  )}
                 />
-              </RadioGroup>
 
-              <div style={{ display: 'flex', flexDirection: 'column', marginRight: '0.3rem' }}>
-                <Button
-                  variant="contained"
-                  style={{ backgroundColor: 'green', color: 'white', padding: '0.3rem', minWidth: '36px', marginBottom: '0.2rem' }}
-                  onClick={() => handleAddMovementBelow(index)}
-                >
-                  <span className="material-icons" style={{ fontSize: '20px' }}>add</span>
-                </Button>
-                <Button
-                  variant="contained"
-                  color="error"
-                  onClick={() => handleDeleteMovement(index)}
-                  style={{ padding: '0.3rem', minWidth: '36px' }}
-                >
-                  <span className="material-icons" style={{ fontSize: '20px' }}>delete</span>
-                </Button>
+                <FormControl style={{ marginLeft: '0.5rem', width: '60px', minWidth: '60px' }} variant="outlined">
+                  <InputLabel>Type</InputLabel>
+                  <Select
+                    value={movement.type}
+                    onChange={(e) => handleChangeMovement(index, 'type', e.target.value)}
+                    label="Type"
+                  >
+                    <MenuItem value="J">J</MenuItem>
+                    <MenuItem value="L">L</MenuItem>
+                  </Select>
+                </FormControl>
               </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', marginRight: '0.3rem' }}>
-                <Button
-                  variant="contained"
-                  style={{ backgroundColor: 'blue', color: 'white', padding: '0.3rem', minWidth: '36px', marginBottom: '0.2rem' }}
-                  onClick={() => handleMoveUp(index)}
-                  disabled={index === 0}
-                >
-                  <span className="material-icons" style={{ fontSize: '20px' }}>arrow_upward</span>
-                </Button>
-
-                <Button
-                  variant="contained"
-                  style={{ backgroundColor: 'blue', color: 'white', padding: '0.3rem', minWidth: '36px' }}
-                  onClick={() => handleMoveDown(index)}
-                  disabled={index === movements.length - 1}
-                >
-                  <span className="material-icons" style={{ fontSize: '20px' }}>arrow_downward</span>
-                </Button>
-              </div>
-
-              <Autocomplete
-                options={poseNames}
-                value={movement.pose}
-                onChange={(event, newValue) => handleChangeMovement(index, 'pose', newValue)}
-                renderInput={(params) => (
-                  <TextField {...params} label="Pose" variant="outlined" style={{ marginLeft: '0.5rem', width: '180px', paddingTop: '0', paddingBottom: '0' }} />
-                )}
-              />
-
-              <FormControl style={{ marginLeft: '0.5rem', width: '60px', minWidth: '60px' }} variant="outlined">
-                <InputLabel>Type</InputLabel>
-                <Select
-                  value={movement.type}
-                  onChange={(e) => handleChangeMovement(index, 'type', e.target.value)}
-                  label="Type"
-                >
-                  <MenuItem value="J">J</MenuItem>
-                  <MenuItem value="L">L</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-          ))}
+            ))}
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
             <Button

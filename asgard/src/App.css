@@ -59,12 +59,11 @@ html, body, #root {
 }
 
 .sidebar {
-  flex: 1;
-  padding: 1rem;
-  border-right: 1px solid #444;
+  width: 30rem; /* Ajustar el ancho al 20% de la pantalla */
+  background-color: #f4f4f4;
+  border-right: 1px solid #ddd;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  padding: 1rem;
 }
 
 .tabs {
@@ -162,4 +161,13 @@ html, body, #root {
 /* Drawer close button styles */
 .drawer-header .MuiIconButton-root {
   color: #ffffff; /* Lighter color for better visibility */
+}
+
+.scrollable-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centrar los movimientos horizontalmente */
+  max-height: 300px;
+  overflow-y: auto;
+  padding-top: 0.5em;
 }

@@ -5,10 +5,6 @@ import UrdfViewer from './components/UrdfViewer';
 import JointSliders from './components/JointSliders';
 import IKSliders from './components/IkSliders';
 import ROSLIB from 'roslib';
-import Drawer from '@mui/material/Drawer';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -36,7 +32,6 @@ function App() {
   const [showRealRobot, setShowRealRobot] = useState(true);
   const [showGhostRobot, setShowGhostRobot] = useState(true);
   const [ikStatus, setIkStatus] = useState('reachable');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [poseName, setPoseName] = useState('');
   const [isMoving, setIsMoving] = useState(false);
@@ -205,33 +200,9 @@ function App() {
 
   return (
     <RosProvider>
-      <div className="app-container">
-        {/* UrdfViewer a pantalla completa */}
-        <UrdfViewer
-          previewJoints={effectivePreviewJoints}
-          showRealRobot={showRealRobot}
-          showGhostRobot={showGhostRobot}
-          ikStatus={ikStatus}
-          ghostRef={ghostRef} // Asegurar que ghostRef se pase correctamente
-          onGhostJointsChange={setGhostJoints} // Callback para recibir valores del ghost
-          className="urdf-viewer"
-          showFPS={showFPS} // Pasar el estado showFPS
-          showGhostRobotCoordinates={showGhostRobotCoordinates} // Pasar el estado showGhostRobotCoordinates
-        />
-
-        {/* Persistent Drawer */}
-        <Drawer
-          variant="persistent"
-          anchor="left"
-          open={isSidebarOpen}
-          className="persistent-drawer"
-        >
-          <div className="drawer-header">
-            <IconButton onClick={() => setIsSidebarOpen(false)}>
-              <ChevronLeftIcon />
-            </IconButton>
-          </div>
-
+      <div className="app-container" style={{ display: 'flex', height: '100vh' }}>
+        {/* Menú lateral fijo */}
+        <div className="sidebar">
           {/* Accordions */}
           <Accordion
             expanded={activeTab === 'forward'}
@@ -331,18 +302,23 @@ function App() {
               <Program isMoving={isMoving} poses={poses} />
             </AccordionDetails>
           </Accordion>
+        </div>
 
-        </Drawer>
-
-        {/* Hamburger Icon Button */}
-        <IconButton
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="hamburger-button"
-        >
-          <MenuIcon />
-        </IconButton>
-
-        {/* Floating Action Button */}
+        {/* UrdfViewer ocupa el resto de la pantalla */}
+        <div style={{ flex: 1, position: 'relative' }}>
+          <UrdfViewer
+            previewJoints={effectivePreviewJoints}
+            showRealRobot={showRealRobot}
+            showGhostRobot={showGhostRobot}
+            ikStatus={ikStatus}
+            ghostRef={ghostRef} // Asegurar que ghostRef se pase correctamente
+            onGhostJointsChange={setGhostJoints} // Callback para recibir valores del ghost
+            className="urdf-viewer"
+            showFPS={showFPS} // Pasar el estado showFPS
+            showGhostRobotCoordinates={showGhostRobotCoordinates} // Pasar el estado showGhostRobotCoordinates
+          />
+        </div>
+      {/* Floating Action Button */}
         <Fab variant="extended"
           color="primary"
           aria-label="add"
@@ -380,7 +356,7 @@ function App() {
             </Button>
           </DialogActions>
         </Dialog>
-
+      
       </div>
     </RosProvider>
   );

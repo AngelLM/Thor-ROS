@@ -64,7 +64,7 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     // Gizmo
     const gizmo = new ViewportGizmo(camera, renderer, { type: 'sphere' });
     gizmo.attachControls(new OrbitControls(camera, renderer.domElement));
-    gizmo.target.set(0.6, 0, 0);
+    gizmo.target.set(0, 0, 0.3);
     camera.lookAt(gizmo.target);
 
     // Forced initial update of gizmo to ensure correct position
