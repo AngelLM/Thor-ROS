@@ -185,7 +185,14 @@ function Program({ isMoving, poses }) {
   };
 
   const handleRunAll = async () => {
-    isRunAllInProgress = true; // Marcar que Run All está en progreso
+    // Check if all movements have an associated pose
+    const movementsWithoutPose = movements.filter(movement => !movement.pose);
+    if (movementsWithoutPose.length > 0) {
+      alert('Some movements do not have an associated pose. Please ensure all movements have a pose before running.');
+      return;
+    }
+
+    isRunAllInProgress = true; // Mark that Run All is in progress
     setIsStepDisabled(true); // Disable the Start button at the beginning
 
     if (selectedMovement !== 0) {
@@ -200,21 +207,19 @@ function Program({ isMoving, poses }) {
     }
 
     for (let i = selectedMovement; i < movements.length; i++) {
-      executeMovement(i); // Usar la función executeMovement para ejecutar cada movimiento
+      executeMovement(i); // Use the executeMovement function to execute each movement
       const newPointer = i + 1 >= movements.length ? 0 : i + 1;
       setSelectedMovement(newPointer);
       setCurrentStep(i); // Highlight the executed movement
-      // Esperar a que el movimiento se complete antes de continuar con un bucle de espera
-      // Wait until the robot reaches the target pose
-      while(!isPoseCurrent(movements[i].pose)) {
+      // Wait until the robot reaches the target pose before continuing with a wait loop
+      while (!isPoseCurrent(movements[i].pose)) {
         console.log(`Waiting for robot to reach pose: ${movements[i].pose}`);
-        // Esperar un breve período para evitar un bucle infinito
-        await new Promise(resolve => setTimeout(resolve, 100));  
+        // Wait a short period to avoid an infinite loop
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
-      
     }
 
-    isRunAllInProgress = false; // Marcar que Run All ha terminado
+    isRunAllInProgress = false; // Mark that Run All has finished
     setIsStepDisabled(false); // Re-enable the Start button after all movements are executed
     console.log('All movements executed.');
   };
@@ -225,6 +230,11 @@ function Program({ isMoving, poses }) {
 
   const handleStepFW = () => {
     const nextStep = selectedMovement === null ? 0 : selectedMovement;
+
+    if (!movements[nextStep]?.pose) {
+      alert('The selected movement does not have a defined pose. Please select a pose before proceeding.');
+      return;
+    }
 
     if (currentStep === movements.length - 1) {
       if (window.confirm('You have reached the last movement. Do you want to go to the first movement?')) {
@@ -247,11 +257,21 @@ function Program({ isMoving, poses }) {
     const prevStep = lastExecutedStep !== null ? lastExecutedStep - 1 : selectedMovement;
 
     if (prevStep < 0) {
+      if (!movements[movements.length - 1]?.pose) {
+        alert('The last movement does not have a defined pose. Please select a pose before proceeding.');
+        return;
+      }
+
       if (window.confirm('You have reached the first movement. Do you want to go to the last movement?')) {
         executeMovement(movements.length - 1);
         setCurrentStep(movements.length - 1); // Highlight the executed movement
         setSelectedMovement(0); // Pointer always points to the next movement
       }
+      return;
+    }
+
+    if (!movements[prevStep]?.pose) {
+      alert('The selected movement does not have a defined pose. Please select a pose before proceeding.');
       return;
     }
 
