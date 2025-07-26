@@ -694,42 +694,6 @@ const handleTCPMove = (axis, increment) => {
         </div>
       </div>
 
-      <h4 style={{ marginTop: '1.5rem', textAlign: 'center' }}>Robot Configuration</h4>
-      <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '70%', margin: '0 auto', gap: '2rem' }}> {/* Container for radio groups */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Shoulder group */}
-          <FormLabel component="legend" style={{ fontWeight: 'bold' }}>Shoulder</FormLabel>
-          <RadioGroup
-            value={ikConfig.shoulder}
-            onChange={(e) => handleConfigChange('shoulder', e.target.value)}
-          >
-            <FormControlLabel value="left" control={<Radio disabled />} label="Left" />
-            <FormControlLabel value="right" control={<Radio disabled />} label="Right" />
-            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
-          </RadioGroup>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Elbow group */}
-          <FormLabel component="legend" style={{ fontWeight: 'bold' }}>Elbow</FormLabel>
-          <RadioGroup
-            value={ikConfig.elbow}
-            onChange={(e) => handleConfigChange('elbow', e.target.value)}
-          >
-            <FormControlLabel value="above" control={<Radio disabled />} label="Above" />
-            <FormControlLabel value="below" control={<Radio disabled />} label="Below" />
-            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
-          </RadioGroup>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Wrist group */}
-          <FormLabel component="legend" style={{ fontWeight: 'bold' }}>Wrist</FormLabel>
-          <RadioGroup
-            value={ikConfig.wrist}
-            onChange={(e) => handleConfigChange('wrist', e.target.value)}
-          >
-            <FormControlLabel value="up" control={<Radio disabled />} label="Up" />
-            <FormControlLabel value="down" control={<Radio disabled />} label="Down" />
-            <FormControlLabel value="any" control={<Radio disabled />} label="Any" />
-          </RadioGroup>
-        </div>
-      </div>
       <Button
         onClick={sendIKGoal}
         disabled={isUnreachable}
