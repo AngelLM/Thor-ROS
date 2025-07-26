@@ -322,11 +322,6 @@ function Program({ isMoving, poses }) {
     }
   };
 
-  const handleResetPointer = () => {
-    setCurrentStep(null);
-    console.log('Pointer reset to initial state.');
-  };
-
   const handleSelectMovement = (index) => {
     setPendingSelection(index);
     setDialogOpen(true);
@@ -509,20 +504,6 @@ function Program({ isMoving, poses }) {
               disabled={isStepDisabled} // Disable button when step is in progress
             >
               Step BW
-            </Button>
-            <Button
-              variant="contained"
-              style={{
-                backgroundColor: isStepDisabled ? 'lightgray' : 'gray',
-                color: isStepDisabled ? 'darkgray' : 'white',
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                cursor: isStepDisabled ? 'not-allowed' : 'pointer'
-              }}
-              onClick={handleResetPointer}
-              disabled={isStepDisabled} // Disable button when step is in progress
-            >
-              Reset
             </Button>
           </div>
 
