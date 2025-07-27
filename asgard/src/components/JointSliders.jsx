@@ -12,7 +12,7 @@ const jointConfigs = [
   { name: 'joint_4', label: 'Art 4', min: -170, max: 170 },
   { name: 'joint_5', label: 'Art 5', min: -90, max: 90 },
   { name: 'joint_6', label: 'Art 6', min: -170, max: 170 },
-  { name: 'gripperbase_to_armgearright', label: 'Tool', min: -89.9, max: 0 }
+  { name: 'gripperbase_to_armgearright', label: 'Tool', min: 0, max: 89.9 }
 ];
 
 function JointSliders({ onPreviewJointsChange, initialJoints }) {
@@ -33,6 +33,10 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
           if (initialJoints[j.name] !== undefined) {
             newVals[j.name] = Math.round((initialJoints[j.name] * 180) / Math.PI * 100) / 100;
           }
+          // Invertimos el valor del gripper
+          if (j.name === 'gripperbase_to_armgearright') {
+            newVals[j.name] = -newVals[j.name];
+          }
         });
         return newVals;
       });
@@ -47,6 +51,9 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
       jointConfigs.forEach(j => {
         joints[j.name] = (sliderValues[j.name] * Math.PI) / 180;
       });
+      // Invertimos el valor del gripper
+      joints['gripperbase_to_armgearright'] = -joints['gripperbase_to_armgearright'];
+      // Llama a la función de callback
       onPreviewJointsChange(joints);
     }
   }, [sliderValues]);
@@ -83,6 +90,9 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
     const message = new ROSLIB.Message({
       data: jointConfigs.map(joint => (sliderValues[joint.name] * Math.PI) / 180),
     });
+    // Invertimos el valor del gripper
+    message.data[jointConfigs.findIndex(j => j.name === 'gripperbase_to_armgearright')] = -message.data[jointConfigs.findIndex(j => j.name === 'gripperbase_to_armgearright')];
+
     // print log for debugging
     console.log('Sending joint command:', message.data);
     topic.publish(message);
