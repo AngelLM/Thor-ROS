@@ -11,7 +11,8 @@ const jointConfigs = [
   { name: 'joint_3', label: 'Art 3', min: -90, max: 90 },
   { name: 'joint_4', label: 'Art 4', min: -170, max: 170 },
   { name: 'joint_5', label: 'Art 5', min: -90, max: 90 },
-  { name: 'joint_6', label: 'Art 6', min: -170, max: 170 }
+  { name: 'joint_6', label: 'Art 6', min: -170, max: 170 },
+  { name: 'gripperbase_to_armgearright', label: 'Tool', min: -89.9, max: 0 }
 ];
 
 function JointSliders({ onPreviewJointsChange, initialJoints }) {
@@ -48,7 +49,6 @@ function JointSliders({ onPreviewJointsChange, initialJoints }) {
       });
       onPreviewJointsChange(joints);
     }
-    // eslint-disable-next-line
   }, [sliderValues]);
 
   const handleSliderChange = (name, value) => {

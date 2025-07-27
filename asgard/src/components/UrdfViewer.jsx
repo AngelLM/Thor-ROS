@@ -234,7 +234,7 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
   // Actualiza el ghost robot cuando cambian las articulaciones objetivo
   useEffect(() => {
     if (!ghostRef.current || !previewJoints) return;
-    const jointNames = ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6'];
+    const jointNames = ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'gripperbase_to_armgearright'];
     if (previewJoints.joint_1 !== undefined) {
       jointNames.forEach(j => {
         if (previewJoints[j] !== undefined) {

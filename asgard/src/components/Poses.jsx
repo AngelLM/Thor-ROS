@@ -65,7 +65,7 @@ function Poses({ ghostRef, onPreviewJointsChange, poses, setPoses }, ref) {
       messageType: 'std_msgs/Float64MultiArray',
     });
     const message = new ROSLIB.Message({
-      data: Object.values(pose.joints).slice(0, 6),
+      data: Object.values(pose.joints),
     });
 
     topic.publish(message);

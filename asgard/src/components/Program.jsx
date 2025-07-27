@@ -340,7 +340,7 @@ function Program({ isMoving, poses }) {
     });
 
     const message = new ROSLIB.Message({
-      data: Object.values(pose.joints).slice(0, 6),
+      data: Object.values(pose.joints),
     });
 
     setIsStepDisabled(true); // Disable step buttons

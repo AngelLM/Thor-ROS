@@ -18,7 +18,8 @@ class JointGoalListener(Node):
             'joint_3',
             'joint_4',
             'joint_5',
-            'joint_6'
+            'joint_6',
+            'gripperbase_to_armgearright'
         ]
         self.subscription = self.create_subscription(
             Float64MultiArray,
@@ -35,8 +36,10 @@ class JointGoalListener(Node):
             return
 
         self.get_logger().info('Recibido comando, enviando a MoveIt2...')
+
+        # Crear la solicitud de planificación de movimiento del arm_group
         goal_constraints = Constraints()
-        for i, joint_name in enumerate(self.joint_names):
+        for i, joint_name in enumerate(self.joint_names[:-1]):
             jc = JointConstraint()
             jc.joint_name = joint_name
             jc.position = msg.data[i]
@@ -55,7 +58,29 @@ class JointGoalListener(Node):
 
         self.move_group_client.wait_for_server()
         self.future = self.move_group_client.send_goal_async(goal_msg)
-        self.get_logger().info('Solicitud enviada a MoveIt2.')
+        self.get_logger().info('Solicitud de arm_group enviada a MoveIt2.')
+
+        # Solicitud para gripper_group
+        gripper_constraints = Constraints()
+        jc = JointConstraint()
+        jc.joint_name = self.joint_names[-1]  # joint_gripper
+        jc.position = msg.data[-1]
+        jc.weight = 1.0
+        gripper_constraints.joint_constraints.append(jc)
+
+        gripper_request = MotionPlanRequest()
+        gripper_request.group_name = 'gripper_group'
+        gripper_request.goal_constraints.append(gripper_constraints)
+
+        gripper_goal_msg = MoveGroup.Goal()
+        gripper_goal_msg.request = gripper_request
+        gripper_goal_msg.planning_options.plan_only = False
+        gripper_goal_msg.planning_options.look_around = False
+        gripper_goal_msg.planning_options.replan = True
+
+        self.move_group_client.wait_for_server()
+        self.future = self.move_group_client.send_goal_async(gripper_goal_msg)
+        self.get_logger().info('Solicitud de gripper_group enviada a MoveIt2.')
 
 def main(args=None):
     rclpy.init(args=args)
