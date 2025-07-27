@@ -121,6 +121,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     wrist: 'any' // Default values set to 'any'
   });
   const [statusMsg, setStatusMsg] = useState(null);
+  const [selectedGripper, setSelectedGripper] = useState(0); // Estado para el botón del gripper
 
   // Estado para saber si la posición es alcanzable
   const isUnreachable = statusMsg && (statusMsg.status === 'unreachable' || statusMsg.status === 'error');
@@ -315,10 +316,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
 
     topic.publish({
       pose: pose,
-      preferred_joints: [], // vacío, ya no se usan
-      elbow_config: ikConfig.elbow,
-      shoulder_config: ikConfig.shoulder,
-      wrist_config: ikConfig.wrist
+      gripperbase_to_armgearright: selectedGripper === 0 ? 0 : selectedGripper === 100 ? -89.9 * Math.PI / 180 : -89.9 * (selectedGripper / 100) * Math.PI / 180
     });
   };
 
@@ -481,6 +479,21 @@ const handleTCPMove = (axis, increment) => {
       setActiveInterval(null);
     }
   };
+
+  useEffect(() => {
+    if (ghostJoints && onPreviewJointsChange) {
+      const gripperValue = selectedGripper === 0 
+        ? 0 
+        : selectedGripper === 100 
+        ? (-89.9 * Math.PI / 180) 
+        : (-89.9 * (selectedGripper / 100) * Math.PI / 180);
+      if (ghostJoints['gripperbase_to_armgearright'] !== gripperValue) {
+        const updatedJoints = { ...ghostJoints };
+        updatedJoints['gripperbase_to_armgearright'] = gripperValue;
+        onPreviewJointsChange(updatedJoints);
+      }
+    }
+  }, [selectedGripper, ghostJoints, onPreviewJointsChange]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}> {/* Center all content */}
@@ -692,6 +705,23 @@ const handleTCPMove = (axis, increment) => {
             </ButtonGroup>
           </div>
         </div>
+      </div>
+
+      {/* Gripper control buttons */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}> {/* Gripper Buttons */}
+        <h3 style={{ marginTop: '1.5rem', textAlign: 'center' }}>Gripper Control</h3>
+        <ButtonGroup>
+          {[0, 20, 40, 60, 80, 100].map((percentage) => (
+            <Button
+              key={percentage}
+              variant={selectedGripper === percentage ? "contained" : "outlined"} // Highlight selected button
+              onClick={() => setSelectedGripper(percentage)} // Update selected state
+              style={{ backgroundColor: selectedGripper === percentage ? '#ccccff' : 'white', color: 'black', border: '1px solid #9999cc' }}
+            >
+              {percentage}%
+            </Button>
+          ))}
+        </ButtonGroup>
       </div>
 
       <Button

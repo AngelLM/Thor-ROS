@@ -159,38 +159,7 @@ class IKGoalListener(Node):
             else:
                 for name in joint_names:
                     joint_pref[name] = 0.0
-            if msg.elbow_config == "up":
-                joint_pref["joint_3"] = abs(joint_pref["joint_3"])
-            elif msg.elbow_config == "down":
-                joint_pref["joint_3"] = -abs(joint_pref["joint_3"])
-            if msg.shoulder_config == "up":
-                joint_pref["joint_2"] = abs(joint_pref["joint_2"])
-            elif msg.shoulder_config == "down":
-                joint_pref["joint_2"] = -abs(joint_pref["joint_2"])
-            if msg.wrist_config == "up":
-                joint_pref["joint_5"] = abs(joint_pref["joint_5"])
-            elif msg.wrist_config == "down":
-                joint_pref["joint_5"] = -abs(joint_pref["joint_5"])
-            # Añade JointConstraint suaves para cada articulación preferida
-            for name in ["joint_2", "joint_3", "joint_5"]:
-                jc = JointConstraint()
-                jc.joint_name = name
-                jc.position = joint_pref[name]
-                jc.tolerance_above = 1.0
-                jc.tolerance_below = 1.0
-                jc.weight = 0.1
-                constraints.joint_constraints.append(jc)
-
-            # Si se proporcionan posiciones de articulaciones preferidas, añadirlas (más fuerte)
-            if hasattr(msg, 'preferred_joints') and msg.preferred_joints:
-                for name, pos in zip(joint_names, msg.preferred_joints):
-                    jc = JointConstraint()
-                    jc.joint_name = name
-                    jc.position = pos
-                    jc.tolerance_above = 0.2
-                    jc.tolerance_below = 0.2
-                    jc.weight = 0.7
-                    constraints.joint_constraints.append(jc)
+            
             request = MotionPlanRequest()
             request.group_name = 'arm_group'
             request.goal_constraints.append(constraints)
@@ -203,7 +172,31 @@ class IKGoalListener(Node):
             self.move_group_client.wait_for_server()
             self.future = self.move_group_client.send_goal_async(goal_msg)
             self.get_logger().info('Solicitud IK enviada a MoveIt2.')
+
+            # Solicitud para gripper_group
+            gripper_constraints = Constraints()
+            jc = JointConstraint()
+            jc.joint_name = "gripperbase_to_armgearright"  # Nombre de la joint del gripper
+            jc.position = msg.gripperbase_to_armgearright  # Usar el valor del mensaje IKGoal
+            jc.weight = 1.0
+            gripper_constraints.joint_constraints.append(jc)
+
+            gripper_request = MotionPlanRequest()
+            gripper_request.group_name = 'gripper_group'
+            gripper_request.goal_constraints.append(gripper_constraints)
+
+            gripper_goal_msg = MoveGroup.Goal()
+            gripper_goal_msg.request = gripper_request
+            gripper_goal_msg.planning_options.plan_only = False
+            gripper_goal_msg.planning_options.look_around = False
+            gripper_goal_msg.planning_options.replan = True
+
+            self.move_group_client.wait_for_server()
+            self.future = self.move_group_client.send_goal_async(gripper_goal_msg)
+            self.get_logger().info('Solicitud de gripper_group enviada a MoveIt2.')
         self.is_pose_reachable(pose_stamped, callback=after_ik)
+
+        
 
 def main(args=None):
     rclpy.init(args=args)
