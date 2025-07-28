@@ -118,8 +118,8 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
               obj.material.vertexColors = false;
             }
           });
-          // --- Flechas siguen al link gripper_base (o base_gripper) ---
-          let eeLink = ghostRef.current.getObjectByName('gripper_base') || ghostRef.current.getObjectByName('base_gripper');
+          // --- Flechas siguen al link gripper_mid_point (o base_gripper) ---
+          let eeLink = ghostRef.current.getObjectByName('gripper_mid_point') || ghostRef.current.getObjectByName('base_gripper');
           if (eeLink) {
             eeLink.updateWorldMatrix(true, false);
             const pos = new THREE.Vector3();

@@ -251,7 +251,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
       ik_request: {
         group_name: 'arm_group',
         pose_stamped: pose,
-        ik_link_name: 'gripper_base',
+        ik_link_name: 'gripper_mid_point',
         timeout: { sec: 0, nanosec: 0 },
         constraints: {},
         robot_state: robotState,
@@ -401,7 +401,7 @@ const handleTCPMove = (axis, increment) => {
     point[axis] = increment; // Modify the specific axis
     console.log(`Initialized point:`, point);
 
-    // Step 2: Build TCP coordinate system using current gripper_base pose
+    // Step 2: Build TCP coordinate system using current gripper_mid_point pose
     const gripperBasePose = {
       x: values.x * 0.001, // Convert mm to meters
       y: values.y * 0.001,

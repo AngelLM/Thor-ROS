@@ -51,14 +51,14 @@ class IKGoalListener(Node):
         req.ik_request.pose_stamped = pose_stamped
         req.ik_request.timeout.sec = 0
         req.ik_request.timeout.nanosec = 0
-        req.ik_request.ik_link_name = 'gripper_base'
+        req.ik_request.ik_link_name = 'gripper_mid_point'
 
         # --- Constraints para solución aproximada ---
         approx_constraints = Constraints()
         # Tolerancia de posición (±2mm)
         pos_constraint = PositionConstraint()
         pos_constraint.header.frame_id = pose_stamped.header.frame_id
-        pos_constraint.link_name = 'gripper_base'
+        pos_constraint.link_name = 'gripper_mid_point'
         box = SolidPrimitive()
         box.type = SolidPrimitive.BOX
         box.dimensions = [0.004, 0.004, 0.004]  # 4mm box (±2mm)
@@ -69,7 +69,7 @@ class IKGoalListener(Node):
         # Tolerancia de orientación (±0.05 rad)
         ori_constraint = OrientationConstraint()
         ori_constraint.header.frame_id = pose_stamped.header.frame_id
-        ori_constraint.link_name = 'gripper_base'
+        ori_constraint.link_name = 'gripper_mid_point'
         ori_constraint.orientation = pose_stamped.pose.orientation
         ori_constraint.absolute_x_axis_tolerance = 0.05
         ori_constraint.absolute_y_axis_tolerance = 0.05
@@ -130,7 +130,7 @@ class IKGoalListener(Node):
                 self.publish_status("reachable", "La pose objetivo es alcanzable. Planificando movimiento.")
             pos_constraint = PositionConstraint()
             pos_constraint.header.frame_id = "base_link"
-            pos_constraint.link_name = "gripper_base"
+            pos_constraint.link_name = "gripper_mid_point"
             pos_constraint.target_point_offset.x = 0.0
             pos_constraint.target_point_offset.y = 0.0
             pos_constraint.target_point_offset.z = 0.0
@@ -142,7 +142,7 @@ class IKGoalListener(Node):
             pos_constraint.weight = 1.0
             ori_constraint = OrientationConstraint()
             ori_constraint.header.frame_id = "base_link"
-            ori_constraint.link_name = "gripper_base"
+            ori_constraint.link_name = "gripper_mid_point"
             ori_constraint.orientation = msg.pose.orientation
             ori_constraint.absolute_x_axis_tolerance = 0.05
             ori_constraint.absolute_y_axis_tolerance = 0.05

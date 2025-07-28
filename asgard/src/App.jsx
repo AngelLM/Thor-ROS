@@ -97,7 +97,7 @@ function App() {
       });
       const req = {
         header: { frame_id: 'base_link' },
-        fk_link_names: ['gripper_base'],
+        fk_link_names: ['gripper_mid_point'],
         robot_state: {
           joint_state: {
             name: Object.keys(currentJoints),
