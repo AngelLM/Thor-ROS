@@ -61,7 +61,7 @@ class IKGoalListener(Node):
         pos_constraint.link_name = 'gripper_mid_point'
         box = SolidPrimitive()
         box.type = SolidPrimitive.BOX
-        box.dimensions = [0.004, 0.004, 0.004]  # 4mm box (±2mm)
+        box.dimensions = [0.001, 0.001, 0.001]  # 4mm box (±2mm)
         pos_constraint.constraint_region.primitives.append(box)
         pos_constraint.constraint_region.primitive_poses.append(pose_stamped.pose)
         pos_constraint.weight = 1.0
@@ -71,9 +71,9 @@ class IKGoalListener(Node):
         ori_constraint.header.frame_id = pose_stamped.header.frame_id
         ori_constraint.link_name = 'gripper_mid_point'
         ori_constraint.orientation = pose_stamped.pose.orientation
-        ori_constraint.absolute_x_axis_tolerance = 0.05
-        ori_constraint.absolute_y_axis_tolerance = 0.05
-        ori_constraint.absolute_z_axis_tolerance = 0.05
+        ori_constraint.absolute_x_axis_tolerance = 0.001
+        ori_constraint.absolute_y_axis_tolerance = 0.001
+        ori_constraint.absolute_z_axis_tolerance = 0.001
         ori_constraint.weight = 1.0
         approx_constraints.orientation_constraints.append(ori_constraint)
         req.ik_request.constraints = approx_constraints
@@ -136,7 +136,7 @@ class IKGoalListener(Node):
             pos_constraint.target_point_offset.z = 0.0
             box = SolidPrimitive()
             box.type = SolidPrimitive.BOX
-            box.dimensions = [0.005, 0.005, 0.005]
+            box.dimensions = [0.001, 0.001, 0.001]
             pos_constraint.constraint_region.primitives.append(box)
             pos_constraint.constraint_region.primitive_poses.append(pose_stamped.pose)
             pos_constraint.weight = 1.0
@@ -144,9 +144,9 @@ class IKGoalListener(Node):
             ori_constraint.header.frame_id = "base_link"
             ori_constraint.link_name = "gripper_mid_point"
             ori_constraint.orientation = msg.pose.orientation
-            ori_constraint.absolute_x_axis_tolerance = 0.05
-            ori_constraint.absolute_y_axis_tolerance = 0.05
-            ori_constraint.absolute_z_axis_tolerance = 0.05
+            ori_constraint.absolute_x_axis_tolerance = 0.001
+            ori_constraint.absolute_y_axis_tolerance = 0.001
+            ori_constraint.absolute_z_axis_tolerance = 0.001
             ori_constraint.weight = 1.0
             constraints = Constraints()
             constraints.position_constraints.append(pos_constraint)
