@@ -290,34 +290,35 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     }));
   };
 
-  const sendIKGoal = () => {
+  const sendJointCommand = () => {
     if (!connected || !ros) {
       console.warn('ROS no está conectado.');
       return;
     }
-    const pose = {
-      position: {
-        x: values.x / 1000,
-        y: values.y / 1000,
-        z: values.z / 1000
-      },
-      orientation: rpyToQuaternion(
-        values.roll * Math.PI / 180,
-        values.pitch * Math.PI / 180,
-        values.yaw * Math.PI / 180
-      )
-    };
-
+    if (!ghostJoints) {
+      console.warn('No hay ghostJoints disponibles.');
+      return;
+    }
+    // Articulaciones principales y gripper
+    const jointNames = [
+      'joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'gripperbase_to_armgearright'
+    ];
+    // Construir el array de posiciones en radianes
+    const jointPositions = jointNames.map(name => ghostJoints[name] !== undefined ? ghostJoints[name] : 0);
+    // Invertir el gripper
+    const gripperIdx = jointNames.indexOf('gripperbase_to_armgearright');
+    jointPositions[gripperIdx] = -jointPositions[gripperIdx];
+    // Publicar en el topic igual que JointSliders.jsx
     const topic = new ROSLIB.Topic({
       ros,
-      name: '/ik_goal',
-      messageType: 'thor_msgs/IKGoal'
+      name: '/joint_group_position_controller/command',
+      messageType: 'std_msgs/Float64MultiArray',
     });
-
-    topic.publish({
-      pose: pose,
-      gripperbase_to_armgearright: selectedGripper === 0 ? 0 : selectedGripper === 100 ? -89.9 * Math.PI / 180 : -89.9 * (selectedGripper / 100) * Math.PI / 180
+    const message = new ROSLIB.Message({
+      data: jointPositions,
     });
+    console.log('Enviando comando articular:', message.data);
+    topic.publish(message);
   };
 
 const handleTCPMove = (axis, increment) => {
@@ -725,10 +726,10 @@ const handleTCPMove = (axis, increment) => {
       </div>
 
       <Button
-        onClick={sendIKGoal}
-        disabled={isUnreachable}
+        onClick={sendJointCommand}
+        disabled={!ghostJoints || Object.keys(ghostJoints).length === 0}
         variant="contained"
-        color={isUnreachable ? "secondary" : "primary"}
+        color={(!ghostJoints || Object.keys(ghostJoints).length === 0) ? "secondary" : "primary"}
         style={{ marginTop: '1rem', fontWeight: 'bold' }}
       >
         Move
