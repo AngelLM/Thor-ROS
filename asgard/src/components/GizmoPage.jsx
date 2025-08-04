@@ -7,7 +7,15 @@ const GizmoPage = () => {
   const mountRef = useRef(null);
   // Estado para posición y orientación acumulada (quaternion)
   const [pos, setPos] = useState({ x: 1, y: 1, z: 1 });
-  const [rotQuat, setRotQuat] = useState(new THREE.Quaternion());
+  // Inicializa con rotación aleatoria
+  const [rotQuat, setRotQuat] = useState(() => {
+    // Genera ángulos aleatorios en radianes
+    const roll = Math.random() * 2 * Math.PI - Math.PI;
+    const pitch = Math.random() * 2 * Math.PI - Math.PI;
+    const yaw = Math.random() * 2 * Math.PI - Math.PI;
+    const euler = new THREE.Euler(roll, pitch, yaw, 'XYZ');
+    return new THREE.Quaternion().setFromEuler(euler);
+  });
 
   useEffect(() => {
     // const width = mountRef.current.offsetWidth;
