@@ -6,23 +6,6 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import * as THREE from 'three';
 
-// Utilidad para convertir RPY a quaternion
-function rpyToQuaternion(roll, pitch, yaw) {
-  const cy = Math.cos(yaw * 0.5);
-  const sy = Math.sin(yaw * 0.5);
-  const cp = Math.cos(pitch * 0.5);
-  const sp = Math.sin(pitch * 0.5);
-  const cr = Math.cos(roll * 0.5);
-  const sr = Math.sin(roll * 0.5);
-
-  return {
-    x: sr * cp * cy - cr * sp * sy,
-    y: cr * sp * cy + sr * cp * sy,
-    z: cr * cp * sy - sr * sp * cy,
-    w: cr * cp * cy + sr * sp * sy
-  };
-}
-
 const blue = {
   100: '#daecff',
   200: '#b6daff',
@@ -141,9 +124,6 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     pitch: displayEuler.pitch,
     yaw: displayEuler.yaw
   }), [position, displayEuler]);
-
-  // Estado para saber si la posición es alcanzable
-  const isUnreachable = statusMsg && (statusMsg.status === 'unreachable' || statusMsg.status === 'error');
 
   // Inicializa SOLO cuando cambia ikPose
   useEffect(() => {
@@ -351,6 +331,33 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     topic.publish(message);
   };
 
+  const handleWorldMove = (axis, increment) => {
+    console.log(`Moving World for axis: ${axis}, increment: ${increment}`);
+
+    if (axis === 'x' || axis === 'y' || axis === 'z') {
+      // Movimiento lineal global (sin transformar)
+      setPosition(prevPos => {
+        const newPos = prevPos.clone();
+        newPos[axis] += increment; // mm en coordenadas globales
+        return newPos;
+      });
+    } else {
+      // Rotación: ejes globales fijos (sin transformar)
+      setBaseQuaternion(prevQuat => {
+        let rotAxis;
+        if (axis === 'roll') rotAxis = new THREE.Vector3(1, 0, 0);
+        if (axis === 'pitch') rotAxis = new THREE.Vector3(0, 1, 0);
+        if (axis === 'yaw') rotAxis = new THREE.Vector3(0, 0, 1);
+        
+        // Crear quaternion de rotación incremental en ejes globales
+        const deltaQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, increment * Math.PI / 180);
+        
+        // Aplicar rotación global
+        return prevQuat.clone().premultiply(deltaQ);
+      });
+    }
+  };
+
   const handleTCPMove = (axis, increment) => {
     console.log(`Moving TCP for axis: ${axis}, increment: ${increment}`);
 
@@ -383,8 +390,9 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     }
   };
 
-  const handleMouseDown = (axis, increment) => {
-    const intervalId = setInterval(() => handleTCPMove(axis, increment), 100); // Ejecuta cada 100ms
+  const handleMouseDown = (axis, increment, frameType = 'tcp') => {
+    const moveFunction = frameType === 'world' ? handleWorldMove : handleTCPMove;
+    const intervalId = setInterval(() => moveFunction(axis, increment), 100); // Ejecuta cada 100ms
     setActiveInterval(intervalId);
   };
 
@@ -457,37 +465,76 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
           label={<strong>Z</strong>}
           axis="z"        />
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for Roll, Pitch, Yaw */}
-        <NumberInput
-          value={displayValues.roll}
-          onChange={(newValue) => handleValueChange('roll', newValue)}
-          unit="°"
-          min={-180}
-          max={180}
-          step={1}
-          label={<strong>Roll</strong>}
-          axis="x"
-        />
-        <NumberInput
-          value={displayValues.pitch}
-          onChange={(newValue) => handleValueChange('pitch', newValue)}
-          unit="°"
-          min={-180}
-          max={180}
-          step={1}
-          label={<strong>Pitch</strong>}
-          axis="y"
-        />
-        <NumberInput
-          value={displayValues.yaw}
-          onChange={(newValue) => handleValueChange('yaw', newValue)}
-          unit="°"
-          min={-180}
-          max={180}
-          step={1}
-          label={<strong>Yaw</strong>}
-          axis="z"
-        />
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for Roll, Pitch, Yaw Buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* Roll group */}
+          <label style={{ marginBottom: '4px' }}><strong>Roll</strong></label>
+          <ButtonGroup>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('roll', -1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
+            >
+              -
+            </Button>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('roll', 1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
+            >
+              +
+            </Button>
+          </ButtonGroup>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* Pitch group */}
+          <label style={{ marginBottom: '4px' }}><strong>Pitch</strong></label>
+          <ButtonGroup>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('pitch', -1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
+            >
+              -
+            </Button>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('pitch', 1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
+            >
+              +
+            </Button>
+          </ButtonGroup>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}> {/* Yaw group */}
+          <label style={{ marginBottom: '4px' }}><strong>Yaw</strong></label>
+          <ButtonGroup>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('yaw', -1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
+            >
+              -
+            </Button>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('yaw', 1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
+            >
+              +
+            </Button>
+          </ButtonGroup>
+        </div>
       </div>
       
       {/* Added buttons for TCP coordinate adjustments */}
@@ -499,7 +546,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('x', -1)}
+                onMouseDown={() => handleMouseDown('x', -1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp} // Asegura que se detenga si el mouse sale del botón
                 style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
@@ -508,7 +555,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('x', 1)}
+                onMouseDown={() => handleMouseDown('x', 1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
@@ -522,7 +569,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('y', -1)}
+                onMouseDown={() => handleMouseDown('y', -1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
@@ -531,7 +578,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('y', 1)}
+                onMouseDown={() => handleMouseDown('y', 1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
@@ -545,7 +592,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('z', -1)}
+                onMouseDown={() => handleMouseDown('z', -1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
@@ -554,7 +601,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('z', 1)}
+                onMouseDown={() => handleMouseDown('z', 1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
@@ -570,7 +617,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('roll', -1)}
+                onMouseDown={() => handleMouseDown('roll', -1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
@@ -579,7 +626,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('roll', 1)}
+                onMouseDown={() => handleMouseDown('roll', 1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
@@ -593,7 +640,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('pitch', -1)}
+                onMouseDown={() => handleMouseDown('pitch', -1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
@@ -602,7 +649,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('pitch', 1)}
+                onMouseDown={() => handleMouseDown('pitch', 1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
@@ -616,7 +663,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('yaw', -1)}
+                onMouseDown={() => handleMouseDown('yaw', -1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
@@ -625,7 +672,7 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('yaw', 1)}
+                onMouseDown={() => handleMouseDown('yaw', 1, 'tcp')}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
                 style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
