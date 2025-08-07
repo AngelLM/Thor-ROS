@@ -217,13 +217,13 @@ useEffect(() => {
   useEffect(() => {
     if (!ros || !connected) return;
     console.log('Sending IK request with pose:', { position: position.toArray(), quaternion: baseQuaternion.toArray() });
-    
+
     const service = new ROSLIB.Service({
       ros,
       name: '/compute_ik',
       serviceType: 'moveit_msgs/srv/GetPositionIK'
     });
-    
+
     const pose = {
       header: { frame_id: 'base_link' },
       pose: {
@@ -249,17 +249,17 @@ useEffect(() => {
         'joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6',
         'gripperbase_to_armgearright'
       ];
-      
+
       const filteredNames = [];
       const filteredPositions = [];
-      
+
       jointNames.forEach(jointName => {
         if (ghostJoints[jointName] !== undefined) {
           filteredNames.push(jointName);
           filteredPositions.push(ghostJoints[jointName]);
         }
       });
-      
+
       if (filteredNames.length > 0) {
         robotState = {
           joint_state: {
@@ -269,7 +269,7 @@ useEffect(() => {
         };
       }
     }
-    
+
     const req = {
       ik_request: {
         group_name: 'arm_group',
@@ -300,7 +300,7 @@ useEffect(() => {
         setStatusMsg({ status: 'unreachable' });
       }
     });
-  }, [position, baseQuaternion, ros, connected, onPreviewJointsChange, ghostJoints]);
+  }, [position, baseQuaternion, ros, connected]);
 
   const handleValueChange = (key, newValue) => {
     if (key === 'x' || key === 'y' || key === 'z') {
