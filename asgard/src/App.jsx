@@ -111,28 +111,14 @@ function App() {
           // Convertir quaternion a RPY
           const q = pose.orientation;
           const t = pose.position;
-          function quaternionToRPY(q) {
-            const ysqr = q.y * q.y;
-            let t0 = +2.0 * (q.w * q.x + q.y * q.z);
-            let t1 = +1.0 - 2.0 * (q.x * q.x + ysqr);
-            let roll = Math.atan2(t0, t1);
-            let t2 = +2.0 * (q.w * q.y - q.z * q.x);
-            t2 = t2 > 1.0 ? 1.0 : t2;
-            t2 = t2 < -1.0 ? -1.0 : t2;
-            let pitch = Math.asin(t2);
-            let t3 = +2.0 * (q.w * q.z + q.x * q.y);
-            let t4 = +1.0 - 2.0 * (ysqr + q.z * q.z);
-            let yaw = Math.atan2(t3, t4);
-            return { roll, pitch, yaw };
-          }
-          const rpy = quaternionToRPY(q);
           const poseObj = {
             x: t.x * 1000,
             y: t.y * 1000,
             z: t.z * 1000,
-            roll: rpy.roll * 180 / Math.PI,
-            pitch: rpy.pitch * 180 / Math.PI,
-            yaw: rpy.yaw * 180 / Math.PI
+            qx: q.x,
+            qy: q.y,
+            qz: q.z,
+            qw: q.w
           };
           lastPoseOnTabChange.current = poseObj;
           setIkPose(poseObj);

@@ -126,35 +126,54 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
   }), [position, displayEuler]);
 
   // Inicializa SOLO cuando cambia ikPose
-  useEffect(() => {
-    if (ikPose) {
-      setPosition(new THREE.Vector3(
-        Math.round(ikPose.x),
-        Math.round(ikPose.y),
-        Math.round(ikPose.z)
+useEffect(() => {
+  if (ikPose) {
+    setPosition(new THREE.Vector3(
+      Math.round(ikPose.x),
+      Math.round(ikPose.y),
+      Math.round(ikPose.z)
+    ));
+    // Usar cuaterniones directamente
+    if (
+      ikPose.qx !== undefined &&
+      ikPose.qy !== undefined &&
+      ikPose.qz !== undefined &&
+      ikPose.qw !== undefined
+    ) {
+      setBaseQuaternion(new THREE.Quaternion(
+        ikPose.qx,
+        ikPose.qy,
+        ikPose.qz,
+        ikPose.qw
       ));
-      const euler = new THREE.Euler(ikPose.roll, ikPose.pitch, ikPose.yaw, 'XYZ');
-      setBaseQuaternion(new THREE.Quaternion().setFromEuler(euler));
     }
-  }, [ikPose]);
+  }
+}, [ikPose]);
 
   // Inicializa cuando cambia initialPose
-  useEffect(() => {
-    if (initialPose) {
-      setPosition(new THREE.Vector3(
-        initialPose.x || 0,
-        initialPose.y || 0,
-        initialPose.z || 0
+useEffect(() => {
+  if (initialPose) {
+    setPosition(new THREE.Vector3(
+      initialPose.x || 0,
+      initialPose.y || 0,
+      initialPose.z || 0
+    ));
+    // Usar cuaterniones directamente
+    if (
+      initialPose.qx !== undefined &&
+      initialPose.qy !== undefined &&
+      initialPose.qz !== undefined &&
+      initialPose.qw !== undefined
+    ) {
+      setBaseQuaternion(new THREE.Quaternion(
+        initialPose.qx,
+        initialPose.qy,
+        initialPose.qz,
+        initialPose.qw
       ));
-      const euler = new THREE.Euler(
-        (initialPose.roll || 0) * Math.PI / 180,
-        (initialPose.pitch || 0) * Math.PI / 180,
-        (initialPose.yaw || 0) * Math.PI / 180,
-        'XYZ'
-      );
-      setBaseQuaternion(new THREE.Quaternion().setFromEuler(euler));
     }
-  }, [initialPose]);
+  }
+}, [initialPose]);
 
   // Suscripción al status del IK
   useEffect(() => {
@@ -315,9 +334,17 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
     ];
     // Construir el array de posiciones en radianes
     const jointPositions = jointNames.map(name => ghostJoints[name] !== undefined ? ghostJoints[name] : 0);
-    // Invertir el gripper
+    // Calcular el valor del gripper según selectedGripper
     const gripperIdx = jointNames.indexOf('gripperbase_to_armgearright');
-    jointPositions[gripperIdx] = -jointPositions[gripperIdx];
+    let gripperValue = 0;
+    if (selectedGripper === 0) {
+      gripperValue = 0;
+    } else if (selectedGripper === 100) {
+      gripperValue = -89.9 * Math.PI / 180;
+    } else {
+      gripperValue = -89.9 * (selectedGripper / 100) * Math.PI / 180;
+    }
+    jointPositions[gripperIdx] = gripperValue;
     // Publicar en el topic igual que JointSliders.jsx
     const topic = new ROSLIB.Topic({
       ros,
@@ -420,50 +447,92 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}>
-      <h3 style={{ marginTop: '1.5rem', textAlign: 'center' }}>World Frame</h3>
       {/* Posición y orientación actual del TCP ghost */}
       <div style={{ marginBottom: '1rem', padding: '0.5rem 1rem', background: '#f7f7ff', borderRadius: '8px', border: '1px solid #ccccff', maxWidth: '500px' }}>
-        <div><strong>Posición TCP (mm):</strong></div>
+        <div><strong>TCP Position (mm):</strong></div>
         <div style={{ fontFamily: 'monospace', fontSize: '0.95em' }}>
           {displayValues.x.toFixed(1)}, {displayValues.y.toFixed(1)}, {displayValues.z.toFixed(1)}
         </div>
-        <div style={{ marginTop: '0.5em' }}><strong>Orientación TCP (Quaternion):</strong></div>
+        <div style={{ marginTop: '0.5em' }}><strong>TCP Orientation (Quaternion):</strong></div>
         <div style={{ fontFamily: 'monospace', fontSize: '0.95em' }}>
           {baseQuaternion.x.toFixed(5)}, {baseQuaternion.y.toFixed(5)}, {baseQuaternion.z.toFixed(5)}, {baseQuaternion.w.toFixed(5)}
         </div>
-        <div style={{ marginTop: '0.5em' }}><strong>Orientación TCP (Euler °):</strong></div>
-        <div style={{ fontFamily: 'monospace', fontSize: '0.95em' }}>
-          roll: {displayValues.roll.toFixed(2)}°, pitch: {displayValues.pitch.toFixed(2)}°, yaw: {displayValues.yaw.toFixed(2)}°
-        </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z */}
-        <NumberInput
-          value={displayValues.x}
-          onChange={(newValue) => handleValueChange('x', newValue)}
-          unit="mm"
-          min={-500}
-          max={500}
-          step={1}
-          label={<strong>X</strong>}
-          axis="x"        />
-        <NumberInput
-          value={displayValues.y}
-          onChange={(newValue) => handleValueChange('y', newValue)}
-          unit="mm"
-          min={-500}
-          max={500}
-          step={1}
-          label={<strong>Y</strong>}
-          axis="y"        />
-        <NumberInput
-          value={displayValues.z}
-          onChange={(newValue) => handleValueChange('z', newValue)}
-          unit="mm"
-          min={0}
-          max={1000}
-          step={1}
-          label={<strong>Z</strong>}
-          axis="z"        />
+
+       <h3 style={{ marginTop: '1.5rem', textAlign: 'center' }}>World Frame</h3>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z as buttons */}
+        {/* X group */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}>
+          <label style={{ marginBottom: '4px' }}><strong>X</strong></label>
+          <ButtonGroup>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('x', -1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
+            >
+              -
+            </Button>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('x', 1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
+            >
+              +
+            </Button>
+          </ButtonGroup>
+        </div>
+        {/* Y group */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}>
+          <label style={{ marginBottom: '4px' }}><strong>Y</strong></label>
+          <ButtonGroup>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('y', -1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
+            >
+              -
+            </Button>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('y', 1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
+            >
+              +
+            </Button>
+          </ButtonGroup>
+        </div>
+        {/* Z group */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <label style={{ marginBottom: '4px' }}><strong>Z</strong></label>
+          <ButtonGroup>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('z', -1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
+            >
+              -
+            </Button>
+            <Button
+              variant="contained"
+              onMouseDown={() => handleMouseDown('z', 1, 'world')}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
+            >
+              +
+            </Button>
+          </ButtonGroup>
+        </div>
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for Roll, Pitch, Yaw Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* Roll group */}
