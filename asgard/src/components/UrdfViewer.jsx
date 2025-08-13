@@ -175,55 +175,145 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
           eeLink.getWorldPosition(pos);
           const sphere = new THREE.Mesh(
             new THREE.SphereGeometry(0.02, 32, 32),
-            new THREE.MeshPhongMaterial({ color: 0xff9800, opacity: 0.5, transparent: true })
+            new THREE.MeshPhongMaterial({ color: 0x4caf50, opacity: 0.5, transparent: true })
           );
           sphere.position.copy(pos);
           scene.add(sphere);
 
-          // TransformControls para la esfera
-          const transform = new TransformControls(camera, renderer.domElement);
-          transform.attach(sphere);
-          transform.setMode('translate');
-          transform.setSpace('world');
-          transform.showX = true;
-          transform.showY = true;
-          transform.showZ = true;
-          transform.setTranslationSnap(null);
-          transform.setRotationSnap(null);
-          // Bloquear escalado
-          transform.setMode("translate");
-          transform.setSpace("world");
-          scene.add(transform.getHelper());
+          // Dos TransformControls: translate y rotate
+          const translateControl = new TransformControls(camera, renderer.domElement);
+          translateControl.attach(sphere);
+          translateControl.setMode('translate');
+          translateControl.setSpace('local');
+          translateControl.setTranslationSnap(null);
+          translateControl.setRotationSnap(null);
+          translateControl.setSize(1.0);
+          scene.add(translateControl.getHelper());
 
-          // Bloquear orbit mientras drag
-          transform.addEventListener('dragging-changed', (e) => {
-            orbit.enabled = !e.value;
-          });
+          const rotateControl = new TransformControls(camera, renderer.domElement);
+          rotateControl.attach(sphere);
+          rotateControl.setMode('rotate');
+          rotateControl.setSpace('local');
+          rotateControl.setTranslationSnap(null);
+          rotateControl.setRotationSnap(null);
+          rotateControl.setSize(0.85); // un poco más pequeño para evitar solape visual
+          scene.add(rotateControl.getHelper());
 
-          // Log pose on change
-          transform.addEventListener('objectChange', () => {
+          // Función compartida para enviar IK con la pose de la esfera
+          const sendIKFromSphere = () => {
             sphere.updateMatrixWorld(true);
             const p = new THREE.Vector3();
             const q = new THREE.Quaternion();
             sphere.getWorldPosition(p);
             sphere.getWorldQuaternion(q);
-            console.log('Sphere pose:', {
-              position: { x: +p.x.toFixed(4), y: +p.y.toFixed(4), z: +p.z.toFixed(4) },
-              orientation: { x: +q.x.toFixed(4), y: +q.y.toFixed(4), z: +q.z.toFixed(4), w: +q.w.toFixed(4) }
+            // Construir robot_state con las articulaciones del ghost
+            const names = ['joint_1','joint_2','joint_3','joint_4','joint_5','joint_6','gripperbase_to_armgearright'];
+            const filteredNames = [];
+            const filteredPositions = [];
+            if (ghostRef.current && ghostRef.current.joints) {
+              names.forEach(jn => {
+                if (ghostRef.current.joints[jn] !== undefined) {
+                  filteredNames.push(jn);
+                  filteredPositions.push(ghostRef.current.joints[jn].angle);
+                }
+              });
+            }
+            let robotState = {};
+            if (filteredNames.length > 0) {
+              robotState = { joint_state: { name: filteredNames, position: filteredPositions } };
+            }
+            // Servicio IK (idéntico a IkSliders.jsx)
+            const ikService = new ROSLIB.Service({
+              ros: ros,
+              name: '/compute_ik',
+              serviceType: 'moveit_msgs/srv/GetPositionIK',
             });
+            const pose = {
+              header: { frame_id: 'base_link' },
+              pose: {
+                position: { x: p.x, y: p.y, z: p.z },
+                orientation: { x: q.x, y: q.y, z: q.z, w: q.w }
+              }
+            };
+            const req = {
+              ik_request: {
+                group_name: 'arm_group',
+                pose_stamped: pose,
+                ik_link_name: 'gripper_mid_point',
+                timeout: { sec: 0, nanosec: 0 },
+                constraints: {},
+                robot_state: robotState,
+                avoid_collisions: false
+              }
+            };
+            ikService.callService(req, (res) => {
+              if (res && res.solution && res.solution.joint_state && res.error_code && res.error_code.val === 1) {
+                res.solution.joint_state.name.forEach((name, i) => {
+                  if (ghostRef.current && ghostRef.current.joints && ghostRef.current.joints[name] !== undefined) {
+                    ghostRef.current.setJointValue(name, res.solution.joint_state.position[i]);
+                  }
+                });
+                // Notificar inmediatamente al padre para actualizar sliders FK
+                if (onGhostJointsChange && res.solution && res.solution.joint_state) {
+                  const updated = {};
+                  res.solution.joint_state.name.forEach((name, i) => {
+                    updated[name] = res.solution.joint_state.position[i];
+                  });
+                  onGhostJointsChange(updated);
+                }
+                // Alcanzable -> verde
+                if (sphere && sphere.material && sphere.material.color) {
+                  sphere.material.color.set(0x4caf50);
+                  sphere.material.opacity = 0.5; // Mantener semitransparente
+                }
+              } else {
+                // No alcanzable -> rojo
+                if (sphere && sphere.material && sphere.material.color) {
+                  sphere.material.color.set(0xf44336);
+                  sphere.material.opacity = 1.0; // Mantener opaco
+                }
+              }
+            });
+          };
+
+          // Gestionar orbit y exclusión mutua durante el drag
+          translateControl.addEventListener('dragging-changed', (e) => {
+            orbit.enabled = !e.value;
+            rotateControl.enabled = !e.value; // desactiva rotate mientras se arrastra translate
+          });
+          rotateControl.addEventListener('dragging-changed', (e) => {
+            orbit.enabled = !e.value;
+            translateControl.enabled = !e.value; // desactiva translate mientras se arrastra rotate
           });
 
-          // Atajos W/E/L
+          // Enviar IK en cambios de objeto para ambos controles
+          translateControl.addEventListener('objectChange', sendIKFromSphere);
+          rotateControl.addEventListener('objectChange', sendIKFromSphere);
+
+          // Atajos R/T/L/G
           const onKeyDown = (e) => {
             switch (e.key.toLowerCase()) {
-              case 'w':
-                transform.setMode('translate');
-                break;
-              case 'e':
-                transform.setMode('rotate');
-                break;
               case 'l':
-                transform.setSpace(transform.space === 'local' ? 'world' : 'local');
+                // Cambiar espacio en ambos controles
+                const newSpace = translateControl.space === 'local' ? 'world' : 'local';
+                translateControl.setSpace(newSpace);
+                rotateControl.setSpace(newSpace);
+                break;
+              case 'g':
+                // Colocar la esfera en el TCP del ghost
+                if (ghostRef.current) {
+                  let tcp = ghostRef.current.getObjectByName('gripper_mid_point') || ghostRef.current.getObjectByName('base_gripper');
+                  if (tcp) {
+                    tcp.updateWorldMatrix(true, false);
+                    const npos = new THREE.Vector3();
+                    const nquat = new THREE.Quaternion();
+                    tcp.getWorldPosition(npos);
+                    tcp.getWorldQuaternion(nquat);
+                    sphere.position.copy(npos);
+                    sphere.quaternion.copy(nquat);
+                    sphere.updateMatrixWorld(true);
+                  }
+                }
                 break;
               default:
                 break;

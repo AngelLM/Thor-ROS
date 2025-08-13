@@ -205,7 +205,7 @@ function App() {
               <span className="accordion-title">Forward Kinematics</span>
             </AccordionSummary>
             <AccordionDetails>
-              <JointSliders onPreviewJointsChange={setFkJoints} initialJoints={lastJointsOnTabChange.current} />
+              <JointSliders onPreviewJointsChange={setFkJoints} initialJoints={ghostJoints || lastJointsOnTabChange.current} />
             </AccordionDetails>
           </Accordion>
 
