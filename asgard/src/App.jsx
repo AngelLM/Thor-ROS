@@ -47,6 +47,7 @@ function App() {
   const ghostRef = useRef(null); // Referencia para el robot fantasma
   const poseRef = useRef(null); // Referencia para el componente Poses
   const randomRef = useRef(); // Referencia para el componente Random
+  const urdfApiRef = useRef(null);
 
   // Suscribirse a /joint_states para obtener la posición actual
   useEffect(() => {
@@ -82,10 +83,8 @@ function App() {
 
   // Solo inicializar sliders al cambiar de tab
   useEffect(() => {
-    if (activeTab === 'forward' && currentJoints) {
-      lastJointsOnTabChange.current = { ...currentJoints };
-      setFkJoints({ ...currentJoints });
-    }
+    // No forzar FK a la posición del robot real al abrir la pestaña
+    // Mantener la pose del ghost actual (los sliders ya reciben ghostJoints como initialJoints)
     if (activeTab === 'inverse' && currentJoints) {
       // Llamar a servicio FK para obtener la pose cartesiana actual
       const ros = rosRef.current;
@@ -198,14 +197,11 @@ function App() {
             onChange={() => setActiveTab(activeTab === 'forward' ? '' : 'forward')}
             className="accordion forward-kinematics"
           >
-            <AccordionSummary
-              className='accordion-summary'
-              expandIcon={<ExpandMoreIcon className="expand-icon" />}
-            >
+            <AccordionSummary className='accordion-summary' expandIcon={<ExpandMoreIcon className="expand-icon" />}> 
               <span className="accordion-title">Forward Kinematics</span>
             </AccordionSummary>
             <AccordionDetails>
-              <JointSliders onPreviewJointsChange={setFkJoints} initialJoints={ghostJoints || lastJointsOnTabChange.current} />
+              <JointSliders onPreviewJointsChange={setFkJoints} initialJoints={ghostJoints} urdfApi={urdfApiRef.current} active={activeTab === 'forward'} />
             </AccordionDetails>
           </Accordion>
 
@@ -220,17 +216,16 @@ function App() {
             }}
             className="accordion inverse-kinematics"
           >
-            <AccordionSummary
-              className='accordion-summary'
-              expandIcon={<ExpandMoreIcon className="expand-icon" />}
-            >
+            <AccordionSummary className='accordion-summary' expandIcon={<ExpandMoreIcon className="expand-icon" />}> 
               <span className="accordion-title">Inverse Kinematics</span>
             </AccordionSummary>
             <AccordionDetails>
               <IKSliders 
                 onPreviewJointsChange={setPreviewJoints} 
                 initialPose={ikPose}
-                ghostJoints={ghostJoints} // Pasar los valores del ghost a IKSliders
+                ghostJoints={ghostJoints}
+                urdfApi={urdfApiRef.current}
+                active={activeTab === 'inverse'}
               />
             </AccordionDetails>
           </Accordion>
@@ -296,15 +291,15 @@ function App() {
         {/* UrdfViewer ocupa el resto de la pantalla */}
         <div style={{ flex: 1, position: 'relative' }}>
           <UrdfViewer
+            ref={urdfApiRef}
             previewJoints={effectivePreviewJoints}
             showRealRobot={showRealRobot}
             showGhostRobot={showGhostRobot}
             ikStatus={ikStatus}
-            ghostRef={ghostRef} // Asegurar que ghostRef se pase correctamente
-            onGhostJointsChange={setGhostJoints} // Callback para recibir valores del ghost
+            onGhostJointsChange={setGhostJoints}
             className="urdf-viewer"
-            showFPS={showFPS} // Pasar el estado showFPS
-            showGhostRobotCoordinates={showGhostRobotCoordinates} // Pasar el estado showGhostRobotCoordinates
+            showFPS={showFPS}
+            showGhostRobotCoordinates={showGhostRobotCoordinates}
           />
         </div>
       {/* Floating Action Button */}
