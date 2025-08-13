@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { ViewportGizmo } from "three-viewport-gizmo";
+import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 import URDFLoader from 'urdf-loader';
 import ROSLIB from 'roslib';
 
@@ -12,7 +13,6 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
   const ghostRef = useRef(null); // robot ghost
   const sceneRef = useRef(null);
   const urdfXmlRef = useRef(null);
-  const arrowsRef = useRef([]); // Store ArrowHelpers
   const [fps, setFps] = useState(0); // Estado para los FPS
 
   // Cargar y mostrar ambos robots (real y ghost)
@@ -46,24 +46,10 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     const ambientLight = new THREE.AmbientLight(0x404040);
     scene.add(ambientLight);
 
-    // Flechas para el end effector del ghost
-    const arrowLength = 0.12;
-    const arrowHeadLength = 0.04;
-    const arrowHeadWidth = 0.025;
-    const arrows = [
-      new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), arrowLength, 0xff0000, arrowHeadLength, arrowHeadWidth), // X rojo
-      new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), arrowLength, 0x00ff00, arrowHeadLength, arrowHeadWidth), // Y verde
-      new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), arrowLength, 0x0000ff, arrowHeadLength, arrowHeadWidth), // Z azul
-    ];
-    arrows.forEach((arrow) => {
-      arrow.visible = showGhostRobotCoordinates; // Set initial visibility
-      scene.add(arrow);
-    });
-    arrowsRef.current = arrows; // Store arrows in ref
-
     // Gizmo
+    const orbit = new OrbitControls(camera, renderer.domElement);
     const gizmo = new ViewportGizmo(camera, renderer, { type: 'sphere' });
-    gizmo.attachControls(new OrbitControls(camera, renderer.domElement));
+    gizmo.attachControls(orbit);
     gizmo.target.set(0, 0, 0.3);
     camera.lookAt(gizmo.target);
 
@@ -90,9 +76,7 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
         if (ghostRef.current) {
           // Obtener los valores actuales de las joints del ghost robot
           const jointValues = {};
-          
           if (ghostRef.current.joints) {
-            // Leer todas las joints disponibles del robot en lugar de hardcodear
             Object.keys(ghostRef.current.joints).forEach(jointName => {
               const joint = ghostRef.current.joints[jointName];
               if (joint && joint.angle !== undefined) {
@@ -100,9 +84,6 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
               }
             });
           }
-          
-          // console.log('Ghost Robot Joint Values (URDFVIEWER):', jointValues);
-          
           // Enviar los valores al componente padre si hay callback
           if (onGhostJointsChange) {
             onGhostJointsChange(jointValues);
@@ -118,19 +99,6 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
               obj.material.vertexColors = false;
             }
           });
-          // --- Flechas siguen al link gripper_mid_point (o base_gripper) ---
-          let eeLink = ghostRef.current.getObjectByName('gripper_mid_point') || ghostRef.current.getObjectByName('base_gripper');
-          if (eeLink) {
-            eeLink.updateWorldMatrix(true, false);
-            const pos = new THREE.Vector3();
-            const quat = new THREE.Quaternion();
-            eeLink.getWorldPosition(pos);
-            eeLink.getWorldQuaternion(quat);
-            arrows.forEach((arrow, i) => {
-              arrow.position.copy(pos);
-              arrow.setDirection(new THREE.Vector3(i===0?1:0, i===1?1:0, i===2?1:0).applyQuaternion(quat).normalize());
-            });
-          }
         }
         // Render the scene
         renderer.toneMapping = THREE.CineonToneMapping;
@@ -199,6 +167,73 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
         scene.add(ghost);
         ghostRef.current = ghost;
 
+        // Crear esfera semitransparente en el TCP del ghost
+        let eeLink = ghost.getObjectByName('gripper_mid_point') || ghost.getObjectByName('base_gripper');
+        if (eeLink) {
+          eeLink.updateWorldMatrix(true, false);
+          const pos = new THREE.Vector3();
+          eeLink.getWorldPosition(pos);
+          const sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.02, 32, 32),
+            new THREE.MeshPhongMaterial({ color: 0xff9800, opacity: 0.5, transparent: true })
+          );
+          sphere.position.copy(pos);
+          scene.add(sphere);
+
+          // TransformControls para la esfera
+          const transform = new TransformControls(camera, renderer.domElement);
+          transform.attach(sphere);
+          transform.setMode('translate');
+          transform.setSpace('world');
+          transform.showX = true;
+          transform.showY = true;
+          transform.showZ = true;
+          transform.setTranslationSnap(null);
+          transform.setRotationSnap(null);
+          // Bloquear escalado
+          transform.setMode("translate");
+          transform.setSpace("world");
+          scene.add(transform.getHelper());
+
+          // Bloquear orbit mientras drag
+          transform.addEventListener('dragging-changed', (e) => {
+            orbit.enabled = !e.value;
+          });
+
+          // Log pose on change
+          transform.addEventListener('objectChange', () => {
+            sphere.updateMatrixWorld(true);
+            const p = new THREE.Vector3();
+            const q = new THREE.Quaternion();
+            sphere.getWorldPosition(p);
+            sphere.getWorldQuaternion(q);
+            console.log('Sphere pose:', {
+              position: { x: +p.x.toFixed(4), y: +p.y.toFixed(4), z: +p.z.toFixed(4) },
+              orientation: { x: +q.x.toFixed(4), y: +q.y.toFixed(4), z: +q.z.toFixed(4), w: +q.w.toFixed(4) }
+            });
+          });
+
+          // Atajos W/E/L
+          const onKeyDown = (e) => {
+            switch (e.key.toLowerCase()) {
+              case 'w':
+                transform.setMode('translate');
+                break;
+              case 'e':
+                transform.setMode('rotate');
+                break;
+              case 'l':
+                transform.setSpace(transform.space === 'local' ? 'world' : 'local');
+                break;
+              default:
+                break;
+            }
+          };
+          window.addEventListener('keydown', onKeyDown);
+          // Limpieza
+          // Puedes mejorar la limpieza si lo necesitas
+        }
+
         // Suscripción a joint_states para robot real
         const jointStateListener = new ROSLIB.Topic({
           ros: ros,
@@ -222,7 +257,6 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
       console.warn('[ROS] 🔌 Conexión cerrada');
     });
     return () => {
-      arrows.forEach((arrow) => scene.remove(arrow)); // Cleanup arrows
       window.removeEventListener('resize', handleResize);
       if (rendererRef.current) {
         rendererRef.current.dispose();
@@ -250,15 +284,6 @@ const UrdfViewer = ({ previewJoints, showRealRobot = true, showGhostRobot = true
     if (robotRef.current) robotRef.current.visible = !!showRealRobot;
     if (ghostRef.current) ghostRef.current.visible = !!showGhostRobot;
   }, [showRealRobot, showGhostRobot]);
-
-  // Mostrar/ocultar flechas según showGhostRobotCoordinates
-  useEffect(() => {
-    if (arrowsRef.current.length > 0) {
-      arrowsRef.current.forEach((arrow) => {
-        arrow.visible = showGhostRobotCoordinates;
-      });
-    }
-  }, [showGhostRobotCoordinates]);
 
   return (
     <div>
