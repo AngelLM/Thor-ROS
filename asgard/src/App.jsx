@@ -11,7 +11,9 @@ import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Settings from './components/Settings';
 import Fab from '@mui/material/Fab';
-import AddIcon from '@mui/icons-material/Add';
+import SchoolIcon from '@mui/icons-material/School';
+import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
+import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -273,16 +275,39 @@ function App() {
             <RobotState urdfApi={urdfApiRef.current} currentJoints={currentJoints} ghostJoints={ghostJoints} />
           </div>
         </div>
-      {/* Floating Action Button */}
-        <Fab variant="extended"
-          color="primary"
-          aria-label="add"
-          style={{ position: 'absolute', bottom: '75px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem' }}
-          onClick={handleFabClick}
-        >
-          <AddIcon />
-          Pose
-        </Fab>
+      
+      {/* Toggle TCP Gizmo Frame FAB */}
+      <Fab variant="extended"
+        color="primary"
+        aria-label="toggle-tcp-gizmo"
+        style={{ position: 'absolute', bottom: '205px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
+        onClick={() => { if (urdfApiRef.current && urdfApiRef.current.toggleTCPGizmoFrame) urdfApiRef.current.toggleTCPGizmoFrame(); }}
+      >
+        Toggle TCP Gizmo Frame
+        <FlipCameraAndroidIcon style={{ marginLeft: '8px' }} />
+      </Fab>
+
+      {/* Move Ghost to Real FAB */}
+      <Fab variant="extended"
+        color="primary"
+        aria-label="move-ghost-to-real"
+        style={{ position: 'absolute', bottom: '135px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
+        onClick={() => { if (urdfApiRef.current && urdfApiRef.current.copyRealToGhost) urdfApiRef.current.copyRealToGhost(); }}
+      >
+        Move Ghost to Real
+        <PrecisionManufacturingIcon style={{ marginLeft: '8px' }} />
+      </Fab>
+
+      {/* Teach Real Pose FAB */}
+      <Fab variant="extended"
+        color="primary"
+        aria-label="teach-pose"
+        style={{ position: 'absolute', bottom: '65px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
+        onClick={handleFabClick}
+      >
+        Teach Real Pose
+        <SchoolIcon style={{ marginLeft: '8px' }} />
+      </Fab>
 
         {/* Form Dialog */}
         <Dialog open={isDialogOpen} onClose={handleDialogClose}>

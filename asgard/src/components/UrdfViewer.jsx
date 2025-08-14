@@ -68,6 +68,36 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
     }
   };
 
+  // Copy real robot joint angles into the ghost robot (make ghost take real pose)
+  const copyRealToGhost = () => {
+    if (!robotRef.current || !ghostRef.current) return;
+    try {
+      const rj = robotRef.current.joints || {};
+      Object.keys(rj).forEach(jn => {
+        const rv = rj[jn] && rj[jn].angle;
+        if (rv !== undefined && ghostRef.current.joints && ghostRef.current.joints[jn] !== undefined) {
+          ghostRef.current.setJointValue(jn, rv);
+        }
+      });
+      // Notify parent about ghost change
+      emitGhostIfChanged();
+      // Snap sphere to new ghost EE
+      const eeGhost = getEE();
+      if (eeGhost && sphereRef.current) {
+        eeGhost.updateWorldMatrix(true, false);
+        const npos = new THREE.Vector3();
+        const nquat = new THREE.Quaternion();
+        eeGhost.getWorldPosition(npos);
+        eeGhost.getWorldQuaternion(nquat);
+        sphereRef.current.position.copy(npos);
+        sphereRef.current.quaternion.copy(nquat);
+        sphereRef.current.updateMatrixWorld(true);
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
   const getEE = () => {
     if (!ghostRef.current) return null;
     return ghostRef.current.getObjectByName('gripper_mid_point') || ghostRef.current.getObjectByName('base_gripper');
@@ -221,6 +251,19 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
       sphereRef.current.quaternion.copy(q);
       sphereRef.current.updateMatrixWorld(true);
     }
+    ,
+    // Toggle TransformControls space between local and world (same as pressing 'L')
+    toggleTCPGizmoFrame: () => {
+      const t = translateCtrlRef.current;
+      const r = rotateCtrlRef.current;
+      if (!t && !r) return;
+      const newSpace = (t && t.space === 'local') || (r && r.space === 'local') ? 'world' : 'local';
+      if (t) t.setSpace(newSpace);
+      if (r) r.setSpace(newSpace);
+    }
+  ,
+  // Allow external callers to copy the real robot pose into the ghost
+  copyRealToGhost: () => copyRealToGhost(),
   }), [connected]);
 
   // Init scene
@@ -451,16 +494,7 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
               break;
             }
             case 'g': {
-              const ee = getEE();
-              if (!ee) break;
-              ee.updateWorldMatrix(true, false);
-              const npos = new THREE.Vector3();
-              const nquat = new THREE.Quaternion();
-              ee.getWorldPosition(npos);
-              ee.getWorldQuaternion(nquat);
-              sphere.position.copy(npos);
-              sphere.quaternion.copy(nquat);
-              sphere.updateMatrixWorld(true);
+              copyRealToGhost();
               break;
             }
             default: break;

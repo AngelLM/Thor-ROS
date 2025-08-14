@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useROS } from '../RosContext';
-import ROSLIB from 'roslib';
 import { styled } from '@mui/system';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -89,12 +88,25 @@ const NumberInput = React.forwardRef(function CustomNumberInput(props, ref) {
   );
 });
 
-export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusChange, initialPose, ghostJoints }) {
-  const { ros, connected } = useROS();
+export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusChange, initialPose, ghostJoints, urdfApi, active = true }) {
+  const { connected } = useROS();
   
   // Estados principales: posición y quaternion base (fuentes de verdad)
   const [position, setPosition] = useState(new THREE.Vector3(200, 0, 300)); // en mm
   const [baseQuaternion, setBaseQuaternion] = useState(new THREE.Quaternion(0, 0, 0, 1)); // identidad
+  const suppressSolveRef = useRef(false);
+
+  // Al activarse la pestaña IK, sincroniza con el TCP actual del ghost
+  useEffect(() => {
+    if (!active) return;
+    if (!urdfApi) return;
+    const state = urdfApi.getGhostState && urdfApi.getGhostState();
+    if (state && state.tcp) {
+      suppressSolveRef.current = true; // no dispares IK por este sync
+      setPosition(new THREE.Vector3(state.tcp.x, state.tcp.y, state.tcp.z));
+      setBaseQuaternion(new THREE.Quaternion(state.tcp.qx, state.tcp.qy, state.tcp.qz, state.tcp.qw));
+    }
+  }, [active, urdfApi]);
   
   // Estados para funcionalidad
   const [ikConfig, setIkConfig] = useState({
@@ -126,181 +138,100 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
   }), [position, displayEuler]);
 
   // Inicializa SOLO cuando cambia ikPose
-useEffect(() => {
-  if (ikPose) {
-    setPosition(new THREE.Vector3(
-      Math.round(ikPose.x),
-      Math.round(ikPose.y),
-      Math.round(ikPose.z)
-    ));
-    // Usar cuaterniones directamente
-    if (
-      ikPose.qx !== undefined &&
-      ikPose.qy !== undefined &&
-      ikPose.qz !== undefined &&
-      ikPose.qw !== undefined
-    ) {
-      setBaseQuaternion(new THREE.Quaternion(
-        ikPose.qx,
-        ikPose.qy,
-        ikPose.qz,
-        ikPose.qw
+  useEffect(() => {
+    if (ikPose) {
+      setPosition(new THREE.Vector3(
+        Math.round(ikPose.x),
+        Math.round(ikPose.y),
+        Math.round(ikPose.z)
       ));
+      // Usar cuaterniones directamente
+      if (
+        ikPose.qx !== undefined &&
+        ikPose.qy !== undefined &&
+        ikPose.qz !== undefined &&
+        ikPose.qw !== undefined
+      ) {
+        setBaseQuaternion(new THREE.Quaternion(
+          ikPose.qx,
+          ikPose.qy,
+          ikPose.qz,
+          ikPose.qw
+        ));
+      }
     }
-  }
-}, [ikPose]);
+  }, [ikPose]);
 
   // Inicializa cuando cambia initialPose
-useEffect(() => {
-  if (initialPose) {
-    setPosition(new THREE.Vector3(
-      initialPose.x || 0,
-      initialPose.y || 0,
-      initialPose.z || 0
-    ));
-    // Usar cuaterniones directamente
-    if (
-      initialPose.qx !== undefined &&
-      initialPose.qy !== undefined &&
-      initialPose.qz !== undefined &&
-      initialPose.qw !== undefined
-    ) {
-      setBaseQuaternion(new THREE.Quaternion(
-        initialPose.qx,
-        initialPose.qy,
-        initialPose.qz,
-        initialPose.qw
+  useEffect(() => {
+    if (initialPose) {
+      setPosition(new THREE.Vector3(
+        initialPose.x || 0,
+        initialPose.y || 0,
+        initialPose.z || 0
       ));
-    }
-  }
-}, [initialPose]);
-
-  // Suscripción al status del IK
-  useEffect(() => {
-    if (!ros || !connected) return;
-    const statusTopic = new ROSLIB.Topic({
-      ros,
-      name: '/ik_goal_status',
-      messageType: 'std_msgs/String'
-    });
-    const cb = (msg) => {
-      try {
-        const data = JSON.parse(msg.data);
-        setStatusMsg(data);
-        if (onIKStatusChange && data.status) {
-          onIKStatusChange(data.status);
-        }
-      } catch {
-        setStatusMsg({ status: "error", detail: "Error interpretando el mensaje de estado" });
-        if (onIKStatusChange) onIKStatusChange('error');
+      // Usar cuaterniones directamente
+      if (
+        initialPose.qx !== undefined &&
+        initialPose.qy !== undefined &&
+        initialPose.qz !== undefined &&
+        initialPose.qw !== undefined
+      ) {
+        setBaseQuaternion(new THREE.Quaternion(
+          initialPose.qx,
+          initialPose.qy,
+          initialPose.qz,
+          initialPose.qw
+        ));
       }
-    };
-    statusTopic.subscribe(cb);
-    return () => statusTopic.unsubscribe(cb);
-  }, [ros, connected, onIKStatusChange]);
-
-  // Notificar cambios de pose
-  useEffect(() => {
-    if (onPreviewJointsChange) {
-      onPreviewJointsChange({
-        x: position.x,
-        y: position.y,
-        z: position.z,
-        roll: displayEuler.roll * Math.PI / 180,
-        pitch: displayEuler.pitch * Math.PI / 180,
-        yaw: displayEuler.yaw * Math.PI / 180
-      });
     }
-  }, [position, displayEuler, onPreviewJointsChange]);
+  }, [initialPose]);
 
-  // Peticiones IK (cuando cambian posición o quaternion)
+  // Peticiones IK (cuando cambian posición o quaternion) => delegar en urdfApi
   useEffect(() => {
-    if (!ros || !connected) return;
-    console.log('Sending IK request with pose:', { position: position.toArray(), quaternion: baseQuaternion.toArray() });
-
-    const service = new ROSLIB.Service({
-      ros,
-      name: '/compute_ik',
-      serviceType: 'moveit_msgs/srv/GetPositionIK'
-    });
-
+    if (!active) return; // sólo cuando el tab está activo
+    if (!urdfApi || !connected) return;
+    if (suppressSolveRef.current) { // evitar re-lanzar IK si es un sync externo
+      suppressSolveRef.current = false;
+      return;
+    }
     const pose = {
-      header: { frame_id: 'base_link' },
-      pose: {
-        position: {
-          x: position.x / 1000,
-          y: position.y / 1000,
-          z: position.z / 1000
-        },
-        orientation: {
-          x: baseQuaternion.x,
-          y: baseQuaternion.y,
-          z: baseQuaternion.z,
-          w: baseQuaternion.w
-        }
-      }
+      x: position.x,
+      y: position.y,
+      z: position.z,
+      qx: baseQuaternion.x,
+      qy: baseQuaternion.y,
+      qz: baseQuaternion.z,
+      qw: baseQuaternion.w,
     };
-
-    // Construir robot_state con ghostJoints si están disponibles
-    let robotState = {};
-    if (ghostJoints && Object.keys(ghostJoints).length > 0) {
-      // Filtrar solo las joints principales y del gripper que necesitamos
-      const jointNames = [
-        'joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6',
-        'gripperbase_to_armgearright'
-      ];
-
-      const filteredNames = [];
-      const filteredPositions = [];
-
-      jointNames.forEach(jointName => {
-        if (ghostJoints[jointName] !== undefined) {
-          filteredNames.push(jointName);
-          filteredPositions.push(ghostJoints[jointName]);
-        }
-      });
-
-      if (filteredNames.length > 0) {
-        robotState = {
-          joint_state: {
-            name: filteredNames,
-            position: filteredPositions
-          }
-        };
-      }
-    }
-
-    const req = {
-      ik_request: {
-        group_name: 'arm_group',
-        pose_stamped: pose,
-        ik_link_name: 'gripper_mid_point',
-        timeout: { sec: 0, nanosec: 0 },
-        constraints: {},
-        robot_state: robotState,
-        avoid_collisions: false
-      }
-    };
-    service.callService(req, (res) => {
-      console.log('Received IK response:', res);
-      if (res && res.solution && res.solution.joint_state && res.error_code && res.error_code.val === 1) {
-        const joints = {};
-        res.solution.joint_state.name.forEach((name, i) => {
-          joints[name] = res.solution.joint_state.position[i];
-        });
-        if (onPreviewJointsChange) {
-          onPreviewJointsChange(joints);
-        }
+    urdfApi.solveAndMoveToPose(pose).then((res) => {
+      if (res && res.ok) {
+        if (onPreviewJointsChange) onPreviewJointsChange(res.joints);
         setStatusMsg({ status: 'reachable' });
+        if (onIKStatusChange) onIKStatusChange('reachable');
+        // Alinear esfera con el nuevo TCP resuelto
+        if (urdfApi.syncTargetToTCP) urdfApi.syncTargetToTCP();
       } else {
-        console.warn('IK response indicates unreachable or error:', res);
-        if (onPreviewJointsChange) {
-          onPreviewJointsChange({});
-        }
+        if (onPreviewJointsChange) onPreviewJointsChange({});
         setStatusMsg({ status: 'unreachable' });
+        if (onIKStatusChange) onIKStatusChange('unreachable');
       }
     });
-  }, [position, baseQuaternion, ros, connected]);
+  }, [position, baseQuaternion, urdfApi, connected, active]);
+
+  // Sincroniza la UI con el TCP del ghost cuando cambia el ghost (p.ej. esfera + IK en UrdfViewer)
+  useEffect(() => {
+    if (!active) return;
+    if (!urdfApi || !ghostJoints) return;
+    const state = urdfApi.getGhostState && urdfApi.getGhostState();
+    if (state && state.tcp) {
+      const { x, y, z, qx, qy, qz, qw } = state.tcp;
+      // Evitar loop: marcamos para no lanzar IK en el siguiente efecto
+      suppressSolveRef.current = true;
+      setPosition(new THREE.Vector3(x, y, z));
+      setBaseQuaternion(new THREE.Quaternion(qx, qy, qz, qw));
+    }
+  }, [ghostJoints, active, urdfApi]);
 
   const handleValueChange = (key, newValue) => {
     if (key === 'x' || key === 'y' || key === 'z') {
@@ -320,42 +251,8 @@ useEffect(() => {
   };
 
   const sendJointCommand = () => {
-    if (!connected || !ros) {
-      console.warn('ROS no está conectado.');
-      return;
-    }
-    if (!ghostJoints) {
-      console.warn('No hay ghostJoints disponibles.');
-      return;
-    }
-    // Articulaciones principales y gripper
-    const jointNames = [
-      'joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'gripperbase_to_armgearright'
-    ];
-    // Construir el array de posiciones en radianes
-    const jointPositions = jointNames.map(name => ghostJoints[name] !== undefined ? ghostJoints[name] : 0);
-    // Calcular el valor del gripper según selectedGripper
-    const gripperIdx = jointNames.indexOf('gripperbase_to_armgearright');
-    let gripperValue = 0;
-    if (selectedGripper === 0) {
-      gripperValue = 0;
-    } else if (selectedGripper === 100) {
-      gripperValue = -89.9 * Math.PI / 180;
-    } else {
-      gripperValue = -89.9 * (selectedGripper / 100) * Math.PI / 180;
-    }
-    jointPositions[gripperIdx] = gripperValue;
-    // Publicar en el topic igual que JointSliders.jsx
-    const topic = new ROSLIB.Topic({
-      ros,
-      name: '/joint_group_position_controller/command',
-      messageType: 'std_msgs/Float64MultiArray',
-    });
-    const message = new ROSLIB.Message({
-      data: jointPositions,
-    });
-    console.log('Enviando comando articular:', message.data);
-    topic.publish(message);
+    if (!urdfApi) return;
+    urdfApi.publishGhostToController();
   };
 
   const handleWorldMove = (axis, increment) => {
@@ -447,19 +344,7 @@ useEffect(() => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}>
-      {/* Posición y orientación actual del TCP ghost */}
-      <div style={{ marginBottom: '1rem', padding: '0.5rem 1rem', background: '#f7f7ff', borderRadius: '8px', border: '1px solid #ccccff', maxWidth: '500px' }}>
-        <div><strong>TCP Position (mm):</strong></div>
-        <div style={{ fontFamily: 'monospace', fontSize: '0.95em' }}>
-          {displayValues.x.toFixed(1)}, {displayValues.y.toFixed(1)}, {displayValues.z.toFixed(1)}
-        </div>
-        <div style={{ marginTop: '0.5em' }}><strong>TCP Orientation (Quaternion):</strong></div>
-        <div style={{ fontFamily: 'monospace', fontSize: '0.95em' }}>
-          {baseQuaternion.x.toFixed(5)}, {baseQuaternion.y.toFixed(5)}, {baseQuaternion.z.toFixed(5)}, {baseQuaternion.w.toFixed(5)}
-        </div>
-      </div>
-
-       <h3 style={{ marginTop: '1.5rem', textAlign: 'center' }}>World Frame</h3>
+       <h3 style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '1.5rem' }}>World Frame</h3>
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z as buttons */}
         {/* X group */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}>
@@ -608,7 +493,7 @@ useEffect(() => {
       
       {/* Added buttons for TCP coordinate adjustments */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}> {/* TCP Buttons */}
-        <h3 style={{ marginTop: '1.5rem', textAlign: 'center' }}>TCP Frame</h3>
+        <h3 style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '1.5rem' }}>TCP Frame</h3>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* X group */}
             <label style={{ marginBottom: '4px' }}><strong>X</strong></label>
@@ -755,7 +640,7 @@ useEffect(() => {
 
       {/* Gripper control buttons */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}> {/* Gripper Buttons */}
-        <h3 style={{ marginTop: '1.5rem', textAlign: 'center' }}>Gripper Control</h3>
+        <h3 style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '1.5rem' }}>Gripper Control</h3>
         <ButtonGroup>
           {[0, 20, 40, 60, 80, 100].map((percentage) => (
             <Button
