@@ -10,6 +10,8 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Settings from './components/Settings';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 import Fab from '@mui/material/Fab';
 import SchoolIcon from '@mui/icons-material/School';
 import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
@@ -23,13 +25,13 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Poses from './components/Poses';
 import Program from './components/Program';
-import RobotState from './components/RobotState';
+// RobotState will be shown as an overlay inside the viewer instead of a separate component
 
 function App() {
   const defaultSettings = {
     showRealRobot: true,
     showGhostRobot: true,
-    showFPS: true,
+  showFPS: false,
     showGhostRobotCoordinates: true,
   };
 
@@ -58,6 +60,45 @@ function App() {
   const poseRef = useRef(null); // Referencia para el componente Poses
   const randomRef = useRef(); // Referencia para el componente Random
   const urdfApiRef = useRef(null);
+
+  // Controls visibility of the floating RobotState overlay
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  // Overlay TCP values (for floating RobotState overlay)
+  const [overlayRealTCP, setOverlayRealTCP] = useState(null);
+  const [overlayGhostTCP, setOverlayGhostTCP] = useState(null);
+
+  // Helpers for formatting (copied/adapted from RobotState component)
+  const jointOrder = ['joint_1','joint_2','joint_3','joint_4','joint_5','joint_6'];
+  const radToDeg = (r) => (r * 180 / Math.PI);
+  const formatArmJoints = (joints) => {
+    if (!joints) return 'N/A';
+    try {
+      const vals = jointOrder.map((n) => {
+        const v = joints[n];
+        if (v === undefined || v === null) return 'N/A';
+        return `${radToDeg(v).toFixed(1)}\u00b0`;
+      });
+      return vals.join(', ');
+    } catch (e) { return 'N/A'; }
+  };
+  const formatGripper = (joints) => {
+    if (!joints) return 'N/A';
+    const g = joints['gripperbase_to_armgearright'];
+    if (g === undefined || g === null) return 'N/A';
+    return `${Math.round(Math.abs(radToDeg(g)))}\u00b0`;
+  };
+  const formatPosition = (tcp) => {
+    if (!tcp) return 'N/A';
+    const { x, y, z } = tcp;
+    const factor = (Math.abs(x) < 10 && Math.abs(y) < 10 && Math.abs(z) < 10) ? 1000 : 1;
+    return `${(x*factor).toFixed(1)}mm, ${(y*factor).toFixed(1)}mm, ${(z*factor).toFixed(1)}mm`;
+  };
+  const formatOrientation = (tcp) => {
+    if (!tcp) return 'N/A';
+    const { qx, qy, qz, qw } = tcp;
+    return `${(qx||0).toFixed(1)}, ${(qy||0).toFixed(1)}, ${(qz||0).toFixed(1)}, ${(qw||0).toFixed(1)}`;
+  };
 
   // Suscribirse a /joint_states para obtener la posición actual
   useEffect(() => {
@@ -154,6 +195,36 @@ function App() {
   // Rediseñar la página para mostrar únicamente UrdfViewer a pantalla completa y un div flotante con JointSliders
   const memoizedOnPreviewJointsChange = React.useCallback((joints) => setPreviewJoints(joints), []);
 
+  // Keep overlay TCP values in sync. Try to use urdfApi methods when available.
+  useEffect(() => {
+    let mounted = true;
+    const update = async () => {
+      const api = urdfApiRef.current;
+      if (!api) return;
+      try {
+        // Real TCP: prefer computing from currentJoints
+        if (currentJoints && typeof api.getTCPFromJoints === 'function') {
+          const t = api.getTCPFromJoints(currentJoints);
+          if (mounted) setOverlayRealTCP(t || null);
+        }
+        // Ghost TCP: prefer explicit ghost state or compute from ghost joints
+        if (ghostJoints && typeof api.getTCPFromJoints === 'function') {
+          const tg = api.getTCPFromJoints(ghostJoints);
+          if (mounted) setOverlayGhostTCP(tg || null);
+        } else if (typeof api.getGhostState === 'function') {
+          const s = api.getGhostState && api.getGhostState();
+          if (s && s.tcp && mounted) setOverlayGhostTCP(s.tcp);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    // immediate update
+    update();
+    const id = setInterval(update, 300);
+    return () => { mounted = false; clearInterval(id); };
+  }, [currentJoints, ghostJoints]);
+
   return (
     <RosProvider>
       <div className="app-container" style={{ display: 'flex', height: '100vh' }}>
@@ -220,6 +291,12 @@ function App() {
                 showGhostRobotCoordinates={showGhostRobotCoordinates} // Pasar el estado showGhostRobotCoordinates
                 setShowGhostRobotCoordinates={setShowGhostRobotCoordinates} // Pasar el setter de showGhostRobotCoordinates
               />
+              <div style={{ marginTop: '0.5rem' }}>
+                <FormControlLabel
+                  control={<Checkbox checked={showOverlay} onChange={(e) => setShowOverlay(e.target.checked)} />}
+                  label="Show robot state overlay"
+                />
+              </div>
             </AccordionDetails>
           </Accordion>
 
@@ -271,27 +348,41 @@ function App() {
               showGhostRobotCoordinates={showGhostRobotCoordinates}
             />
           </div>
-          <div style={{ height: '50px', flexShrink: 0 }}>
-            <RobotState urdfApi={urdfApiRef.current} currentJoints={currentJoints} ghostJoints={ghostJoints} />
-          </div>
+
+          {/* Floating overlay with robot state (replaces RobotState component) */}
+          {/* Helper state and formatters are defined below in the component */}
+          {showOverlay && (
+            <div style={{ position: 'absolute', bottom: '12px', left: 0, right: 0, zIndex: 11, display: 'flex', justifyContent: 'center' }}>
+              <div id="robot-state-overlay" style={{ background: 'transparent', borderRadius: 8, padding: '0.5rem 0.9rem', boxShadow: 'none', fontFamily: 'monospace', fontSize: '0.85rem', width: 'calc(100% - 48px)', maxWidth: '1400px' }}>
+                  <div style={{ marginBottom: '0.18rem' }}>
+                    <strong style={{ fontSize: '1rem' }}>Real Robot</strong> - <strong><em>Joints</em></strong>: {formatArmJoints(currentJoints)} - <strong><em>Gripper</em></strong>: {formatGripper(currentJoints)} - <strong><em>Position</em></strong>: {formatPosition(overlayRealTCP)} - <strong><em>Orientation</em></strong>: {formatOrientation(overlayRealTCP)}
+                  </div>
+                <div>
+                  <strong style={{ fontSize: '1rem' }}>Ghost Robot</strong> - <strong><em>Joints</em></strong>: {formatArmJoints(ghostJoints)} - <strong><em>Gripper</em></strong>: {formatGripper(ghostJoints)} - <strong><em>Position</em></strong>: {formatPosition(overlayGhostTCP)} - <strong><em>Orientation</em></strong>: {formatOrientation(overlayGhostTCP)}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       
       {/* Toggle TCP Gizmo Frame FAB */}
-      <Fab variant="extended"
-        color="primary"
-        aria-label="toggle-tcp-gizmo"
-        style={{ position: 'absolute', bottom: '205px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
-        onClick={() => { if (urdfApiRef.current && urdfApiRef.current.toggleTCPGizmoFrame) urdfApiRef.current.toggleTCPGizmoFrame(); }}
-      >
-        Toggle TCP Gizmo Frame
-        <FlipCameraAndroidIcon style={{ marginLeft: '8px' }} />
-      </Fab>
+      {showGhostRobotCoordinates && (
+        <Fab variant="extended"
+          color="primary"
+          aria-label="toggle-tcp-gizmo"
+          style={{ position: 'absolute', bottom: '225px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
+          onClick={() => { if (urdfApiRef.current && urdfApiRef.current.toggleTCPGizmoFrame) urdfApiRef.current.toggleTCPGizmoFrame(); }}
+        >
+          Toggle TCP Gizmo Frame
+          <FlipCameraAndroidIcon style={{ marginLeft: '8px' }} />
+        </Fab>
+      )}
 
       {/* Move Ghost to Real FAB */}
       <Fab variant="extended"
         color="primary"
         aria-label="move-ghost-to-real"
-        style={{ position: 'absolute', bottom: '135px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
+        style={{ position: 'absolute', bottom: '155px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
         onClick={() => { if (urdfApiRef.current && urdfApiRef.current.copyRealToGhost) urdfApiRef.current.copyRealToGhost(); }}
       >
         Move Ghost to Real
@@ -302,7 +393,7 @@ function App() {
       <Fab variant="extended"
         color="primary"
         aria-label="teach-pose"
-        style={{ position: 'absolute', bottom: '65px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
+        style={{ position: 'absolute', bottom: '85px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
         onClick={handleFabClick}
       >
         Teach Real Pose
