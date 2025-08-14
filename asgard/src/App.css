@@ -59,7 +59,9 @@ html, body, #root {
 }
 
 .sidebar {
-  width: 30rem; /* Ajustar el ancho al 30% de la pantalla */
+  min-width: 450px;
+  width: 44vw;
+  max-width: 450px;
   background-color: #f4f4f4;
   border-right: 1px solid #ddd;
   overflow-y: auto;
