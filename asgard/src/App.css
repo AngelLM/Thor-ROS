@@ -59,7 +59,7 @@ html, body, #root {
 }
 
 .sidebar {
-  width: 30rem; /* Ajustar el ancho al 20% de la pantalla */
+  width: 30rem; /* Ajustar el ancho al 30% de la pantalla */
   background-color: #f4f4f4;
   border-right: 1px solid #ddd;
   overflow-y: auto;

@@ -21,6 +21,7 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Poses from './components/Poses';
 import Program from './components/Program';
+import RobotState from './components/RobotState';
 
 function App() {
   const defaultSettings = {
@@ -178,10 +179,6 @@ function App() {
             onChange={() => {
               const newTab = activeTab === 'inverse' ? '' : 'inverse';
               setActiveTab(newTab);
-              // No forzar ikPose al abrir la pestaña; IKSliders leerá el TCP del ghost desde UrdfViewer
-              // if (newTab === 'inverse' && lastPoseOnTabChange.current) {
-              //   setIkPose(lastPoseOnTabChange.current);
-              // }
             }}
             className="accordion inverse-kinematics"
           >
@@ -257,25 +254,30 @@ function App() {
           </Accordion>
         </div>
 
-        {/* UrdfViewer ocupa el resto de la pantalla */}
-        <div style={{ flex: 1, position: 'relative' }}>
-          <UrdfViewer
-            ref={urdfApiRef}
-            previewJoints={effectivePreviewJoints}
-            showRealRobot={showRealRobot}
-            showGhostRobot={showGhostRobot}
-            ikStatus={ikStatus}
-            onGhostJointsChange={setGhostJoints}
-            className="urdf-viewer"
-            showFPS={showFPS}
-            showGhostRobotCoordinates={showGhostRobotCoordinates}
-          />
+        {/* UrdfViewer y barra de estado comparten el espacio vertical */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0 }}>
+          <div style={{ flex: '1 1 auto', minHeight: 0, overflow: 'hidden' }}>
+            <UrdfViewer
+              ref={urdfApiRef}
+              previewJoints={effectivePreviewJoints}
+              showRealRobot={showRealRobot}
+              showGhostRobot={showGhostRobot}
+              ikStatus={ikStatus}
+              onGhostJointsChange={setGhostJoints}
+              className="urdf-viewer"
+              showFPS={showFPS}
+              showGhostRobotCoordinates={showGhostRobotCoordinates}
+            />
+          </div>
+          <div style={{ height: '50px', flexShrink: 0 }}>
+            <RobotState urdfApi={urdfApiRef.current} currentJoints={currentJoints} ghostJoints={ghostJoints} />
+          </div>
         </div>
       {/* Floating Action Button */}
         <Fab variant="extended"
           color="primary"
           aria-label="add"
-          style={{ position: 'absolute', bottom: '35px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem' }}
+          style={{ position: 'absolute', bottom: '75px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem' }}
           onClick={handleFabClick}
         >
           <AddIcon />

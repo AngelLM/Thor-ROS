@@ -20,6 +20,8 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
   const rotateCtrlRef = useRef(null);
   const gizmoRef = useRef(null);
   const orbitRef = useRef(null);
+  const gridRef = useRef(null);
+  const hemiRef = useRef(null);
   const ikServiceRef = useRef(null);
   const fkServiceRef = useRef(null);
   const jointCmdTopicRef = useRef(null);
@@ -121,26 +123,18 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
     };
     ikServiceRef.current.callService(req, (res) => {
       if (res && res.solution && res.solution.joint_state && res.error_code && res.error_code.val === 1) {
-        const solved = {};
-        res.solution.joint_state.name.forEach((n, i) => { solved[n] = res.solution.joint_state.position[i]; });
-        // Apply
-        Object.keys(solved).forEach(jn => {
-          if (ghostRef.current && ghostRef.current.joints && ghostRef.current.joints[jn] !== undefined) {
-            ghostRef.current.setJointValue(jn, solved[jn]);
-          }
-        });
-        emitGhostIfChanged();
-        if (sphereRef.current && sphereRef.current.material) {
-          sphereRef.current.material.color.set(0x4caf50);
-          sphereRef.current.material.opacity = 0.5;
+      const solved = {};
+      res.solution.joint_state.name.forEach((n, i) => { solved[n] = res.solution.joint_state.position[i]; });
+      // Apply
+      Object.keys(solved).forEach(jn => {
+        if (ghostRef.current && ghostRef.current.joints && ghostRef.current.joints[jn] !== undefined) {
+        ghostRef.current.setJointValue(jn, solved[jn]);
         }
-        resolve({ ok: true, joints: solved });
+      });
+      emitGhostIfChanged();
+      resolve({ ok: true, joints: solved });
       } else {
-        if (sphereRef.current && sphereRef.current.material) {
-          sphereRef.current.material.color.set(0xf44336);
-          sphereRef.current.material.opacity = 1.0;
-        }
-        resolve({ ok: false, error: 'ik_unreachable', raw: res });
+      resolve({ ok: false, error: 'ik_unreachable', raw: res });
       }
     });
   });
@@ -153,6 +147,31 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
       let tcp = null;
       if (tcpM) tcp = { x: tcpM.x * 1000, y: tcpM.y * 1000, z: tcpM.z * 1000, qx: tcpM.qx, qy: tcpM.qy, qz: tcpM.qz, qw: tcpM.qw };
       return { joints, tcp };
+    },
+    // Compute TCP pose (in mm) for a given joints map by using the ghost model as a virtual FK solver
+    getTCPFromJoints: (joints) => {
+      if (!ghostRef.current) return null;
+      // Save current ghost joints
+      const prev = {};
+      Object.keys(ghostRef.current.joints || {}).forEach(jn => { prev[jn] = ghostRef.current.joints[jn] && ghostRef.current.joints[jn].angle; });
+      // Apply requested joints where available
+      Object.keys(joints || {}).forEach(jn => {
+        if (ghostRef.current.joints && ghostRef.current.joints[jn] !== undefined) {
+          ghostRef.current.setJointValue(jn, joints[jn]);
+        }
+      });
+      // Force update and read EE
+      const eePose = getTcpPoseMeters();
+      // Restore previous joints
+      Object.keys(prev).forEach(jn => {
+        if (prev[jn] !== undefined && ghostRef.current.joints && ghostRef.current.joints[jn] !== undefined) {
+          ghostRef.current.setJointValue(jn, prev[jn]);
+        }
+      });
+      // Prevent emitting ghost change due to this temporary set by resetting lastSentJointsRef
+      try { lastSentJointsRef.current = gatherGhostJoints(); } catch (e) {}
+      if (!eePose) return null;
+      return { x: eePose.x * 1000, y: eePose.y * 1000, z: eePose.z * 1000, qx: eePose.qx, qy: eePose.qy, qz: eePose.qz, qw: eePose.qw };
     },
     setGhostJoints: (joints) => {
       if (!ghostRef.current || !joints) return;
@@ -219,6 +238,17 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
     sceneRef.current = scene;
+    // Grid on Z=0 (XY plane) since this app uses Z as up
+    const grid = new THREE.GridHelper(4, 40, 0x888888, 0xcccccc);
+    // GridHelper is XZ by default; rotate to XY plane
+    grid.rotation.x = Math.PI / 2;
+    grid.position.set(0, 0, 0);
+    if (grid.material) {
+      grid.material.opacity = 0.5;
+      grid.material.transparent = true;
+    }
+    scene.add(grid);
+    gridRef.current = grid;
     
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
@@ -227,11 +257,16 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
     while (mountRef.current.firstChild) mountRef.current.removeChild(mountRef.current.firstChild);
     mountRef.current.appendChild(renderer.domElement);
 
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 7.5);
+    const light = new THREE.DirectionalLight(0xffffff, 0.6);
+    light.position.set(-5, 10, 7.5);
     scene.add(light);
     const ambientLight = new THREE.AmbientLight(0x404040);
     scene.add(ambientLight);
+    // Hemisphere light for soft sky/ground illumination
+    const hemi = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.2);
+    hemi.position.set(0, 0, 10);
+    scene.add(hemi);
+    hemiRef.current = hemi;
 
     const orbit = new OrbitControls(camera, renderer.domElement);
     orbitRef.current = orbit;
@@ -310,8 +345,10 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (rendererRef.current) rendererRef.current.dispose();
-      clearInterval(logFPS);
+  if (rendererRef.current) rendererRef.current.dispose();
+  if (gridRef.current && sceneRef.current) sceneRef.current.remove(gridRef.current);
+  if (hemiRef.current && sceneRef.current) sceneRef.current.remove(hemiRef.current);
+  clearInterval(logFPS);
     };
   }, []);
 
@@ -481,10 +518,10 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
   }, [showGhostRobotCoordinates]);
 
   return (
-    <div>
-      <div ref={mountRef} style={{ width: '100%', height: '100%', margin: '0', padding: '0', position: 'absolute', top: '0', left: '0', overflow: 'hidden' }} />
+    <div style={{ width: '100%', height: '100%', position: 'relative', margin: 0, padding: 0, overflow: 'hidden' }}>
+      <div ref={mountRef} style={{ width: '100%', height: '100%', margin: 0, padding: 0, position: 'relative', overflow: 'hidden' }} />
       {showFPS && (
-        <div style={{ position: 'absolute', bottom: '5px', right: '10px', backgroundColor: 'rgba(0, 0, 0, 0.5)', color: 'white', padding: '5px', borderRadius: '5px', fontSize: '12px' }}>
+        <div style={{ position: 'absolute', bottom: '10px', left: '10px', backgroundColor: 'rgba(0, 0, 0, 0.5)', color: 'white', padding: '5px', borderRadius: '5px', fontSize: '12px' }}>
           FPS: {fps}
         </div>
       )}

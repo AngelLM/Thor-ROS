@@ -1,11 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
-const SETTINGS_KEY = 'thor_settings';
-
 export default function Settings({ showRealRobot, setShowRealRobot, showGhostRobot, setShowGhostRobot, showFPS, setShowFPS, showGhostRobotCoordinates, setShowGhostRobotCoordinates }) {
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <FormControlLabel
