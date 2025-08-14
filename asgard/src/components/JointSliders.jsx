@@ -52,7 +52,10 @@ function JointSliders({ onPreviewJointsChange, initialJoints, urdfApi, active = 
     const joints = {};
     jointConfigs.forEach(j => { joints[j.name] = (sliderValues[j.name] * Math.PI) / 180; });
     joints['gripperbase_to_armgearright'] = -joints['gripperbase_to_armgearright'];
-    if (active && urdfApi) urdfApi.setGhostJoints(joints);
+    if (active && urdfApi) {
+      urdfApi.setGhostJoints(joints);
+      if (urdfApi.syncTargetToTCP) urdfApi.syncTargetToTCP();
+    }
     // if (onPreviewJointsChange) onPreviewJointsChange(joints);
   }, [sliderValues, urdfApi, active]);
 

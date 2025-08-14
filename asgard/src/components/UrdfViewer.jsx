@@ -24,6 +24,7 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
   const fkServiceRef = useRef(null);
   const jointCmdTopicRef = useRef(null);
   const lastSentJointsRef = useRef(null);
+  const isDraggingTargetRef = useRef(false);
   const [fps, setFps] = useState(0);
 
   const { ros, connected } = useROS();
@@ -48,6 +49,20 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
     if (!equalsJoints(current, lastSentJointsRef.current)) {
       lastSentJointsRef.current = current;
       onGhostJointsChange(current);
+      // Sync target sphere to current TCP if not being dragged
+      if (!isDraggingTargetRef.current && sphereRef.current) {
+        const ee = getEE();
+        if (ee) {
+          ee.updateWorldMatrix(true, false);
+          const p = new THREE.Vector3();
+          const q = new THREE.Quaternion();
+          ee.getWorldPosition(p);
+          ee.getWorldQuaternion(q);
+          sphereRef.current.position.copy(p);
+          sphereRef.current.quaternion.copy(q);
+          sphereRef.current.updateMatrixWorld(true);
+        }
+      }
     }
   };
 
@@ -152,13 +167,30 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
     publishGhostToController: () => {
       if (!ros || !connected || !jointCmdTopicRef.current) return;
       const current = gatherGhostJoints();
-      const data = jointOrder.map(n => current[n] !== undefined ? current[n] : 0);
-      const idx = jointOrder.indexOf('gripperbase_to_armgearright');
-      if (idx >= 0) data[idx] = -data[idx];
+      // Always send all joints, including gripper, and invert gripper sign
+      const data = jointOrder.map(n => {
+        if (n === 'gripperbase_to_armgearright') {
+          // Controller expects negative radians for gripper
+          return current[n] !== undefined ? -Math.abs(current[n]) : 0;
+        }
+        return current[n] !== undefined ? current[n] : 0;
+      });
       const msg = new ROSLIB.Message({ data });
       jointCmdTopicRef.current.publish(msg);
     },
     snapTargetToTCP: () => {
+      const ee = getEE();
+      if (!ee || !sphereRef.current) return;
+      ee.updateWorldMatrix(true, false);
+      const p = new THREE.Vector3();
+      const q = new THREE.Quaternion();
+      ee.getWorldPosition(p);
+      ee.getWorldQuaternion(q);
+      sphereRef.current.position.copy(p);
+      sphereRef.current.quaternion.copy(q);
+      sphereRef.current.updateMatrixWorld(true);
+    },
+    syncTargetToTCP: () => {
       const ee = getEE();
       if (!ee || !sphereRef.current) return;
       ee.updateWorldMatrix(true, false);
@@ -224,6 +256,20 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
         requestAnimationFrame(animate);
         if (ghostRef.current) {
           emitGhostIfChanged();
+          // Keep sphere following TCP when not dragging
+          if (!isDraggingTargetRef.current && sphereRef.current) {
+            const ee = getEE();
+            if (ee) {
+              ee.updateWorldMatrix(true, false);
+              const p = new THREE.Vector3();
+              const q = new THREE.Quaternion();
+              ee.getWorldPosition(p);
+              ee.getWorldQuaternion(q);
+              sphereRef.current.position.copy(p);
+              sphereRef.current.quaternion.copy(q);
+              sphereRef.current.updateMatrixWorld(true);
+            }
+          }
           ghostRef.current.traverse(obj => {
             if (obj.isMesh) {
               if (Array.isArray(obj.material)) {
@@ -335,8 +381,8 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
         rotateCtrlRef.current = rotateControl;
 
         const orbit = orbitRef.current;
-        translateControl.addEventListener('dragging-changed', (e) => { if (orbit) orbit.enabled = !e.value; if (rotateControl) rotateControl.enabled = !e.value; });
-        rotateControl.addEventListener('dragging-changed', (e) => { if (orbit) orbit.enabled = !e.value; if (translateControl) translateControl.enabled = !e.value; });
+        translateControl.addEventListener('dragging-changed', (e) => { if (orbit) orbit.enabled = !e.value; if (rotateControl) rotateControl.enabled = !e.value; isDraggingTargetRef.current = e.value; });
+        rotateControl.addEventListener('dragging-changed', (e) => { if (orbit) orbit.enabled = !e.value; if (translateControl) translateControl.enabled = !e.value; isDraggingTargetRef.current = e.value; });
 
         const sendIKFromSphere = () => {
           if (!sphereRef.current) return;
@@ -349,7 +395,12 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
           sphereRef.current.getWorldPosition(p);
           sphereRef.current.getWorldQuaternion(q);
           const poseMm = { x: p.x * 1000, y: p.y * 1000, z: p.z * 1000, qx: q.x, qy: q.y, qz: q.z, qw: q.w };
-          solveAndMoveToPoseInternal(poseMm);
+          solveAndMoveToPoseInternal(poseMm).then((res) => {
+            if (res && res.ok) {
+              // Empujar joints inmediatamente para sincronizar UI aguas arriba
+              emitGhostIfChanged();
+            }
+          });
         };
         translateControl.addEventListener('objectChange', sendIKFromSphere);
         rotateControl.addEventListener('objectChange', sendIKFromSphere);
@@ -414,6 +465,20 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
     if (robotRef.current) robotRef.current.visible = !!showRealRobot;
     if (ghostRef.current) ghostRef.current.visible = !!showGhostRobot;
   }, [showRealRobot, showGhostRobot]);
+
+  // Controlar visibilidad de la esfera y los TransformControls
+  useEffect(() => {
+    if (sphereRef.current) sphereRef.current.visible = !!showGhostRobotCoordinates;
+    // Hide TransformControls helpers and disable controls
+    if (translateCtrlRef.current) {
+      translateCtrlRef.current.getHelper().visible = !!showGhostRobotCoordinates;
+      translateCtrlRef.current.enabled = !!showGhostRobotCoordinates;
+    }
+    if (rotateCtrlRef.current) {
+      rotateCtrlRef.current.getHelper().visible = !!showGhostRobotCoordinates;
+      rotateCtrlRef.current.enabled = !!showGhostRobotCoordinates;
+    }
+  }, [showGhostRobotCoordinates]);
 
   return (
     <div>

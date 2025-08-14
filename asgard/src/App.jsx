@@ -23,20 +23,27 @@ import Poses from './components/Poses';
 import Program from './components/Program';
 
 function App() {
+  const defaultSettings = {
+    showRealRobot: true,
+    showGhostRobot: true,
+    showFPS: true,
+    showGhostRobotCoordinates: true,
+  };
+
   const [activeTab, setActiveTab] = useState('forward');
   const [ikPose, setIkPose] = useState(null); // Estado compartido para la pose IK
   const [previewJoints, setPreviewJoints] = useState(null); // Estado para las articulaciones objetivo (IK)
   const [fkJoints, setFkJoints] = useState(null); // Estado para las articulaciones objetivo (FK)
   const [currentJoints, setCurrentJoints] = useState(null); // Estado articular actual del robot
   const [ghostJoints, setGhostJoints] = useState(null); // Estado para las articulaciones del ghost robot
-  const [showRealRobot, setShowRealRobot] = useState(true);
-  const [showGhostRobot, setShowGhostRobot] = useState(true);
+  const [showRealRobot, setShowRealRobot] = useState(defaultSettings.showRealRobot);
+  const [showGhostRobot, setShowGhostRobot] = useState(defaultSettings.showGhostRobot);
+  const [showGhostRobotCoordinates, setShowGhostRobotCoordinates] = useState(defaultSettings.showGhostRobotCoordinates);
+  const [showFPS, setShowFPS] = useState(defaultSettings.showFPS);
   const [ikStatus, setIkStatus] = useState('reachable');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [poseName, setPoseName] = useState('');
   const [isMoving, setIsMoving] = useState(false);
-  const [showFPS, setShowFPS] = useState(true); // Estado para controlar la visibilidad de los FPS
-  const [showGhostRobotCoordinates, setShowGhostRobotCoordinates] = useState(true); // Estado para controlar la visibilidad de las flechas
   const [poses, setPoses] = useState(() => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     return savedPoses;
@@ -83,48 +90,9 @@ function App() {
 
   // Solo inicializar sliders al cambiar de tab
   useEffect(() => {
-    // No forzar FK a la posición del robot real al abrir la pestaña
-    // Mantener la pose del ghost actual (los sliders ya reciben ghostJoints como initialJoints)
-    if (activeTab === 'inverse' && currentJoints) {
-      // Llamar a servicio FK para obtener la pose cartesiana actual
-      const ros = rosRef.current;
-      if (!ros) return;
-      const service = new ROSLIB.Service({
-        ros,
-        name: '/compute_fk',
-        serviceType: 'moveit_msgs/srv/GetPositionFK'
-      });
-      const req = {
-        header: { frame_id: 'base_link' },
-        fk_link_names: ['gripper_mid_point'],
-        robot_state: {
-          joint_state: {
-            name: Object.keys(currentJoints),
-            position: Object.values(currentJoints)
-          }
-        }
-      };
-      service.callService(req, (res) => {
-        if (res && res.pose_stamped && res.pose_stamped.length > 0) {
-          const pose = res.pose_stamped[0].pose;
-          // Convertir quaternion a RPY
-          const q = pose.orientation;
-          const t = pose.position;
-          const poseObj = {
-            x: t.x * 1000,
-            y: t.y * 1000,
-            z: t.z * 1000,
-            qx: q.x,
-            qy: q.y,
-            qz: q.z,
-            qw: q.w
-          };
-          lastPoseOnTabChange.current = poseObj;
-          setIkPose(poseObj);
-        }
-      });
-    }
-    // eslint-disable-next-line
+    // Ya no forzar IK a la pose del robot real al abrir la pestaña.
+    // IKSliders sincroniza desde el TCP del ghost vía urdfApi.getGhostState().
+    // Mantener este efecto vacío para conservar semántica de dependencias sin provocar cambios.
   }, [activeTab]);
 
   // Console log para verificar el estado de los joints del ghost robot
@@ -133,9 +101,6 @@ function App() {
       console.log('Ghost Robot Joints:', ghostRef.current.getJointValues());
     }
   }, [ghostRef.current]); 
-
-  // Determina qué preview mostrar
-  const effectivePreviewJoints = activeTab === 'forward' ? fkJoints : previewJoints;
 
   const handleFabClick = () => {
     setIsDialogOpen(true);
@@ -180,6 +145,9 @@ function App() {
     setPoseName('');
   };
 
+  // Determina qué preview mostrar
+  const effectivePreviewJoints = activeTab === 'forward' ? fkJoints : previewJoints;
+
   // Rediseñar la página para mostrar únicamente UrdfViewer a pantalla completa y un div flotante con JointSliders
   const memoizedOnPreviewJointsChange = React.useCallback((joints) => setPreviewJoints(joints), []);
 
@@ -210,9 +178,10 @@ function App() {
             onChange={() => {
               const newTab = activeTab === 'inverse' ? '' : 'inverse';
               setActiveTab(newTab);
-              if (newTab === 'inverse' && lastPoseOnTabChange.current) {
-                setIkPose(lastPoseOnTabChange.current);
-              }
+              // No forzar ikPose al abrir la pestaña; IKSliders leerá el TCP del ghost desde UrdfViewer
+              // if (newTab === 'inverse' && lastPoseOnTabChange.current) {
+              //   setIkPose(lastPoseOnTabChange.current);
+              // }
             }}
             className="accordion inverse-kinematics"
           >
@@ -245,10 +214,10 @@ function App() {
               <Settings
                 showRealRobot={showRealRobot}
                 setShowRealRobot={setShowRealRobot}
-                showGhostRobot={showGhostRobot}
-                setShowGhostRobot={setShowGhostRobot}
                 showFPS={showFPS} // Pasar el estado showFPS
                 setShowFPS={setShowFPS} // Pasar el setter de showFPS
+                showGhostRobot={showGhostRobot}
+                setShowGhostRobot={setShowGhostRobot}
                 showGhostRobotCoordinates={showGhostRobotCoordinates} // Pasar el estado showGhostRobotCoordinates
                 setShowGhostRobotCoordinates={setShowGhostRobotCoordinates} // Pasar el setter de showGhostRobotCoordinates
               />

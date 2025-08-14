@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useROS } from '../RosContext';
 import { styled } from '@mui/system';
 import Button from '@mui/material/Button';
@@ -94,6 +94,19 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
   // Estados principales: posición y quaternion base (fuentes de verdad)
   const [position, setPosition] = useState(new THREE.Vector3(200, 0, 300)); // en mm
   const [baseQuaternion, setBaseQuaternion] = useState(new THREE.Quaternion(0, 0, 0, 1)); // identidad
+  const suppressSolveRef = useRef(false);
+
+  // Al activarse la pestaña IK, sincroniza con el TCP actual del ghost
+  useEffect(() => {
+    if (!active) return;
+    if (!urdfApi) return;
+    const state = urdfApi.getGhostState && urdfApi.getGhostState();
+    if (state && state.tcp) {
+      suppressSolveRef.current = true; // no dispares IK por este sync
+      setPosition(new THREE.Vector3(state.tcp.x, state.tcp.y, state.tcp.z));
+      setBaseQuaternion(new THREE.Quaternion(state.tcp.qx, state.tcp.qy, state.tcp.qz, state.tcp.qw));
+    }
+  }, [active, urdfApi]);
   
   // Estados para funcionalidad
   const [ikConfig, setIkConfig] = useState({
@@ -178,6 +191,10 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
   useEffect(() => {
     if (!active) return; // sólo cuando el tab está activo
     if (!urdfApi || !connected) return;
+    if (suppressSolveRef.current) { // evitar re-lanzar IK si es un sync externo
+      suppressSolveRef.current = false;
+      return;
+    }
     const pose = {
       x: position.x,
       y: position.y,
@@ -192,6 +209,8 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
         if (onPreviewJointsChange) onPreviewJointsChange(res.joints);
         setStatusMsg({ status: 'reachable' });
         if (onIKStatusChange) onIKStatusChange('reachable');
+        // Alinear esfera con el nuevo TCP resuelto
+        if (urdfApi.syncTargetToTCP) urdfApi.syncTargetToTCP();
       } else {
         if (onPreviewJointsChange) onPreviewJointsChange({});
         setStatusMsg({ status: 'unreachable' });
@@ -199,6 +218,20 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
       }
     });
   }, [position, baseQuaternion, urdfApi, connected, active]);
+
+  // Sincroniza la UI con el TCP del ghost cuando cambia el ghost (p.ej. esfera + IK en UrdfViewer)
+  useEffect(() => {
+    if (!active) return;
+    if (!urdfApi || !ghostJoints) return;
+    const state = urdfApi.getGhostState && urdfApi.getGhostState();
+    if (state && state.tcp) {
+      const { x, y, z, qx, qy, qz, qw } = state.tcp;
+      // Evitar loop: marcamos para no lanzar IK en el siguiente efecto
+      suppressSolveRef.current = true;
+      setPosition(new THREE.Vector3(x, y, z));
+      setBaseQuaternion(new THREE.Quaternion(qx, qy, qz, qw));
+    }
+  }, [ghostJoints, active, urdfApi]);
 
   const handleValueChange = (key, newValue) => {
     if (key === 'x' || key === 'y' || key === 'z') {

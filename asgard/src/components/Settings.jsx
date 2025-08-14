@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
+const SETTINGS_KEY = 'thor_settings';
+
 export default function Settings({ showRealRobot, setShowRealRobot, showGhostRobot, setShowGhostRobot, showFPS, setShowFPS, showGhostRobotCoordinates, setShowGhostRobotCoordinates }) {
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <FormControlLabel
@@ -15,7 +18,7 @@ export default function Settings({ showRealRobot, setShowRealRobot, showGhostRob
       />
       <FormControlLabel
         control={<Checkbox checked={showGhostRobotCoordinates} onChange={(e) => setShowGhostRobotCoordinates(e.target.checked)} />}
-        label="Show Ghost Robot Tool Axis"
+        label="Show Ghost Robot TCP Gizmo"
       />
       <FormControlLabel
         control={<Checkbox checked={showFPS} onChange={(e) => setShowFPS(e.target.checked)} />}
