@@ -28,16 +28,16 @@ function App() {
   const defaultSettings = {
     showRealRobot: true,
     showGhostRobot: true,
-  showFPS: false,
+    showFPS: false,
     showGhostRobotCoordinates: true,
   };
 
   const [activeTab, setActiveTab] = useState('forward');
-  const [ikPose] = useState(null); // Estado compartido para la pose IK
-  const [previewJoints, setPreviewJoints] = useState(null); // Estado para las articulaciones objetivo (IK)
-  const [fkJoints, setFkJoints] = useState(null); // Estado para las articulaciones objetivo (FK)
-  const [currentJoints, setCurrentJoints] = useState(null); // Estado articular actual del robot
-  const [ghostJoints, setGhostJoints] = useState(null); // Estado para las articulaciones del ghost robot
+  const [initialIkPose] = useState(null);
+  const [ikPreviewJoints, setIkPreviewJoints] = useState(null);
+  const [fkJoints, setFkJoints] = useState(null);
+  const [currentJoints, setCurrentJoints] = useState(null);
+  const [ghostJoints, setGhostJoints] = useState(null);
   const [showRealRobot, setShowRealRobot] = useState(defaultSettings.showRealRobot);
   const [showGhostRobot, setShowGhostRobot] = useState(defaultSettings.showGhostRobot);
   const [showGhostRobotCoordinates, setShowGhostRobotCoordinates] = useState(defaultSettings.showGhostRobotCoordinates);
@@ -50,8 +50,8 @@ function App() {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     return savedPoses;
   });
-  const ghostRef = useRef(null); // Referencia para el robot fantasma
-  const poseRef = useRef(null); // Referencia para el componente Poses
+  const ghostRobotRef = useRef(null); // Reference to the ghost robot
+  const posesRef = useRef(null); // Reference to the Poses component
   const urdfApiRef = useRef(null);
 
   const [showOverlay, setShowOverlay] = useState(false);
@@ -89,7 +89,7 @@ function App() {
     return `${(qx||0).toFixed(1)}, ${(qy||0).toFixed(1)}, ${(qz||0).toFixed(1)}, ${(qw||0).toFixed(1)}`;
   };
 
-  // Suscribirse a /joint_states para obtener la posición actual
+  // Subscribe to /joint_states to obtain current joint positions
   useEffect(() => {
     const ros = new ROSLIB.Ros({ url: 'ws://localhost:9090' });
     const jointStateListener = new ROSLIB.Topic({
@@ -118,7 +118,7 @@ function App() {
     };
   }, []);
 
-  const handleFabClick = () => {
+  const openSavePoseDialog = () => {
     setIsDialogOpen(true);
   };
 
@@ -144,27 +144,25 @@ function App() {
       joints: Object.fromEntries(
         ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'gripperbase_to_armgearright'].map(jointName => [jointName, currentJoints[jointName]])
       ),
-      gripperBase: ikPose
+      gripperBase: initialIkPose
     };
 
     const updatedPoses = [...poses, poseData];
     setPoses(updatedPoses);
     localStorage.setItem('savedPoses', JSON.stringify(updatedPoses));
-    // console.log('Pose saved:', poseData);
 
-    if (poseRef.current) {
-      poseRef.current.updatePoses();
-      // console.log('Poses updated in Poses component');
+    if (posesRef.current) {
+      posesRef.current.updatePoses();
     }
 
     setIsDialogOpen(false);
     setPoseName('');
   };
 
-  // Determina qué preview mostrar
-  const effectivePreviewJoints = activeTab === 'forward' ? fkJoints : previewJoints;
+  // Determine which preview joints to show (FK vs IK)
+  const effectivePreviewJoints = activeTab === 'forward' ? fkJoints : ikPreviewJoints;
 
-  const memoizedOnPreviewJointsChange = React.useCallback((joints) => setPreviewJoints(joints), []);
+  const memoizedOnPreviewJointsChange = React.useCallback((joints) => setIkPreviewJoints(joints), []);
 
   // Keep overlay TCP values in sync. Try to use urdfApi methods when available.
   useEffect(() => {
@@ -190,7 +188,6 @@ function App() {
         // ignore
       }
     };
-    // immediate update
     update();
     const id = setInterval(update, 300);
     return () => { mounted = false; clearInterval(id); };
@@ -199,7 +196,7 @@ function App() {
   return (
     <RosProvider>
       <div className="app-container" style={{ display: 'flex', height: '100vh' }}>
-        {/* Menú lateral fijo */}
+        {/* Left sidebar */}
         <div className="sidebar">
           <div style={{ textAlign: 'center', padding: '0.5rem' }}>
             <img src="/images/thor_logo.png" alt="Thor Logo" style={{ maxWidth: '80%', height: 'auto' }} />
@@ -231,8 +228,8 @@ function App() {
             </AccordionSummary>
             <AccordionDetails>
               <InverseKinematicsControls
-                onPreviewJointsChange={setPreviewJoints}
-                initialPose={ikPose}
+                onPreviewJointsChange={setIkPreviewJoints}
+                initialPose={initialIkPose}
                 ghostJoints={ghostJoints}
                 urdfApi={urdfApiRef.current}
                 active={activeTab === 'inverse'}
@@ -255,12 +252,12 @@ function App() {
               <Settings
                 showRealRobot={showRealRobot}
                 setShowRealRobot={setShowRealRobot}
-                showFPS={showFPS} // Pasar el estado showFPS
-                setShowFPS={setShowFPS} // Pasar el setter de showFPS
+                showFPS={showFPS} // pass showFPS state
+                setShowFPS={setShowFPS} // pass showFPS setter
                 showGhostRobot={showGhostRobot}
                 setShowGhostRobot={setShowGhostRobot}
-                showGhostRobotCoordinates={showGhostRobotCoordinates} // Pasar el estado showGhostRobotCoordinates
-                setShowGhostRobotCoordinates={setShowGhostRobotCoordinates} // Pasar el setter de showGhostRobotCoordinates
+                showGhostRobotCoordinates={showGhostRobotCoordinates} // pass ghost robot coordinates flag
+                setShowGhostRobotCoordinates={setShowGhostRobotCoordinates} // pass ghost robot coordinates setter
                 showOverlay={showOverlay}
                 setShowOverlay={setShowOverlay}
               />
@@ -279,7 +276,7 @@ function App() {
               <span className="accordion-title">Poses</span>
             </AccordionSummary>
             <AccordionDetails>
-              <Poses ref={poseRef} ghostRef={ghostRef} onPreviewJointsChange={memoizedOnPreviewJointsChange} poses={poses} setPoses={setPoses} />
+              <Poses ref={posesRef} ghostRef={ghostRobotRef} onPreviewJointsChange={memoizedOnPreviewJointsChange} poses={poses} setPoses={setPoses} />
             </AccordionDetails>
           </Accordion>
 
@@ -300,7 +297,6 @@ function App() {
           </Accordion>
         </div>
 
-        {/* UrdfViewer y barra de estado comparten el espacio vertical */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0 }}>
           <div style={{ flex: '1 1 auto', minHeight: 0, overflow: 'hidden' }}>
             <UrdfViewer
@@ -329,43 +325,43 @@ function App() {
             </div>
           )}
         </div>
-      
-      {/* Toggle TCP Gizmo Frame FAB */}
-      {showGhostRobotCoordinates && (
+
+        {/* TCP Gizmo Frame FAB */}
+        {showGhostRobotCoordinates && (
+          <Fab variant="extended"
+            color="primary"
+            aria-label="toggle-tcp-gizmo"
+            style={{ position: 'absolute', bottom: '225px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
+            onClick={() => { if (urdfApiRef.current && urdfApiRef.current.toggleTCPGizmoFrame) urdfApiRef.current.toggleTCPGizmoFrame(); }}
+          >
+            Toggle TCP Gizmo Frame
+            <FlipCameraAndroidIcon style={{ marginLeft: '8px' }} />
+          </Fab>
+        )}
+
+        {/* Move Ghost to Real FAB */}
+        {showGhostRobot && (
+          <Fab variant="extended"
+            color="primary"
+            aria-label="move-ghost-to-real"
+            style={{ position: 'absolute', bottom: '155px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
+            onClick={() => { if (urdfApiRef.current && urdfApiRef.current.copyRealToGhost) urdfApiRef.current.copyRealToGhost(); }}
+          >
+            Move Ghost to Real
+            <PrecisionManufacturingIcon style={{ marginLeft: '8px' }} />
+          </Fab>
+        )}
+
+        {/* Teach Real Pose FAB */}
         <Fab variant="extended"
           color="primary"
-          aria-label="toggle-tcp-gizmo"
-          style={{ position: 'absolute', bottom: '225px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
-          onClick={() => { if (urdfApiRef.current && urdfApiRef.current.toggleTCPGizmoFrame) urdfApiRef.current.toggleTCPGizmoFrame(); }}
+          aria-label="teach-pose"
+          style={{ position: 'absolute', bottom: '85px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
+          onClick={openSavePoseDialog}
         >
-          Toggle TCP Gizmo Frame
-          <FlipCameraAndroidIcon style={{ marginLeft: '8px' }} />
+          Teach Real Pose
+          <SchoolIcon style={{ marginLeft: '8px' }} />
         </Fab>
-      )}
-
-      {/* Move Ghost to Real FAB */}
-      {showGhostRobot && (
-        <Fab variant="extended"
-          color="primary"
-          aria-label="move-ghost-to-real"
-          style={{ position: 'absolute', bottom: '155px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
-          onClick={() => { if (urdfApiRef.current && urdfApiRef.current.copyRealToGhost) urdfApiRef.current.copyRealToGhost(); }}
-        >
-          Move Ghost to Real
-          <PrecisionManufacturingIcon style={{ marginLeft: '8px' }} />
-        </Fab>
-      )}
-
-      {/* Teach Real Pose FAB */}
-      <Fab variant="extended"
-        color="primary"
-        aria-label="teach-pose"
-        style={{ position: 'absolute', bottom: '85px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
-        onClick={handleFabClick}
-      >
-        Teach Real Pose
-        <SchoolIcon style={{ marginLeft: '8px' }} />
-      </Fab>
 
         {/* Form Dialog */}
         <Dialog open={isDialogOpen} onClose={handleDialogClose}>
@@ -394,7 +390,6 @@ function App() {
             </Button>
           </DialogActions>
         </Dialog>
-      
       </div>
     </RosProvider>
   );
