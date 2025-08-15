@@ -81,6 +81,14 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}]
     )
 
+    ik_goal_listener = Node(
+        package="thor_status_publisher",
+        executable="ik_goal_listener",
+        name="ik_goal_listener",
+        output="screen",
+        parameters=[{"use_sim_time": True}]
+    )
+
     return LaunchDescription([
         gazebo,
         controller,
@@ -89,5 +97,6 @@ def generate_launch_description():
         rosbridge,
         rosapi,
         status_publisher,
-        joint_goal_listener
+        joint_goal_listener,
+        ik_goal_listener
     ])
