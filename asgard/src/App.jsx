@@ -10,8 +10,6 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Settings from './components/Settings';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
 import Fab from '@mui/material/Fab';
 import SchoolIcon from '@mui/icons-material/School';
 import FlipCameraAndroidIcon from '@mui/icons-material/FlipCameraAndroid';
@@ -25,7 +23,6 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Poses from './components/Poses';
 import Program from './components/Program';
-// RobotState will be shown as an overlay inside the viewer instead of a separate component
 
 function App() {
   const defaultSettings = {
@@ -54,11 +51,8 @@ function App() {
     return savedPoses;
   });
   const rosRef = useRef(null);
-  const lastJointsOnTabChange = useRef(null);
-  const lastPoseOnTabChange = useRef(null);
   const ghostRef = useRef(null); // Referencia para el robot fantasma
   const poseRef = useRef(null); // Referencia para el componente Poses
-  const randomRef = useRef(); // Referencia para el componente Random
   const urdfApiRef = useRef(null);
 
   // Controls visibility of the floating RobotState overlay
