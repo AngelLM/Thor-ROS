@@ -3,7 +3,7 @@ import './App.css';
 import { RosProvider } from './RosContext';
 import UrdfViewer from './components/UrdfViewer';
 import JointSliders from './components/JointSliders';
-import IKSliders from './components/IkSliders';
+import InverseKinematicsControls from './components/InverseKinematicsControls';
 import ROSLIB from 'roslib';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -230,8 +230,8 @@ function App() {
               <span className="accordion-title">Inverse Kinematics</span>
             </AccordionSummary>
             <AccordionDetails>
-              <IKSliders 
-                onPreviewJointsChange={setPreviewJoints} 
+              <InverseKinematicsControls
+                onPreviewJointsChange={setPreviewJoints}
                 initialPose={ikPose}
                 ghostJoints={ghostJoints}
                 urdfApi={urdfApiRef.current}
