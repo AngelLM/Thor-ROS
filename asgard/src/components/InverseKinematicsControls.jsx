@@ -4,13 +4,21 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import * as THREE from 'three';
 
-export default function InverseKinematicsControls({ ikPose, onPreviewJointsChange, onIKStatusChange, initialPose, ghostJoints, urdfApi, active = true }) {
+export default function InverseKinematicsControls({
+  ikPose: ikTargetPose,
+  onPreviewJointsChange: onPreviewJointsUpdate,
+  onIKStatusChange: onIKReachabilityChange,
+  initialPose,
+  ghostJoints,
+  urdfApi,
+  active = true,
+}) {
   const { connected } = useROS();
-  
-  // Main state: position and base quaternion (source of truth)
-  const [position, setPosition] = useState(new THREE.Vector3(200, 0, 300)); // in mm
-  const [baseQuaternion, setBaseQuaternion] = useState(new THREE.Quaternion(0, 0, 0, 1)); // identity
-  const suppressSolveRef = useRef(false);
+
+  // Main state: TCP position and orientation (source of truth)
+  const [tcpPosition, setTcpPosition] = useState(new THREE.Vector3(200, 0, 300)); // in mm
+  const [tcpQuaternion, setTcpQuaternion] = useState(new THREE.Quaternion(0, 0, 0, 1)); // identity
+  const suppressNextSolveRef = useRef(false);
 
   // When the IK tab becomes active, sync with the ghost's current TCP
   useEffect(() => {
@@ -18,46 +26,47 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
     if (!urdfApi) return;
     const state = urdfApi.getGhostState && urdfApi.getGhostState();
     if (state && state.tcp) {
-      suppressSolveRef.current = true; // prevent triggering IK solve from this sync
-      setPosition(new THREE.Vector3(state.tcp.x, state.tcp.y, state.tcp.z));
-      setBaseQuaternion(new THREE.Quaternion(state.tcp.qx, state.tcp.qy, state.tcp.qz, state.tcp.qw));
+      suppressNextSolveRef.current = true; // prevent triggering IK solve from this sync
+      setTcpPosition(new THREE.Vector3(state.tcp.x, state.tcp.y, state.tcp.z));
+      setTcpQuaternion(new THREE.Quaternion(state.tcp.qx, state.tcp.qy, state.tcp.qz, state.tcp.qw));
     }
   }, [active, urdfApi]);
   
-  const [selectedGripper, setSelectedGripper] = useState(0);
-  const [activeInterval, setActiveInterval] = useState(null);
+  const [gripperPercent, setGripperPercent] = useState(0);
+  // use a ref for the continuous-move interval id to avoid re-renders
+  const continuousMoveIntervalRef = useRef(null);
   // keep a ref to the latest ghostJoints so we can update gripper only when user changes it
-  const latestGhostJointsRef = useRef(null);
-  useEffect(() => { latestGhostJointsRef.current = ghostJoints; }, [ghostJoints]);
+  const ghostJointsRef = useRef(null);
+  useEffect(() => { ghostJointsRef.current = ghostJoints; }, [ghostJoints]);
 
   // Initialize only when `ikPose` changes
   useEffect(() => {
-    if (ikPose) {
-      setPosition(new THREE.Vector3(
-        Math.round(ikPose.x),
-        Math.round(ikPose.y),
-        Math.round(ikPose.z)
+    if (ikTargetPose) {
+      setTcpPosition(new THREE.Vector3(
+        Math.round(ikTargetPose.x),
+        Math.round(ikTargetPose.y),
+        Math.round(ikTargetPose.z)
       ));
       if (
-        ikPose.qx !== undefined &&
-        ikPose.qy !== undefined &&
-        ikPose.qz !== undefined &&
-        ikPose.qw !== undefined
+        ikTargetPose.qx !== undefined &&
+        ikTargetPose.qy !== undefined &&
+        ikTargetPose.qz !== undefined &&
+        ikTargetPose.qw !== undefined
       ) {
-        setBaseQuaternion(new THREE.Quaternion(
-          ikPose.qx,
-          ikPose.qy,
-          ikPose.qz,
-          ikPose.qw
+        setTcpQuaternion(new THREE.Quaternion(
+          ikTargetPose.qx,
+          ikTargetPose.qy,
+          ikTargetPose.qz,
+          ikTargetPose.qw
         ));
       }
     }
-  }, [ikPose]);
+  }, [ikTargetPose]);
 
   // Initialize when `initialPose` changes
   useEffect(() => {
     if (initialPose) {
-      setPosition(new THREE.Vector3(
+      setTcpPosition(new THREE.Vector3(
         initialPose.x || 0,
         initialPose.y || 0,
         initialPose.z || 0
@@ -68,7 +77,7 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
         initialPose.qz !== undefined &&
         initialPose.qw !== undefined
       ) {
-        setBaseQuaternion(new THREE.Quaternion(
+        setTcpQuaternion(new THREE.Quaternion(
           initialPose.qx,
           initialPose.qy,
           initialPose.qz,
@@ -82,31 +91,31 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
   useEffect(() => {
     if (!active) return; // only when the tab is active
     if (!urdfApi || !connected) return;
-    if (suppressSolveRef.current) { // avoid re-triggering IK if this is an external sync
-      suppressSolveRef.current = false;
+    if (suppressNextSolveRef.current) { // avoid re-triggering IK if this is an external sync
+      suppressNextSolveRef.current = false;
       return;
     }
     const pose = {
-      x: position.x,
-      y: position.y,
-      z: position.z,
-      qx: baseQuaternion.x,
-      qy: baseQuaternion.y,
-      qz: baseQuaternion.z,
-      qw: baseQuaternion.w,
+      x: tcpPosition.x,
+      y: tcpPosition.y,
+      z: tcpPosition.z,
+      qx: tcpQuaternion.x,
+      qy: tcpQuaternion.y,
+      qz: tcpQuaternion.z,
+      qw: tcpQuaternion.w,
     };
     urdfApi.solveAndMoveToPose(pose).then((res) => {
       if (res && res.ok) {
-        if (onPreviewJointsChange) onPreviewJointsChange(res.joints);
-        if (onIKStatusChange) onIKStatusChange('reachable');
+        if (onPreviewJointsUpdate) onPreviewJointsUpdate(res.joints);
+        if (onIKReachabilityChange) onIKReachabilityChange('reachable');
         // Align the visual target/sphere with the newly solved TCP
         if (urdfApi.syncTargetToTCP) urdfApi.syncTargetToTCP();
       } else {
-        if (onPreviewJointsChange) onPreviewJointsChange({});
-        if (onIKStatusChange) onIKStatusChange('unreachable');
+        if (onPreviewJointsUpdate) onPreviewJointsUpdate({});
+        if (onIKReachabilityChange) onIKReachabilityChange('unreachable');
       }
     });
-  }, [position, baseQuaternion, urdfApi, connected, active]);
+  }, [tcpPosition, tcpQuaternion, urdfApi, connected, active]);
 
   // Sync the UI with the ghost's TCP when the ghost changes
   useEffect(() => {
@@ -116,99 +125,99 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
     if (state && state.tcp) {
       const { x, y, z, qx, qy, qz, qw } = state.tcp;
       // Avoid loop: flag to prevent launching IK in the next effect
-      suppressSolveRef.current = true;
-      setPosition(new THREE.Vector3(x, y, z));
-      setBaseQuaternion(new THREE.Quaternion(qx, qy, qz, qw));
+      suppressNextSolveRef.current = true;
+      setTcpPosition(new THREE.Vector3(x, y, z));
+      setTcpQuaternion(new THREE.Quaternion(qx, qy, qz, qw));
     }
   }, [ghostJoints, active, urdfApi]);
 
-  const sendJointCommand = () => {
+  const publishGhostToController = () => {
     if (!urdfApi) return;
     urdfApi.publishGhostToController();
   };
 
-  const handleWorldMove = (axis, increment) => {
+  const applyWorldDelta = (axis, increment) => {
     if (axis === 'x' || axis === 'y' || axis === 'z') {
       // Linear global movement (no transform)
-      setPosition(prevPos => {
+      setTcpPosition(prevPos => {
         const newPos = prevPos.clone();
         newPos[axis] += increment; // mm in global coordinates
         return newPos;
       });
     } else {
       // Rotation: fixed global axes (no transform)
-      setBaseQuaternion(prevQuat => {
+      setTcpQuaternion(prevQuat => {
         let rotAxis;
         if (axis === 'roll') rotAxis = new THREE.Vector3(1, 0, 0);
         if (axis === 'pitch') rotAxis = new THREE.Vector3(0, 1, 0);
         if (axis === 'yaw') rotAxis = new THREE.Vector3(0, 0, 1);
-        
+
         // Create incremental rotation quaternion in global axes
         const deltaQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, increment * Math.PI / 180);
-        
+
         // Apply global rotation
         return prevQuat.clone().premultiply(deltaQ);
       });
     }
   };
 
-  const handleTCPMove = (axis, increment) => {
+  const applyTcpDelta = (axis, increment) => {
     if (axis === 'x' || axis === 'y' || axis === 'z') {
       // Linear movement: transform delta by current quaternion (local coordinates)
-      setPosition(prevPos => {
+      setTcpPosition(prevPos => {
         const localDelta = new THREE.Vector3();
         localDelta[axis] = increment; // mm
-        localDelta.applyQuaternion(baseQuaternion); // transformar a coordenadas globales
+        localDelta.applyQuaternion(tcpQuaternion); // transform to global coordinates
         return prevPos.clone().add(localDelta);
       });
     } else {
-      // Rotation: use logic from GizmoPage (pure quaternion)
-      setBaseQuaternion(prevQuat => {
+      // Rotation: use pure quaternions
+      setTcpQuaternion(prevQuat => {
         const q = prevQuat.clone();
         let rotAxis;
         if (axis === 'roll') rotAxis = new THREE.Vector3(1, 0, 0);
         if (axis === 'pitch') rotAxis = new THREE.Vector3(0, 1, 0);
         if (axis === 'yaw') rotAxis = new THREE.Vector3(0, 0, 1);
-        
+
         // Transform axis to current local coordinates
         rotAxis.applyQuaternion(q);
-        
+
         // Create incremental rotation quaternion
         const deltaQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, increment * Math.PI / 180);
-        
+
         // Apply rotation
         return q.premultiply(deltaQ);
       });
     }
   };
 
-  const handleMouseDown = (axis, increment, frameType = 'tcp') => {
-    const moveFunction = frameType === 'world' ? handleWorldMove : handleTCPMove;
+  const startContinuousMove = (axis, increment, frameType = 'tcp') => {
+    const moveFunction = frameType === 'world' ? applyWorldDelta : applyTcpDelta;
     const intervalId = setInterval(() => moveFunction(axis, increment), 100); // Runs every 100ms
-    setActiveInterval(intervalId);
+    continuousMoveIntervalRef.current = intervalId;
   };
 
-  const handleMouseUp = () => {
-    if (activeInterval) {
-      clearInterval(activeInterval);
-      setActiveInterval(null);
+  const stopContinuousMove = () => {
+    if (continuousMoveIntervalRef.current) {
+      clearInterval(continuousMoveIntervalRef.current);
+      continuousMoveIntervalRef.current = null;
     }
   };
 
   // Sync the gripper position with the ghost's state
   useEffect(() => {
-    const currentGhost = latestGhostJointsRef.current;
-    if (!currentGhost || typeof onPreviewJointsChange !== 'function') return;
-    const gripperValue = selectedGripper === 0
+    const currentGhost = ghostJointsRef.current;
+    if (!currentGhost || typeof onPreviewJointsUpdate !== 'function') return;
+    const gripperValue = gripperPercent === 0
       ? 0
-      : selectedGripper === 100
+      : gripperPercent === 100
       ? (-89.9 * Math.PI / 180)
-      : (-89.9 * (selectedGripper / 100) * Math.PI / 180);
+      : (-89.9 * (gripperPercent / 100) * Math.PI / 180);
     if (currentGhost['gripperbase_to_armgearright'] !== gripperValue) {
       const updatedJoints = { ...currentGhost, gripperbase_to_armgearright: gripperValue };
-      onPreviewJointsChange(updatedJoints);
+      onPreviewJointsUpdate(updatedJoints);
     }
-  }, [selectedGripper, onPreviewJointsChange]);
+  }, [gripperPercent, onPreviewJointsUpdate]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}>
@@ -220,18 +229,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
           <ButtonGroup>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('x', -1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+                      onMouseDown={() => startContinuousMove('x', -1, 'world')}
+                    onMouseUp={stopContinuousMove}
+                    onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
             >
               -
             </Button>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('x', 1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('x', 1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
             >
               +
@@ -244,18 +253,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
           <ButtonGroup>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('y', -1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseDown={() => startContinuousMove('y', -1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
             >
               -
             </Button>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('y', 1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseDown={() => startContinuousMove('y', 1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
             >
               +
@@ -268,18 +277,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
           <ButtonGroup>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('z', -1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseDown={() => startContinuousMove('z', -1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
             >
               -
             </Button>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('z', 1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseDown={() => startContinuousMove('z', 1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
             >
               +
@@ -293,18 +302,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
           <ButtonGroup>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('roll', -1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseDown={() => startContinuousMove('roll', -1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
             >
               -
             </Button>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('roll', 1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('roll', 1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
             >
               +
@@ -316,18 +325,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
           <ButtonGroup>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('pitch', -1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseDown={() => startContinuousMove('pitch', -1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
             >
               -
             </Button>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('pitch', 1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseDown={() => startContinuousMove('pitch', 1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
             >
               +
@@ -339,18 +348,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
           <ButtonGroup>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('yaw', -1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseDown={() => startContinuousMove('yaw', -1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
             >
               -
             </Button>
             <Button
               variant="contained"
-              onMouseDown={() => handleMouseDown('yaw', 1, 'world')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseDown={() => startContinuousMove('yaw', 1, 'world')}
+              onMouseUp={stopContinuousMove}
+              onMouseLeave={stopContinuousMove}
               style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
             >
               +
@@ -368,18 +377,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('x', -1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp} // Ensure it stops if the mouse leaves the button
+                onMouseDown={() => startContinuousMove('x', -1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove} // Ensure it stops if the mouse leaves the button
                 style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
               >
                 -
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('x', 1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('x', 1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
               >
                 +
@@ -391,18 +400,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('y', -1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('y', -1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
               >
                 -
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('y', 1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('y', 1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
               >
                 +
@@ -414,18 +423,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('z', -1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('z', -1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
               >
                 -
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('z', 1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('z', 1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
               >
                 +
@@ -439,18 +448,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('roll', -1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('roll', -1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
               >
                 -
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('roll', 1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('roll', 1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
               >
                 +
@@ -462,18 +471,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('pitch', -1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('pitch', -1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
               >
                 -
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('pitch', 1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('pitch', 1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ffffcc', color: 'black', border: '1px solid #cccc99' }}
               >
                 +
@@ -485,18 +494,18 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
             <ButtonGroup>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('yaw', -1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('yaw', -1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
               >
                 -
               </Button>
               <Button
                 variant="contained"
-                onMouseDown={() => handleMouseDown('yaw', 1, 'tcp')}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
+                onMouseDown={() => startContinuousMove('yaw', 1, 'tcp')}
+                onMouseUp={stopContinuousMove}
+                onMouseLeave={stopContinuousMove}
                 style={{ backgroundColor: '#ccccff', color: 'black', border: '1px solid #9999cc' }}
               >
                 +
@@ -513,9 +522,9 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
           {[0, 20, 40, 60, 80, 100].map((percentage) => (
             <Button
               key={percentage}
-              variant={selectedGripper === percentage ? "contained" : "outlined"} // Highlight selected button
-              onClick={() => setSelectedGripper(percentage)} // Update selected state
-              style={{ backgroundColor: selectedGripper === percentage ? '#ccccff' : 'white', color: 'black', border: '1px solid #9999cc' }}
+              variant={gripperPercent === percentage ? "contained" : "outlined"} // Highlight selected button
+              onClick={() => setGripperPercent(percentage)} // Update selected state
+              style={{ backgroundColor: gripperPercent === percentage ? '#ccccff' : 'white', color: 'black', border: '1px solid #9999cc' }}
             >
               {percentage}%
             </Button>
@@ -524,7 +533,7 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
       </div>
 
       <Button
-        onClick={sendJointCommand}
+        onClick={publishGhostToController}
         disabled={!ghostJoints || Object.keys(ghostJoints).length === 0}
         variant="contained"
         color={(!ghostJoints || Object.keys(ghostJoints).length === 0) ? "secondary" : "primary"}
