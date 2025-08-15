@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { RosProvider } from './RosContext';
 import UrdfViewer from './components/UrdfViewer';
-import JointSliders from './components/JointSliders';
+import FKControls from './components/FKControls';
 import InverseKinematicsControls from './components/InverseKinematicsControls';
 import ROSLIB from 'roslib';
 import Accordion from '@mui/material/Accordion';
@@ -35,7 +35,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('forward');
   const [initialIkPose] = useState(null);
   const [ikPreviewJoints, setIkPreviewJoints] = useState(null);
-  const [fkJoints, setFkJoints] = useState(null);
+  const [fkJoints] = useState(null);
   const [currentJoints, setCurrentJoints] = useState(null);
   const [ghostJoints, setGhostJoints] = useState(null);
   const [showRealRobot, setShowRealRobot] = useState(defaultSettings.showRealRobot);
@@ -211,7 +211,7 @@ function App() {
               <span className="accordion-title">Forward Kinematics</span>
             </AccordionSummary>
             <AccordionDetails>
-              <JointSliders onPreviewJointsChange={setFkJoints} initialJoints={ghostJoints} urdfApi={urdfApiRef.current} active={activeTab === 'forward'} />
+              <FKControls initialJoints={ghostJoints} urdfApi={urdfApiRef.current} active={activeTab === 'forward'} />
             </AccordionDetails>
           </Accordion>
 

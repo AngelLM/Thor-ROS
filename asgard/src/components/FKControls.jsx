@@ -14,65 +14,64 @@ const jointConfigs = [
   { name: 'gripperbase_to_armgearright', label: 'Tool', min: 0, max: 89.9 }
 ];
 
-function JointSliders({ onPreviewJointsChange, initialJoints, urdfApi, active = true }) {
+function FKControls({ initialJoints, urdfApi, active = true }) {
   const { connected } = useROS();
-  const suppressNextApplyRef = useRef(false);
-  const [sliderValues, setSliderValues] = useState(
+  const suppressSyncRef = useRef(false);
+  const [jointValuesDeg, setJointValuesDeg] = useState(
     jointConfigs.reduce((acc, joint) => {
       acc[joint.name] = 0;
       return acc;
     }, {})
   );
 
-  // Inicializa los sliders SOLO cuando cambia initialJoints (sin lógica extra)
+  // Initialize the sliders ONLY when `initialJoints` changes (no extra logic)
   useEffect(() => {
     if (initialJoints) {
-      setSliderValues(prev => {
-        const newVals = { ...prev };
-        jointConfigs.forEach(j => {
-          if (initialJoints[j.name] !== undefined) {
-            newVals[j.name] = Math.round((initialJoints[j.name] * 180) / Math.PI * 100) / 100;
+      setJointValuesDeg(prev => {
+        const newValuesDeg = { ...prev };
+        jointConfigs.forEach(cfg => {
+          if (initialJoints[cfg.name] !== undefined) {
+            newValuesDeg[cfg.name] = Math.round((initialJoints[cfg.name] * 180) / Math.PI * 100) / 100;
           }
-          if (j.name === 'gripperbase_to_armgearright') {
-            newVals[j.name] = -newVals[j.name];
+          if (cfg.name === 'gripperbase_to_armgearright') {
+            newValuesDeg[cfg.name] = -newValuesDeg[cfg.name];
           }
         });
-        return newVals;
+        return newValuesDeg;
       });
-      suppressNextApplyRef.current = true; // don't push back to ghost for this programmatic sync
+    suppressSyncRef.current = true; // Don't push back to the ghost for this programmatic sync
     }
   }, [initialJoints]);
 
-  // Actualiza ghost vía API solo en cambios del usuario
+  // Update the ghost via the API only on user-initiated changes
   useEffect(() => {
-    if (suppressNextApplyRef.current) {
-      suppressNextApplyRef.current = false;
+    if (suppressSyncRef.current) {
+      suppressSyncRef.current = false;
       return;
     }
-    const joints = {};
-    jointConfigs.forEach(j => { joints[j.name] = (sliderValues[j.name] * Math.PI) / 180; });
-    joints['gripperbase_to_armgearright'] = -joints['gripperbase_to_armgearright'];
+     const jointsRad = {};
+    jointConfigs.forEach(cfg => { jointsRad[cfg.name] = (jointValuesDeg[cfg.name] * Math.PI) / 180; });
+    jointsRad['gripperbase_to_armgearright'] = -jointsRad['gripperbase_to_armgearright'];
     if (active && urdfApi) {
-      urdfApi.setGhostJoints(joints);
+      urdfApi.setGhostJoints(jointsRad);
       if (urdfApi.syncTargetToTCP) urdfApi.syncTargetToTCP();
     }
-    // if (onPreviewJointsChange) onPreviewJointsChange(joints);
-  }, [sliderValues, urdfApi, active]);
+  }, [jointValuesDeg, urdfApi, active]);
 
-  const handleSliderChange = (name, value) => {
-    setSliderValues(prev => ({ ...prev, [name]: parseFloat(value.toFixed(1)) }));
+  const handleJointSliderChange = (name, value) => {
+    setJointValuesDeg(prev => ({ ...prev, [name]: parseFloat(value.toFixed(1)) }));
   };
 
-  const handleInputChange = (name, value, min, max) => {
-    let num = parseFloat(value);
-    if (isNaN(num)) num = 0;
-    if (num > max) num = max;
-    if (num < min) num = min;
-    num = parseFloat(num.toFixed(1));
-    setSliderValues(prev => ({ ...prev, [name]: num }));
+  const handleJointInputChange = (name, value, min, max) => {
+    let valueNum = parseFloat(value);
+    if (isNaN(valueNum)) valueNum = 0;
+    if (valueNum > max) valueNum = max;
+    if (valueNum < min) valueNum = min;
+    valueNum = parseFloat(valueNum.toFixed(1));
+    setJointValuesDeg(prev => ({ ...prev, [name]: valueNum }));
   };
 
-  const sendJointCommand = () => {
+  const publishGhostToController = () => {
     if (!connected || !urdfApi) return;
     urdfApi.publishGhostToController();
   };
@@ -84,16 +83,16 @@ function JointSliders({ onPreviewJointsChange, initialJoints, urdfApi, active = 
           <label htmlFor={joint.name} style={{ minWidth: '90px', fontWeight: 'bold' }}>
             {joint.label}
           </label>
-          <Slider id={joint.name} min={joint.min} max={joint.max} step={0.1} value={sliderValues[joint.name]} onChange={(e, value) => handleSliderChange(joint.name, value)} style={{ flex: 1, marginLeft: '-30px' }} />
-          <Input value={sliderValues[joint.name]} onChange={e => handleInputChange(joint.name, e.target.value, joint.min, joint.max)} inputProps={{ step: 0.1, min: joint.min, max: joint.max, type: 'number', 'aria-labelledby': joint.name }} style={{ width: '80px' }} />
+          <Slider id={joint.name} min={joint.min} max={joint.max} step={0.1} value={jointValuesDeg[joint.name]} onChange={(e, value) => handleJointSliderChange(joint.name, value)} style={{ flex: 1, marginLeft: '-30px' }} />
+          <Input value={jointValuesDeg[joint.name]} onChange={e => handleJointInputChange(joint.name, e.target.value, joint.min, joint.max)} inputProps={{ step: 0.1, min: joint.min, max: joint.max, type: 'number', 'aria-labelledby': joint.name }} style={{ width: '80px' }} />
           <span>°</span>
         </div>
       ))}
-      <Button variant="contained" color="primary" onClick={sendJointCommand} style={{ marginTop: '1rem', display: 'block', marginLeft: 'auto', marginRight: 'auto', fontWeight: 'bold' }}>
+      <Button variant="contained" color="primary" onClick={publishGhostToController} style={{ marginTop: '1rem', display: 'block', marginLeft: 'auto', marginRight: 'auto', fontWeight: 'bold' }}>
         Move
       </Button>
     </div>
   );
 }
 
-export default JointSliders;
+export default FKControls;
