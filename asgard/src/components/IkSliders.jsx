@@ -117,6 +117,9 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
   const [statusMsg, setStatusMsg] = useState(null);
   const [selectedGripper, setSelectedGripper] = useState(0);
   const [activeInterval, setActiveInterval] = useState(null);
+  // keep a ref to the latest ghostJoints so we can update gripper only when user changes it
+  const latestGhostJointsRef = useRef(null);
+  useEffect(() => { latestGhostJointsRef.current = ghostJoints; }, [ghostJoints]);
 
   // Valores derivados para UI (calculados en tiempo real)
   const displayEuler = React.useMemo(() => {
@@ -328,19 +331,18 @@ export default function IKSliders({ ikPose, onPreviewJointsChange, onIKStatusCha
   };
 
   useEffect(() => {
-    if (ghostJoints && onPreviewJointsChange) {
-      const gripperValue = selectedGripper === 0 
-        ? 0 
-        : selectedGripper === 100 
-        ? (-89.9 * Math.PI / 180) 
-        : (-89.9 * (selectedGripper / 100) * Math.PI / 180);
-      if (ghostJoints['gripperbase_to_armgearright'] !== gripperValue) {
-        const updatedJoints = { ...ghostJoints };
-        updatedJoints['gripperbase_to_armgearright'] = gripperValue;
-        onPreviewJointsChange(updatedJoints);
-      }
+    const currentGhost = latestGhostJointsRef.current;
+    if (!currentGhost || typeof onPreviewJointsChange !== 'function') return;
+    const gripperValue = selectedGripper === 0
+      ? 0
+      : selectedGripper === 100
+      ? (-89.9 * Math.PI / 180)
+      : (-89.9 * (selectedGripper / 100) * Math.PI / 180);
+    if (currentGhost['gripperbase_to_armgearright'] !== gripperValue) {
+      const updatedJoints = { ...currentGhost, gripperbase_to_armgearright: gripperValue };
+      onPreviewJointsChange(updatedJoints);
     }
-  }, [selectedGripper, ghostJoints, onPreviewJointsChange]);
+  }, [selectedGripper, onPreviewJointsChange]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}>
