@@ -279,7 +279,7 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
     cameraRef.current = camera;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0f0f0);
+    scene.background = new THREE.Color(0xd4d8d8);
     sceneRef.current = scene;
     // Grid on Z=0 (XY plane) since this app uses Z as up
     const grid = new THREE.GridHelper(4, 40, 0x888888, 0xcccccc);

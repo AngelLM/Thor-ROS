@@ -231,7 +231,7 @@ function App() {
         {/* Menú lateral fijo */}
         <div className="sidebar">
           <div style={{ textAlign: 'center', padding: '0.5rem' }}>
-            <img src="/images/thor_logo.png" alt="Thor Logo" style={{ maxWidth: '20%', height: 'auto' }} />
+            <img src="/images/thor_logo.png" alt="Thor Logo" style={{ maxWidth: '80%', height: 'auto' }} />
           </div>
           {/* Accordions */}
           <Accordion
@@ -290,13 +290,9 @@ function App() {
                 setShowGhostRobot={setShowGhostRobot}
                 showGhostRobotCoordinates={showGhostRobotCoordinates} // Pasar el estado showGhostRobotCoordinates
                 setShowGhostRobotCoordinates={setShowGhostRobotCoordinates} // Pasar el setter de showGhostRobotCoordinates
+                showOverlay={showOverlay}
+                setShowOverlay={setShowOverlay}
               />
-              <div style={{ marginTop: '0.5rem' }}>
-                <FormControlLabel
-                  control={<Checkbox checked={showOverlay} onChange={(e) => setShowOverlay(e.target.checked)} />}
-                  label="Show robot state overlay"
-                />
-              </div>
             </AccordionDetails>
           </Accordion>
 
@@ -379,15 +375,17 @@ function App() {
       )}
 
       {/* Move Ghost to Real FAB */}
-      <Fab variant="extended"
-        color="primary"
-        aria-label="move-ghost-to-real"
-        style={{ position: 'absolute', bottom: '155px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
-        onClick={() => { if (urdfApiRef.current && urdfApiRef.current.copyRealToGhost) urdfApiRef.current.copyRealToGhost(); }}
-      >
-        Move Ghost to Real
-        <PrecisionManufacturingIcon style={{ marginLeft: '8px' }} />
-      </Fab>
+      {showGhostRobot && (
+        <Fab variant="extended"
+          color="primary"
+          aria-label="move-ghost-to-real"
+          style={{ position: 'absolute', bottom: '155px', right: '35px', zIndex: 10, fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'none', display: 'flex', alignItems: 'center' }}
+          onClick={() => { if (urdfApiRef.current && urdfApiRef.current.copyRealToGhost) urdfApiRef.current.copyRealToGhost(); }}
+        >
+          Move Ghost to Real
+          <PrecisionManufacturingIcon style={{ marginLeft: '8px' }} />
+        </Fab>
+      )}
 
       {/* Teach Real Pose FAB */}
       <Fab variant="extended"
