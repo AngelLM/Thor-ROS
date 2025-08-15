@@ -4,7 +4,7 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import * as THREE from 'three';
 
-export default function InverseKinematicsControls({
+export default function IKControls({
   ikPose: ikTargetPose,
   onPreviewJointsChange: onPreviewJointsUpdate,
   onIKStatusChange: onIKReachabilityChange,

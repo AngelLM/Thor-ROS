@@ -3,7 +3,7 @@ import './App.css';
 import { RosProvider } from './RosContext';
 import UrdfViewer from './components/UrdfViewer';
 import FKControls from './components/FKControls';
-import InverseKinematicsControls from './components/InverseKinematicsControls';
+import IKControls from './components/IKControls';
 import ROSLIB from 'roslib';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -227,7 +227,7 @@ function App() {
               <span className="accordion-title">Inverse Kinematics</span>
             </AccordionSummary>
             <AccordionDetails>
-              <InverseKinematicsControls
+              <IKControls
                 onPreviewJointsChange={setIkPreviewJoints}
                 initialPose={initialIkPose}
                 ghostJoints={ghostJoints}
