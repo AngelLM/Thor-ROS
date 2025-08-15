@@ -1,146 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useROS } from '../RosContext';
-import { styled } from '@mui/system';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import * as THREE from 'three';
 
-const blue = {
-  100: '#daecff',
-  200: '#b6daff',
-  300: '#66b2ff',
-  400: '#3399ff',
-  500: '#007fff',
-  600: '#0072e5',
-  700: '#0059B2',
-  800: '#004c99',
-};
-
-const grey = {
-  50: '#F3F6F9',
-  100: '#E5EAF2',
-  200: '#DAE2ED',
-  300: '#C7D0DD',
-  400: '#B0B8C4',
-  500: '#9DA8B7',
-  600: '#6B7A90',
-  700: '#434D5B',
-  800: '#303740',
-  900: '#1C2025',
-};
-
-const StyledInput = styled('input')(
-  ({ theme, axis }) => `
-  font-size: 0.875rem;
-  font-family: inherit;
-  font-weight: 400;
-  line-height: 1.375;
-  color: ${theme.palette.mode === 'dark' ? grey[300] : grey[900]};
-  background: ${axis === 'x' ? '#ffcccc' : axis === 'y' ? '#ffffcc' : axis === 'z' ? '#ccccff' : theme.palette.mode === 'dark' ? grey[900] : '#fff'};
-  border: 1px solid ${theme.palette.mode === 'dark' ? grey[700] : grey[200]};
-  box-shadow: 0 2px 4px ${
-    theme.palette.mode === 'dark' ? 'rgba(0,0,0, 0.5)' : 'rgba(0,0,0, 0.05)'
-  };
-  border-radius: 8px;
-  margin: 0 8px;
-  padding: 10px 12px;
-  outline: 0;
-  min-width: 0;
-  width: 4rem;
-  text-align: center;
-
-  &:hover {
-    border-color: ${blue[400]};
-  }
-
-  &:focus {
-    border-color: ${blue[400]};
-    box-shadow: 0 0 0 3px ${theme.palette.mode === 'dark' ? blue[700] : blue[200]};
-  }
-
-  &:focus-visible {
-    outline: 0;
-  }
-`,
-);
-
-const NumberInput = React.forwardRef(function CustomNumberInput(props, ref) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <label style={{ marginBottom: '4px' }}>{props.label}</label>
-      <StyledInput
-        type="number"
-        value={props.value.toFixed(1)} // Ensure displayed value is limited to one decimal place
-        onChange={(e) => {
-          const newValue = parseFloat(e.target.value);
-          if (!isNaN(newValue)) {
-            props.onChange(Math.min(Math.max(newValue, props.min), props.max));
-          }
-        }}
-        min={props.min}
-        max={props.max}
-        step={props.step} // Use step directly
-        ref={ref}
-        axis={props.axis} // Pass axis prop for background color
-        style={{ textAlign: 'center', width: '4rem', margin: '0 8px' }}
-      />
-    </div>
-  );
-});
-
 export default function InverseKinematicsControls({ ikPose, onPreviewJointsChange, onIKStatusChange, initialPose, ghostJoints, urdfApi, active = true }) {
   const { connected } = useROS();
   
-  // Estados principales: posición y quaternion base (fuentes de verdad)
-  const [position, setPosition] = useState(new THREE.Vector3(200, 0, 300)); // en mm
-  const [baseQuaternion, setBaseQuaternion] = useState(new THREE.Quaternion(0, 0, 0, 1)); // identidad
+  // Main state: position and base quaternion (source of truth)
+  const [position, setPosition] = useState(new THREE.Vector3(200, 0, 300)); // in mm
+  const [baseQuaternion, setBaseQuaternion] = useState(new THREE.Quaternion(0, 0, 0, 1)); // identity
   const suppressSolveRef = useRef(false);
 
-  // Al activarse la pestaña IK, sincroniza con el TCP actual del ghost
+  // When the IK tab becomes active, sync with the ghost's current TCP
   useEffect(() => {
     if (!active) return;
     if (!urdfApi) return;
     const state = urdfApi.getGhostState && urdfApi.getGhostState();
     if (state && state.tcp) {
-      suppressSolveRef.current = true; // no dispares IK por este sync
+      suppressSolveRef.current = true; // prevent triggering IK solve from this sync
       setPosition(new THREE.Vector3(state.tcp.x, state.tcp.y, state.tcp.z));
       setBaseQuaternion(new THREE.Quaternion(state.tcp.qx, state.tcp.qy, state.tcp.qz, state.tcp.qw));
     }
   }, [active, urdfApi]);
   
-  // Estados para funcionalidad
-  const [ikConfig, setIkConfig] = useState({
-    elbow: 'any',
-    shoulder: 'any',
-    wrist: 'any'
-  });
-  const [statusMsg, setStatusMsg] = useState(null);
   const [selectedGripper, setSelectedGripper] = useState(0);
   const [activeInterval, setActiveInterval] = useState(null);
   // keep a ref to the latest ghostJoints so we can update gripper only when user changes it
   const latestGhostJointsRef = useRef(null);
   useEffect(() => { latestGhostJointsRef.current = ghostJoints; }, [ghostJoints]);
 
-  // Valores derivados para UI (calculados en tiempo real)
-  const displayEuler = React.useMemo(() => {
-    const euler = new THREE.Euler().setFromQuaternion(baseQuaternion, 'XYZ');
-    return {
-      roll: euler.x * 180 / Math.PI,
-      pitch: euler.y * 180 / Math.PI,
-      yaw: euler.z * 180 / Math.PI
-    };
-  }, [baseQuaternion]);
-
-  const displayValues = React.useMemo(() => ({
-    x: position.x,
-    y: position.y,
-    z: position.z,
-    roll: displayEuler.roll,
-    pitch: displayEuler.pitch,
-    yaw: displayEuler.yaw
-  }), [position, displayEuler]);
-
-  // Inicializa SOLO cuando cambia ikPose
+  // Initialize only when `ikPose` changes
   useEffect(() => {
     if (ikPose) {
       setPosition(new THREE.Vector3(
@@ -148,7 +38,6 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
         Math.round(ikPose.y),
         Math.round(ikPose.z)
       ));
-      // Usar cuaterniones directamente
       if (
         ikPose.qx !== undefined &&
         ikPose.qy !== undefined &&
@@ -165,7 +54,7 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
     }
   }, [ikPose]);
 
-  // Inicializa cuando cambia initialPose
+  // Initialize when `initialPose` changes
   useEffect(() => {
     if (initialPose) {
       setPosition(new THREE.Vector3(
@@ -173,7 +62,6 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
         initialPose.y || 0,
         initialPose.z || 0
       ));
-      // Usar cuaterniones directamente
       if (
         initialPose.qx !== undefined &&
         initialPose.qy !== undefined &&
@@ -190,11 +78,11 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
     }
   }, [initialPose]);
 
-  // Peticiones IK (cuando cambian posición o quaternion) => delegar en urdfApi
+  // IK requests (when position or quaternion change) => delegate to urdfApi
   useEffect(() => {
-    if (!active) return; // sólo cuando el tab está activo
+    if (!active) return; // only when the tab is active
     if (!urdfApi || !connected) return;
-    if (suppressSolveRef.current) { // evitar re-lanzar IK si es un sync externo
+    if (suppressSolveRef.current) { // avoid re-triggering IK if this is an external sync
       suppressSolveRef.current = false;
       return;
     }
@@ -210,48 +98,29 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
     urdfApi.solveAndMoveToPose(pose).then((res) => {
       if (res && res.ok) {
         if (onPreviewJointsChange) onPreviewJointsChange(res.joints);
-        setStatusMsg({ status: 'reachable' });
         if (onIKStatusChange) onIKStatusChange('reachable');
-        // Alinear esfera con el nuevo TCP resuelto
+        // Align the visual target/sphere with the newly solved TCP
         if (urdfApi.syncTargetToTCP) urdfApi.syncTargetToTCP();
       } else {
         if (onPreviewJointsChange) onPreviewJointsChange({});
-        setStatusMsg({ status: 'unreachable' });
         if (onIKStatusChange) onIKStatusChange('unreachable');
       }
     });
   }, [position, baseQuaternion, urdfApi, connected, active]);
 
-  // Sincroniza la UI con el TCP del ghost cuando cambia el ghost (p.ej. esfera + IK en UrdfViewer)
+  // Sync the UI with the ghost's TCP when the ghost changes
   useEffect(() => {
     if (!active) return;
     if (!urdfApi || !ghostJoints) return;
     const state = urdfApi.getGhostState && urdfApi.getGhostState();
     if (state && state.tcp) {
       const { x, y, z, qx, qy, qz, qw } = state.tcp;
-      // Evitar loop: marcamos para no lanzar IK en el siguiente efecto
+      // Avoid loop: flag to prevent launching IK in the next effect
       suppressSolveRef.current = true;
       setPosition(new THREE.Vector3(x, y, z));
       setBaseQuaternion(new THREE.Quaternion(qx, qy, qz, qw));
     }
   }, [ghostJoints, active, urdfApi]);
-
-  const handleValueChange = (key, newValue) => {
-    if (key === 'x' || key === 'y' || key === 'z') {
-      setPosition(prevPos => {
-        const newPos = prevPos.clone();
-        newPos[key] = newValue;
-        return newPos;
-      });
-    } else {
-      // Para cambios en Euler, actualizar el quaternion base
-      const currentEuler = new THREE.Euler().setFromQuaternion(baseQuaternion, 'XYZ');
-      if (key === 'roll') currentEuler.x = newValue * Math.PI / 180;
-      if (key === 'pitch') currentEuler.y = newValue * Math.PI / 180;
-      if (key === 'yaw') currentEuler.z = newValue * Math.PI / 180;
-      setBaseQuaternion(new THREE.Quaternion().setFromEuler(currentEuler));
-    }
-  };
 
   const sendJointCommand = () => {
     if (!urdfApi) return;
@@ -259,37 +128,33 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
   };
 
   const handleWorldMove = (axis, increment) => {
-    console.log(`Moving World for axis: ${axis}, increment: ${increment}`);
-
     if (axis === 'x' || axis === 'y' || axis === 'z') {
-      // Movimiento lineal global (sin transformar)
+      // Linear global movement (no transform)
       setPosition(prevPos => {
         const newPos = prevPos.clone();
-        newPos[axis] += increment; // mm en coordenadas globales
+        newPos[axis] += increment; // mm in global coordinates
         return newPos;
       });
     } else {
-      // Rotación: ejes globales fijos (sin transformar)
+      // Rotation: fixed global axes (no transform)
       setBaseQuaternion(prevQuat => {
         let rotAxis;
         if (axis === 'roll') rotAxis = new THREE.Vector3(1, 0, 0);
         if (axis === 'pitch') rotAxis = new THREE.Vector3(0, 1, 0);
         if (axis === 'yaw') rotAxis = new THREE.Vector3(0, 0, 1);
         
-        // Crear quaternion de rotación incremental en ejes globales
+        // Create incremental rotation quaternion in global axes
         const deltaQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, increment * Math.PI / 180);
         
-        // Aplicar rotación global
+        // Apply global rotation
         return prevQuat.clone().premultiply(deltaQ);
       });
     }
   };
 
   const handleTCPMove = (axis, increment) => {
-    console.log(`Moving TCP for axis: ${axis}, increment: ${increment}`);
-
     if (axis === 'x' || axis === 'y' || axis === 'z') {
-      // Movimiento lineal: transformar delta por quaternion actual (coordenadas locales)
+      // Linear movement: transform delta by current quaternion (local coordinates)
       setPosition(prevPos => {
         const localDelta = new THREE.Vector3();
         localDelta[axis] = increment; // mm
@@ -297,7 +162,7 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
         return prevPos.clone().add(localDelta);
       });
     } else {
-      // Rotación: usar lógica de GizmoPage (quaternion puro)
+      // Rotation: use logic from GizmoPage (pure quaternion)
       setBaseQuaternion(prevQuat => {
         const q = prevQuat.clone();
         let rotAxis;
@@ -305,13 +170,13 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
         if (axis === 'pitch') rotAxis = new THREE.Vector3(0, 1, 0);
         if (axis === 'yaw') rotAxis = new THREE.Vector3(0, 0, 1);
         
-        // Transformar eje a coordenadas locales actuales
+        // Transform axis to current local coordinates
         rotAxis.applyQuaternion(q);
         
-        // Crear quaternion de rotación incremental
+        // Create incremental rotation quaternion
         const deltaQ = new THREE.Quaternion().setFromAxisAngle(rotAxis, increment * Math.PI / 180);
         
-        // Aplicar rotación
+        // Apply rotation
         return q.premultiply(deltaQ);
       });
     }
@@ -319,7 +184,7 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
 
   const handleMouseDown = (axis, increment, frameType = 'tcp') => {
     const moveFunction = frameType === 'world' ? handleWorldMove : handleTCPMove;
-    const intervalId = setInterval(() => moveFunction(axis, increment), 100); // Ejecuta cada 100ms
+    const intervalId = setInterval(() => moveFunction(axis, increment), 100); // Runs every 100ms
     setActiveInterval(intervalId);
   };
 
@@ -330,6 +195,7 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
     }
   };
 
+  // Sync the gripper position with the ghost's state
   useEffect(() => {
     const currentGhost = latestGhostJointsRef.current;
     if (!currentGhost || typeof onPreviewJointsChange !== 'function') return;
@@ -347,7 +213,7 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}>
        <h3 style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '1.5rem' }}>World Frame</h3>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z as buttons */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
         {/* X group */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}>
           <label style={{ marginBottom: '4px' }}><strong>X</strong></label>
@@ -504,7 +370,7 @@ export default function InverseKinematicsControls({ ikPose, onPreviewJointsChang
                 variant="contained"
                 onMouseDown={() => handleMouseDown('x', -1, 'tcp')}
                 onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp} // Asegura que se detenga si el mouse sale del botón
+                onMouseLeave={handleMouseUp} // Ensure it stops if the mouse leaves the button
                 style={{ backgroundColor: '#ffcccc', color: 'black', border: '1px solid #ff9999' }}
               >
                 -
