@@ -276,7 +276,7 @@ function App() {
               <span className="accordion-title">Poses</span>
             </AccordionSummary>
             <AccordionDetails>
-              <Poses ref={posesRef} ghostRef={ghostRobotRef} onPreviewJointsChange={memoizedOnPreviewJointsChange} poses={poses} setPoses={setPoses} />
+              <Poses ref={posesRef} onPreviewJointsChange={memoizedOnPreviewJointsChange} poses={poses} setPoses={setPoses} />
             </AccordionDetails>
           </Accordion>
 
