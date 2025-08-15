@@ -33,7 +33,7 @@ function App() {
   };
 
   const [activeTab, setActiveTab] = useState('forward');
-  const [ikPose, setIkPose] = useState(null); // Estado compartido para la pose IK
+  const [ikPose] = useState(null); // Estado compartido para la pose IK
   const [previewJoints, setPreviewJoints] = useState(null); // Estado para las articulaciones objetivo (IK)
   const [fkJoints, setFkJoints] = useState(null); // Estado para las articulaciones objetivo (FK)
   const [currentJoints, setCurrentJoints] = useState(null); // Estado articular actual del robot
@@ -42,7 +42,7 @@ function App() {
   const [showGhostRobot, setShowGhostRobot] = useState(defaultSettings.showGhostRobot);
   const [showGhostRobotCoordinates, setShowGhostRobotCoordinates] = useState(defaultSettings.showGhostRobotCoordinates);
   const [showFPS, setShowFPS] = useState(defaultSettings.showFPS);
-  const [ikStatus, setIkStatus] = useState('reachable');
+  const [ikStatus] = useState('reachable');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [poseName, setPoseName] = useState('');
   const [isMoving, setIsMoving] = useState(false);
@@ -50,19 +50,14 @@ function App() {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     return savedPoses;
   });
-  const rosRef = useRef(null);
   const ghostRef = useRef(null); // Referencia para el robot fantasma
   const poseRef = useRef(null); // Referencia para el componente Poses
   const urdfApiRef = useRef(null);
 
-  // Controls visibility of the floating RobotState overlay
   const [showOverlay, setShowOverlay] = useState(false);
-
-  // Overlay TCP values (for floating RobotState overlay)
   const [overlayRealTCP, setOverlayRealTCP] = useState(null);
   const [overlayGhostTCP, setOverlayGhostTCP] = useState(null);
 
-  // Helpers for formatting (copied/adapted from RobotState component)
   const jointOrder = ['joint_1','joint_2','joint_3','joint_4','joint_5','joint_6'];
   const radToDeg = (r) => (r * 180 / Math.PI);
   const formatArmJoints = (joints) => {
@@ -97,27 +92,24 @@ function App() {
   // Suscribirse a /joint_states para obtener la posición actual
   useEffect(() => {
     const ros = new ROSLIB.Ros({ url: 'ws://localhost:9090' });
-    rosRef.current = ros;
     const jointStateListener = new ROSLIB.Topic({
       ros,
       name: '/joint_states',
       messageType: 'sensor_msgs/msg/JointState'
     });
-    let previousJoints = null; // Variable para almacenar el valor anterior de joints
+    let previousJoints = null;
     jointStateListener.subscribe((msg) => {
-      // Mapear a objeto {joint_1: val, ...} con precisión de 4 decimales
       const joints = {};
       msg.name.forEach((name, i) => {
         joints[name] = parseFloat(msg.position[i].toFixed(4));
       });
 
-      // Comprobar si los valores de joints son distintos a los anteriores antes de asignar
       if (JSON.stringify(previousJoints) !== JSON.stringify(joints)) {
         setCurrentJoints(joints);
-        previousJoints = joints; // Actualizar el valor anterior
-        setIsMoving(true); // Set isMoving to true when joints change
+        previousJoints = joints;
+        setIsMoving(true);
       } else {
-        setIsMoving(false); // Set isMoving to false when joints stop changing
+        setIsMoving(false);
       }
     });
     return () => {
@@ -125,20 +117,6 @@ function App() {
       ros.close();
     };
   }, []);
-
-  // Solo inicializar sliders al cambiar de tab
-  useEffect(() => {
-    // Ya no forzar IK a la pose del robot real al abrir la pestaña.
-    // IKSliders sincroniza desde el TCP del ghost vía urdfApi.getGhostState().
-    // Mantener este efecto vacío para conservar semántica de dependencias sin provocar cambios.
-  }, [activeTab]);
-
-  // Console log para verificar el estado de los joints del ghost robot
-  useEffect(() => {
-    if (ghostRef.current) {
-      console.log('Ghost Robot Joints:', ghostRef.current.getJointValues());
-    }
-  }, [ghostRef.current]); 
 
   const handleFabClick = () => {
     setIsDialogOpen(true);
@@ -172,11 +150,11 @@ function App() {
     const updatedPoses = [...poses, poseData];
     setPoses(updatedPoses);
     localStorage.setItem('savedPoses', JSON.stringify(updatedPoses));
-    console.log('Pose saved:', poseData);
+    // console.log('Pose saved:', poseData);
 
     if (poseRef.current) {
       poseRef.current.updatePoses();
-      console.log('Poses updated in Poses component');
+      // console.log('Poses updated in Poses component');
     }
 
     setIsDialogOpen(false);
@@ -186,7 +164,6 @@ function App() {
   // Determina qué preview mostrar
   const effectivePreviewJoints = activeTab === 'forward' ? fkJoints : previewJoints;
 
-  // Rediseñar la página para mostrar únicamente UrdfViewer a pantalla completa y un div flotante con JointSliders
   const memoizedOnPreviewJointsChange = React.useCallback((joints) => setPreviewJoints(joints), []);
 
   // Keep overlay TCP values in sync. Try to use urdfApi methods when available.
@@ -339,8 +316,6 @@ function App() {
             />
           </div>
 
-          {/* Floating overlay with robot state (replaces RobotState component) */}
-          {/* Helper state and formatters are defined below in the component */}
           {showOverlay && (
             <div style={{ position: 'absolute', bottom: '12px', left: 0, right: 0, zIndex: 11, display: 'flex', justifyContent: 'center' }}>
               <div id="robot-state-overlay" style={{ background: 'transparent', borderRadius: 8, padding: '0.5rem 0.9rem', boxShadow: 'none', fontFamily: 'monospace', fontSize: '0.85rem', width: 'calc(100% - 48px)', maxWidth: '1400px' }}>
