@@ -7,7 +7,7 @@ import URDFLoader from 'urdf-loader';
 import ROSLIB from 'roslib';
 import { useROS } from '../RosContext';
 
-const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostRobot = true, onGhostJointsChange, showFPS = true, showGhostRobotCoordinates = true }, ref) => {
+const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRobot = true, onGhostJointsChange, showFPS = true, showGhostRobotCoordinates = true }, ref) => {
   const mountRef = useRef(null);
   const rendererRef = useRef(null);
   const cameraRef = useRef(null);
@@ -563,4 +563,4 @@ const UrdfViewer = forwardRef(({ previewJoints, showRealRobot = true, showGhostR
   );
 });
 
-export default UrdfViewer;
+export default Viewer3D;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { RosProvider } from './RosContext';
-import UrdfViewer from './components/UrdfViewer';
+import Viewer3D from './components/Viewer3D';
 import FKControls from './components/FKControls';
 import IKControls from './components/IKControls';
 import ROSLIB from 'roslib';
@@ -294,7 +294,7 @@ function App() {
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0 }}>
           <div style={{ flex: '1 1 auto', minHeight: 0, overflow: 'hidden' }}>
-            <UrdfViewer
+            <Viewer3D
               ref={urdfApiRef}
               previewJoints={effectivePreviewJoints}
               showRealRobot={showRealRobot}
