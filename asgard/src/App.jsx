@@ -45,12 +45,10 @@ function App() {
   const [ikStatus] = useState('reachable');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [poseName, setPoseName] = useState('');
-  const [isMoving, setIsMoving] = useState(false);
   const [poses, setPoses] = useState(() => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     return savedPoses;
   });
-  const ghostRobotRef = useRef(null); // Reference to the ghost robot
   const posesRef = useRef(null); // Reference to the Poses component
   const urdfApiRef = useRef(null);
 
@@ -107,9 +105,6 @@ function App() {
       if (JSON.stringify(previousJoints) !== JSON.stringify(joints)) {
         setCurrentJoints(joints);
         previousJoints = joints;
-        setIsMoving(true);
-      } else {
-        setIsMoving(false);
       }
     });
     return () => {
@@ -292,7 +287,7 @@ function App() {
               <span className="accordion-title">Program</span>
             </AccordionSummary>
             <AccordionDetails>
-              <Program isMoving={isMoving} poses={poses} />
+              <Program poses={poses} />
             </AccordionDetails>
           </Accordion>
         </div>

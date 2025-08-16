@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -18,22 +18,21 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
-let isRunAllInProgress = false; // Variable global para controlar el estado de ejecución de Run All
+let isRunAllInProgress = false; // Global flag to track "Run All" execution state
 
-function Program({ isMoving, poses }) {
+function Program({ poses }) {
   const [movements, setMovements] = useState([]);
   const [poseNames, setPoseNames] = useState(poses.map(pose => pose.name));
   const [currentStep, setCurrentStep] = useState(null);
-  const [isStepDisabled, setIsStepDisabled] = useState(false);
-  const [selectedMovement, setSelectedMovement] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [pendingSelection, setPendingSelection] = useState(null);
-  const previousRobotPoseRef = useRef(null); // Usar useRef para almacenar la pose anterior del robot
-  const currentRobotPoseRef = useRef(null); // Usar useRef para almacenar la pose actual del robot
-  const [robotMoving, setRobotMoving] = useState(false); // Estado para indicar si el robot está en movimiento
+  const [controlsDisabled, setControlsDisabled] = useState(false);
+  const [pointerIndex, setPointerIndex] = useState(null);
+  const [selectionDialogOpen, setSelectionDialogOpen] = useState(false);
+  const [pendingSelectionIndex, setPendingSelectionIndex] = useState(null);
+  const previousRobotPoseRef = useRef(null); // Previous robot pose (useRef)
+  const currentRobotPoseRef = useRef(null); // Current robot pose (useRef)
+  const [robotMoving, setRobotMoving] = useState(false); // Whether the robot is moving
   const { ros, connected } = useROS();
   const [runAllDialogOpen, setRunAllDialogOpen] = useState(false);
-  const [runAllFromBeginning, setRunAllFromBeginning] = useState(false);
 
   useEffect(() => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
@@ -47,13 +46,13 @@ function Program({ isMoving, poses }) {
 
   useEffect(() => {
     if (!robotMoving && !isRunAllInProgress) {
-      setIsStepDisabled(false); // Re-enable step buttons when robot stops moving
+      setControlsDisabled(false); // Re-enable controls when robot stops moving
     }
   }, [robotMoving]);
 
   useEffect(() => {
-    if (movements.length > 0 && selectedMovement === null) {
-      setSelectedMovement(0); // Select the first Radio Button by default
+    if (movements.length > 0 && pointerIndex === null) {
+      setPointerIndex(0); // Select the first Radio Button by default
     }
   }, [movements]);
 
@@ -63,19 +62,19 @@ function Program({ isMoving, poses }) {
       return;
     }
 
-    console.log('Suscribiéndose al tópico /joint_states...');
+    console.log('Subscribing to /joint_states...');
 
     const jointStateListener = new ROSLIB.Topic({
       ros,
-      name: '/joint_states', // Tópico que publica los estados de las articulaciones
+      name: '/joint_states', // Topic publishing joint states
       messageType: 'sensor_msgs/JointState',
     });
 
-    // Modificar updateRobotPose para comparar con la pose anterior
+    // Compare against previous pose
     const updateRobotPose = (message) => {
       const jointPositions = {};
       message.name.forEach((name, index) => {
-        jointPositions[name] = parseFloat(message.position[index].toFixed(4)); // Redondear a 4 decimales
+        jointPositions[name] = parseFloat(message.position[index].toFixed(4)); // Round to 4 decimals
       });
 
       if (previousRobotPoseRef.current) {
@@ -87,13 +86,13 @@ function Program({ isMoving, poses }) {
             return false;
           }
 
-          return Math.abs(currentAngle - previousAngle) < 0.0001; // Comparación con tolerancia de 4 decimales
+          return Math.abs(currentAngle - previousAngle) < 0.0001; // Compare with 4-decimal tolerance
         });
 
-        setRobotMoving(!isSamePose); // Si la pose es la misma, el robot no se está moviendo
+        setRobotMoving(!isSamePose); // If the pose is the same, the robot is not moving
       }
-      previousRobotPoseRef.current = jointPositions; // Actualizar la pose anterior en useRef
-      currentRobotPoseRef.current = jointPositions; // Actualizar la pose actual en useRef
+      previousRobotPoseRef.current = jointPositions; // Update previous pose ref
+      currentRobotPoseRef.current = jointPositions; // Update current pose ref
     };
 
     jointStateListener.subscribe(updateRobotPose);
@@ -118,7 +117,7 @@ function Program({ isMoving, poses }) {
       return false;
     }
 
-    const tolerance = 0.0001; // Tolerancia para la comparación (4 decimales)
+    const tolerance = 0.0001; // Tolerance for comparison (4 decimals)
 
     const isMatch = Object.keys(targetPose.joints).every(joint => {
       const currentAngle = currentRobotPoseRef.current[joint];
@@ -183,7 +182,7 @@ function Program({ isMoving, poses }) {
     const updatedMovements = [...movements];
     [updatedMovements[index + 1], updatedMovements[index]] = [updatedMovements[index], updatedMovements[index + 1]];
     setMovements(updatedMovements);
-    saveProgramToLocalStorage(updatedMovements); // Fix incorrect syntax
+    saveProgramToLocalStorage(updatedMovements);
   };
 
   const handleRunAll = async () => {
@@ -194,28 +193,22 @@ function Program({ isMoving, poses }) {
       return;
     }
 
-    if (selectedMovement !== 0) {
+  if (pointerIndex !== 0) {
       setRunAllDialogOpen(true);
       return; // Wait for user input from the dialog
     }
 
-    await executeRunAll();
+  await executeRunAll();
   };
 
   const executeRunAll = async (startIndex = 0) => {
     isRunAllInProgress = true; // Mark that Run All is in progress
-    setIsStepDisabled(true); // Disable the Start button at the beginning
-
-    // if (runAllFromBeginning) {
-    //   console.log('Running all movements from the beginning.');
-    //   setSelectedMovement(0);
-    //   setCurrentStep(0);
-    // }
+    setControlsDisabled(true); // Disable controls at the beginning
 
     for (let i = startIndex; i < movements.length; i++) {
       executeMovement(i); // Use the executeMovement function to execute each movement
       const newPointer = i + 1 >= movements.length ? 0 : i + 1;
-      setSelectedMovement(newPointer);
+      setPointerIndex(newPointer);
       setCurrentStep(i); // Highlight the executed movement
 
       // Wait until the robot reaches the target pose before continuing with a wait loop
@@ -234,29 +227,29 @@ function Program({ isMoving, poses }) {
     }
 
     isRunAllInProgress = false; // Mark that Run All has finished
-    setIsStepDisabled(false); // Re-enable the Start button after all movements are executed
+    setControlsDisabled(false); // Re-enable controls after all movements are executed
     console.log('All movements executed.');
   };
 
   const handleStop = () => {
     // Stop the Run All process
     isRunAllInProgress = false;
-    setIsStepDisabled(false); // Re-enable buttons
+    setControlsDisabled(false); // Re-enable buttons
 
     if (!connected || !ros) {
       console.warn('ROS is not connected. Cannot send stop command.');
       return;
     }
 
-    // Send a stop command to la /trajectory_execution_event
+    // Send a stop command to /trajectory_execution_event
     const stopTopic = new ROSLIB.Topic({
       ros,
-      name: '/trajectory_execution_event', // Updated topic name
-      messageType: 'std_msgs/String', // Updated message type
+      name: '/trajectory_execution_event',
+      messageType: 'std_msgs/String',
     });
 
     const stopMessage = new ROSLIB.Message({
-      data: 'stop', // Message content
+      data: 'stop',
     });
 
     stopTopic.publish(stopMessage);
@@ -264,8 +257,8 @@ function Program({ isMoving, poses }) {
     console.log('Stop command sent to /trajectory_execution_event.');
   };
 
-  const handleStepFW = () => {
-    const nextStep = selectedMovement === null ? 0 : selectedMovement;
+  const handleStepForward = () => {
+    const nextStep = pointerIndex === null ? 0 : pointerIndex;
 
     if (!movements[nextStep]?.pose) {
       alert('The selected movement does not have a defined pose. Please select a pose before proceeding.');
@@ -276,7 +269,7 @@ function Program({ isMoving, poses }) {
       if (window.confirm('You have reached the last movement. Do you want to go to the first movement?')) {
         executeMovement(0);
         setCurrentStep(0); // Highlight the executed movement
-        setSelectedMovement(1); // Pointer always points to the next movement
+        setPointerIndex(1); // Pointer always points to the next movement
       }
       return;
     }
@@ -284,13 +277,13 @@ function Program({ isMoving, poses }) {
     executeMovement(nextStep);
 
     const newPointer = nextStep + 1 >= movements.length ? 0 : nextStep + 1;
-    setSelectedMovement(newPointer);
+    setPointerIndex(newPointer);
     setCurrentStep(nextStep); // Highlight the executed movement
   };
 
-  const handleStepBW = () => {
+  const handleStepBackward = () => {
     const lastExecutedStep = currentStep;
-    const prevStep = lastExecutedStep !== null ? lastExecutedStep - 1 : selectedMovement;
+    const prevStep = lastExecutedStep !== null ? lastExecutedStep - 1 : pointerIndex;
 
     if (prevStep < 0) {
       if (!movements[movements.length - 1]?.pose) {
@@ -301,7 +294,7 @@ function Program({ isMoving, poses }) {
       if (window.confirm('You have reached the first movement. Do you want to go to the last movement?')) {
         executeMovement(movements.length - 1);
         setCurrentStep(movements.length - 1); // Highlight the executed movement
-        setSelectedMovement(0); // Pointer always points to the next movement
+        setPointerIndex(0); // Pointer always points to the next movement
       }
       return;
     }
@@ -313,7 +306,7 @@ function Program({ isMoving, poses }) {
 
     executeMovement(prevStep);
     setCurrentStep(prevStep); // Highlight the executed movement
-    setSelectedMovement(prevStep + 1 >= movements.length ? 0 : prevStep + 1); // Pointer always points to the next movement
+    setPointerIndex(prevStep + 1 >= movements.length ? 0 : prevStep + 1); // Pointer always points to the next movement
   };
 
   const executeMovement = async (step) => {
@@ -343,32 +336,32 @@ function Program({ isMoving, poses }) {
       data: Object.values(pose.joints),
     });
 
-    setIsStepDisabled(true); // Disable step buttons
+    setControlsDisabled(true); // Disable controls while executing
 
     topic.publish(message);
     console.log(`Executing movement: ${step}`, movement);
 
     // Activate the RadioButton of the next movement
     const nextStep = step + 1 >= movements.length ? 0 : step + 1;
-    setSelectedMovement(nextStep);
+    setPointerIndex(nextStep);
 
     if (isPoseCurrent(poseName) && !isRunAllInProgress) {
       console.log('El robot ya está en la pose objetivo después de ejecutar el movimiento. Habilitando botones.');
-      setIsStepDisabled(false);
+      setControlsDisabled(false);
     }
   };
 
-  const handleSelectMovement = (index) => {
-    setPendingSelection(index);
-    setDialogOpen(true);
+  const openSelectionDialog = (index) => {
+    setPendingSelectionIndex(index);
+    setSelectionDialogOpen(true);
   };
 
-  const handleDialogClose = (confirm) => {
-    setDialogOpen(false);
+  const handleSelectionDialogClose = (confirm) => {
+    setSelectionDialogOpen(false);
     if (confirm) {
-      setSelectedMovement(pendingSelection);
+      setPointerIndex(pendingSelectionIndex);
     }
-    setPendingSelection(null);
+    setPendingSelectionIndex(null);
   };
 
   useEffect(() => {
@@ -408,7 +401,7 @@ function Program({ isMoving, poses }) {
 
   return (
     <div style={{ padding: '0.25rem' }}>
-      <Dialog open={dialogOpen} onClose={() => handleDialogClose(false)}>
+    <Dialog open={selectionDialogOpen} onClose={() => handleSelectionDialogClose(false)}>
         <DialogTitle>Caution!</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -419,10 +412,10 @@ function Program({ isMoving, poses }) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => handleDialogClose(false)} color="primary">
+          <Button onClick={() => handleSelectionDialogClose(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={() => handleDialogClose(true)} color="primary" autoFocus>
+          <Button onClick={() => handleSelectionDialogClose(true)} color="primary" autoFocus>
             Confirm
           </Button>
         </DialogActions>
@@ -439,11 +432,10 @@ function Program({ isMoving, poses }) {
           <Button
             onClick={() => {
               console.log('Running all movements from the beginning.');
-              setSelectedMovement(0);
+              setPointerIndex(0);
               setCurrentStep(0);
               setRunAllDialogOpen(false);
 
-              // Pasar el índice inicial explícitamente a executeRunAll
               executeRunAll(0);
             }}
             color="primary"
@@ -454,7 +446,7 @@ function Program({ isMoving, poses }) {
             onClick={() => {
               // setRunAllFromBeginning(false);
               setRunAllDialogOpen(false);
-              executeRunAll(selectedMovement);
+              executeRunAll(pointerIndex);
             }}
             color="secondary"
           >
@@ -486,16 +478,16 @@ function Program({ isMoving, poses }) {
                 }}
               >
                 <RadioGroup
-                  value={selectedMovement}
-                  onChange={() => handleSelectMovement(index)}
+                  value={pointerIndex}
+                  onChange={() => openSelectionDialog(index)}
                   style={{ borderRadius: '50%' }}
                 >
                   <FormControlLabel
                     value={index}
                     control={
                       <Radio
-                        style={{ backgroundColor: selectedMovement === index ? 'yellow' : 'transparent', borderRadius: '50%' }}
-                        icon={<ArrowForwardIosIcon style={{ color: selectedMovement === index ? 'black' : 'lightgray' }} />}
+                        style={{ backgroundColor: pointerIndex === index ? 'yellow' : 'transparent', borderRadius: '50%' }}
+                        icon={<ArrowForwardIosIcon style={{ color: pointerIndex === index ? 'black' : 'lightgray' }} />}
                         checkedIcon={<ArrowForwardIosIcon style={{ color: 'black' }} />}
                       />
                     }
@@ -569,30 +561,30 @@ function Program({ isMoving, poses }) {
             <Button
               variant="contained"
               style={{ 
-                backgroundColor: isStepDisabled ? 'lightgray' : 'yellow', 
-                color: isStepDisabled ? 'darkgray' : 'black', 
+                backgroundColor: controlsDisabled ? 'lightgray' : 'yellow', 
+                color: controlsDisabled ? 'darkgray' : 'black', 
                 marginRight: '0.5rem', 
                 fontSize: '1rem', 
                 fontWeight: 'bold',
-                cursor: isStepDisabled ? 'not-allowed' : 'pointer'
+                cursor: controlsDisabled ? 'not-allowed' : 'pointer'
               }}
-              onClick={handleStepFW}
-              disabled={isStepDisabled} // Disable button when step is in progress
+              onClick={handleStepForward}
+              disabled={controlsDisabled} // Disable button when step is in progress
             >
               Step FW
             </Button>
             <Button
               variant="contained"
               style={{ 
-                backgroundColor: isStepDisabled ? 'lightgray' : 'orange', 
-                color: isStepDisabled ? 'darkgray' : 'white', 
+                backgroundColor: controlsDisabled ? 'lightgray' : 'orange', 
+                color: controlsDisabled ? 'darkgray' : 'white', 
                 marginRight: '0.5rem', 
                 fontSize: '1rem', 
                 fontWeight: 'bold',
-                cursor: isStepDisabled ? 'not-allowed' : 'pointer'
+                cursor: controlsDisabled ? 'not-allowed' : 'pointer'
               }}
-              onClick={handleStepBW}
-              disabled={isStepDisabled} // Disable button when step is in progress
+              onClick={handleStepBackward}
+              disabled={controlsDisabled} // Disable button when step is in progress
             >
               Step BW
             </Button>
@@ -602,29 +594,29 @@ function Program({ isMoving, poses }) {
             <Button
               variant="contained"
               style={{
-                backgroundColor: isStepDisabled ? 'lightgray' : 'green',
-                color: isStepDisabled ? 'darkgray' : 'white',
+                backgroundColor: controlsDisabled ? 'lightgray' : 'green',
+                color: controlsDisabled ? 'darkgray' : 'white',
                 marginRight: '0.5rem',
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                cursor: isStepDisabled ? 'not-allowed' : 'pointer'
+                cursor: controlsDisabled ? 'not-allowed' : 'pointer'
               }}
               onClick={handleRunAll}
-              disabled={isStepDisabled} // Disable button when step is in progress
+              disabled={controlsDisabled} // Disable button when step is in progress
             >
               Run All
             </Button>
             <Button
               variant="contained"
               style={{
-                backgroundColor: isStepDisabled ? 'red' : 'lightgray', // Red when enabled, gray when disabled
-                color: isStepDisabled ? 'white' : 'darkgray', // White text when enabled, dark gray when disabled
+                backgroundColor: controlsDisabled ? 'red' : 'lightgray', // Red when enabled, gray when disabled
+                color: controlsDisabled ? 'white' : 'darkgray', // White text when enabled, dark gray when disabled
                 fontSize: '1rem',
                 fontWeight: 'bold',
-                cursor: isStepDisabled ? 'pointer' : 'not-allowed', // Pointer when enabled, not-allowed when disabled
+                cursor: controlsDisabled ? 'pointer' : 'not-allowed', // Pointer when enabled, not-allowed when disabled
               }}
               onClick={handleStop}
-              disabled={!isStepDisabled} // Enable Stop only when Step and Run All are disabled
+              disabled={!controlsDisabled} // Enable Stop only when Step and Run All are disabled
             >
               Stop
             </Button>
