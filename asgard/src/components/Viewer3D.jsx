@@ -14,7 +14,6 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
   const robotRef = useRef(null);
   const ghostRef = useRef(null);
   const sceneRef = useRef(null);
-  const urdfXmlRef = useRef(null);
   const sphereRef = useRef(null);
   const translateCtrlRef = useRef(null);
   const rotateCtrlRef = useRef(null);
@@ -23,9 +22,8 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
   const gridRef = useRef(null);
   const hemiRef = useRef(null);
   const ikServiceRef = useRef(null);
-  const fkServiceRef = useRef(null);
   const jointCmdTopicRef = useRef(null);
-  const lastSentJointsRef = useRef(null);
+  const lastEmittedGhostJointsRef = useRef(null);
   const isDraggingTargetRef = useRef(false);
   const [fps, setFps] = useState(0);
 
@@ -33,7 +31,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
 
   const jointOrder = ['joint_1','joint_2','joint_3','joint_4','joint_5','joint_6','gripperbase_to_armgearright'];
 
-  const equalsJoints = (a, b) => {
+  const jointsEqual = (a, b) => {
     if (!a || !b) return false;
     for (const name of jointOrder) {
       const va = a[name];
@@ -45,15 +43,15 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     return true;
   };
 
-  const emitGhostIfChanged = () => {
+  const emitGhostStateIfChanged = () => {
     if (!onGhostJointsChange) return;
-    const current = gatherGhostJoints();
-    if (!equalsJoints(current, lastSentJointsRef.current)) {
-      lastSentJointsRef.current = current;
+    const current = collectGhostJoints();
+    if (!jointsEqual(current, lastEmittedGhostJointsRef.current)) {
+      lastEmittedGhostJointsRef.current = current;
       onGhostJointsChange(current);
       // Sync target sphere to current TCP if not being dragged
       if (!isDraggingTargetRef.current && sphereRef.current) {
-        const ee = getEE();
+        const ee = getEndEffector();
         if (ee) {
           ee.updateWorldMatrix(true, false);
           const p = new THREE.Vector3();
@@ -80,9 +78,9 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
         }
       });
       // Notify parent about ghost change
-      emitGhostIfChanged();
+      emitGhostStateIfChanged();
       // Snap sphere to new ghost EE
-      const eeGhost = getEE();
+      const eeGhost = getEndEffector();
       if (eeGhost && sphereRef.current) {
         eeGhost.updateWorldMatrix(true, false);
         const npos = new THREE.Vector3();
@@ -98,12 +96,12 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     }
   };
 
-  const getEE = () => {
+  const getEndEffector = () => {
     if (!ghostRef.current) return null;
     return ghostRef.current.getObjectByName('gripper_mid_point') || ghostRef.current.getObjectByName('base_gripper');
   };
 
-  const gatherGhostJoints = () => {
+  const collectGhostJoints = () => {
     const vals = {};
     if (ghostRef.current && ghostRef.current.joints) {
       Object.keys(ghostRef.current.joints).forEach(jn => {
@@ -114,8 +112,8 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     return vals;
   };
 
-  const getTcpPoseMeters = () => {
-    const ee = getEE();
+  const getEndEffectorPoseMeters = () => {
+    const ee = getEndEffector();
     if (!ee) return null;
     ee.updateWorldMatrix(true, false);
     const p = new THREE.Vector3();
@@ -125,7 +123,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     return { x: p.x, y: p.y, z: p.z, qx: q.x, qy: q.y, qz: q.z, qw: q.w };
   };
 
-  const solveAndMoveToPoseInternal = (poseMm) => new Promise((resolve) => {
+  const computeIkAndApply = (poseMm) => new Promise((resolve) => {
     if (!ros || !connected || !ikServiceRef.current) return resolve({ ok: false, error: 'ros_not_ready' });
     const { x, y, z, qx, qy, qz, qw } = poseMm || {};
     const pose = {
@@ -135,7 +133,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
         orientation: { x: qx || 0, y: qy || 0, z: qz || 0, w: qw || 1 }
       }
     };
-    const current = gatherGhostJoints();
+    const current = collectGhostJoints();
     const filteredNames = [];
     const filteredPositions = [];
     jointOrder.forEach(n => { if (current[n] !== undefined) { filteredNames.push(n); filteredPositions.push(current[n]); } });
@@ -161,7 +159,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
         ghostRef.current.setJointValue(jn, solved[jn]);
         }
       });
-      emitGhostIfChanged();
+      emitGhostStateIfChanged();
       resolve({ ok: true, joints: solved });
       } else {
       resolve({ ok: false, error: 'ik_unreachable', raw: res });
@@ -172,8 +170,8 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
   // Imperative API
   useImperativeHandle(ref, () => ({
     getGhostState: () => {
-      const joints = gatherGhostJoints();
-      const tcpM = getTcpPoseMeters();
+      const joints = collectGhostJoints();
+      const tcpM = getEndEffectorPoseMeters();
       let tcp = null;
       if (tcpM) tcp = { x: tcpM.x * 1000, y: tcpM.y * 1000, z: tcpM.z * 1000, qx: tcpM.qx, qy: tcpM.qy, qz: tcpM.qz, qw: tcpM.qw };
       return { joints, tcp };
@@ -191,7 +189,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
         }
       });
       // Force update and read EE
-      const eePose = getTcpPoseMeters();
+      const eePose = getEndEffectorPoseMeters();
       // Restore previous joints
       Object.keys(prev).forEach(jn => {
         if (prev[jn] !== undefined && ghostRef.current.joints && ghostRef.current.joints[jn] !== undefined) {
@@ -199,7 +197,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
         }
       });
       // Prevent emitting ghost change due to this temporary set by resetting lastSentJointsRef
-      try { lastSentJointsRef.current = gatherGhostJoints(); } catch (e) {}
+      try { lastEmittedGhostJointsRef.current = collectGhostJoints(); } catch (e) {}
       if (!eePose) return null;
       return { x: eePose.x * 1000, y: eePose.y * 1000, z: eePose.z * 1000, qx: eePose.qx, qy: eePose.qy, qz: eePose.qz, qw: eePose.qw };
     },
@@ -210,12 +208,12 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
           ghostRef.current.setJointValue(jn, joints[jn]);
         }
       });
-      emitGhostIfChanged();
+      emitGhostStateIfChanged();
     },
-    solveAndMoveToPose: (poseMm, opts = {}) => solveAndMoveToPoseInternal(poseMm, opts),
+    solveAndMoveToPose: (poseMm, opts = {}) => computeIkAndApply(poseMm, opts),
     publishGhostToController: () => {
       if (!ros || !connected || !jointCmdTopicRef.current) return;
-      const current = gatherGhostJoints();
+      const current = collectGhostJoints();
       // Always send all joints, including gripper, and invert gripper sign
       const data = jointOrder.map(n => {
         if (n === 'gripperbase_to_armgearright') {
@@ -228,7 +226,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
       jointCmdTopicRef.current.publish(msg);
     },
     snapTargetToTCP: () => {
-      const ee = getEE();
+      const ee = getEndEffector();
       if (!ee || !sphereRef.current) return;
       ee.updateWorldMatrix(true, false);
       const p = new THREE.Vector3();
@@ -240,7 +238,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
       sphereRef.current.updateMatrixWorld(true);
     },
     syncTargetToTCP: () => {
-      const ee = getEE();
+      const ee = getEndEffector();
       if (!ee || !sphereRef.current) return;
       ee.updateWorldMatrix(true, false);
       const p = new THREE.Vector3();
@@ -252,7 +250,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
       sphereRef.current.updateMatrixWorld(true);
     }
     ,
-    // Toggle TransformControls space between local and world (same as pressing 'L')
+    // Toggle TransformControls space between local and world
     toggleTCPGizmoFrame: () => {
       const t = translateCtrlRef.current;
       const r = rotateCtrlRef.current;
@@ -320,7 +318,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     gizmo.update();
     gizmoRef.current = gizmo;
 
-    // Animación con limitador de FPS efectivo
+  // Animation with an effective FPS limiter
     let lastTime = 0;
     const targetFPS = 30;
     const frameInterval = 1000 / targetFPS;
@@ -333,10 +331,10 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
         frameCount++;
         requestAnimationFrame(animate);
         if (ghostRef.current) {
-          emitGhostIfChanged();
+          emitGhostStateIfChanged();
           // Keep sphere following TCP when not dragging
           if (!isDraggingTargetRef.current && sphereRef.current) {
-            const ee = getEE();
+            const ee = getEndEffector();
             if (ee) {
               ee.updateWorldMatrix(true, false);
               const p = new THREE.Vector3();
@@ -400,7 +398,6 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     if (!ros || !connected || !sceneRef.current || !cameraRef.current || !rendererRef.current) return;
 
     ikServiceRef.current = new ROSLIB.Service({ ros, name: '/compute_ik', serviceType: 'moveit_msgs/srv/GetPositionIK' });
-    fkServiceRef.current = new ROSLIB.Service({ ros, name: '/compute_fk', serviceType: 'moveit_msgs/srv/GetPositionFK' });
     jointCmdTopicRef.current = new ROSLIB.Topic({ ros, name: '/joint_group_position_controller/command', messageType: 'std_msgs/Float64MultiArray' });
 
     const srv = new ROSLIB.Service({ ros, name: '/robot_state_publisher/get_parameters', serviceType: 'rcl_interfaces/srv/GetParameters' });
@@ -409,7 +406,6 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     srv.callService(req, (result) => {
       const urdfXml = result.values && result.values[0] ? result.values[0].string_value : null;
       if (!urdfXml) return;
-      urdfXmlRef.current = urdfXml;
       const loader = new URDFLoader();
       loader.workingPath = '/thor_urdf';
       loader.fetchOptions = { mode: 'cors' };
@@ -429,7 +425,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
       ghostRef.current = ghost;
 
       // Sphere at TCP
-      const eeLink = getEE();
+      const eeLink = getEndEffector();
       if (eeLink) {
         eeLink.updateWorldMatrix(true, false);
         const pos = new THREE.Vector3();
@@ -475,10 +471,10 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
           sphereRef.current.getWorldPosition(p);
           sphereRef.current.getWorldQuaternion(q);
           const poseMm = { x: p.x * 1000, y: p.y * 1000, z: p.z * 1000, qx: q.x, qy: q.y, qz: q.z, qw: q.w };
-          solveAndMoveToPoseInternal(poseMm).then((res) => {
+          computeIkAndApply(poseMm).then((res) => {
             if (res && res.ok) {
-              // Empujar joints inmediatamente para sincronizar UI aguas arriba
-              emitGhostIfChanged();
+              // Push joints immediately to synchronize the upstream UI
+              emitGhostStateIfChanged();
             }
           });
         };
@@ -520,14 +516,13 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
   useEffect(() => {
     if (!ghostRef.current || !previewJoints) return;
     // Only apply if different from current ghost to avoid flip-flop
-    const current = gatherGhostJoints();
-    if (equalsJoints(previewJoints, current)) return;
+    const current = collectGhostJoints();
+    if (jointsEqual(previewJoints, current)) return;
     if (previewJoints.joint_1 !== undefined) {
       jointOrder.forEach(j => {
         if (previewJoints[j] !== undefined) ghostRef.current.setJointValue(j, previewJoints[j]);
       });
       // Do NOT emit back to parent here to avoid feedback loops
-      // emitGhostIfChanged();
     }
   }, [previewJoints]);
 
@@ -537,7 +532,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     if (ghostRef.current) ghostRef.current.visible = !!showGhostRobot;
   }, [showRealRobot, showGhostRobot]);
 
-  // Controlar visibilidad de la esfera y los TransformControls
+  // Control visibility of the target sphere and the TransformControls
   useEffect(() => {
     if (sphereRef.current) sphereRef.current.visible = !!showGhostRobotCoordinates;
     // Hide TransformControls helpers and disable controls
