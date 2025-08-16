@@ -9,8 +9,7 @@ import InputLabel from '@mui/material/InputLabel';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import { useROS } from '../RosContext';
-import ROSLIB from 'roslib';
+import useRosApi from '../ros/useRosApi';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -31,7 +30,7 @@ function Program({ poses }) {
   const previousRobotPoseRef = useRef(null); // Previous robot pose (useRef)
   const currentRobotPoseRef = useRef(null); // Current robot pose (useRef)
   const [robotMoving, setRobotMoving] = useState(false); // Whether the robot is moving
-  const { ros, connected } = useROS();
+  const rosApi = useRosApi();
   const [runAllDialogOpen, setRunAllDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -57,51 +56,34 @@ function Program({ poses }) {
   }, [movements]);
 
   useEffect(() => {
-    if (!connected || !ros) {
+    if (!rosApi.connected) {
       console.warn('ROS no está conectado.');
       return;
     }
 
     console.log('Subscribing to /joint_states...');
-
-    const jointStateListener = new ROSLIB.Topic({
-      ros,
-      name: '/joint_states', // Topic publishing joint states
-      messageType: 'sensor_msgs/JointState',
-    });
-
-    // Compare against previous pose
-    const updateRobotPose = (message) => {
+    const unsubscribe = rosApi.subscribeJointStates((message) => {
       const jointPositions = {};
       message.name.forEach((name, index) => {
-        jointPositions[name] = parseFloat(message.position[index].toFixed(4)); // Round to 4 decimals
+        jointPositions[name] = parseFloat(message.position[index].toFixed(4));
       });
-
       if (previousRobotPoseRef.current) {
         const isSamePose = Object.keys(jointPositions).every(joint => {
           const currentAngle = jointPositions[joint];
           const previousAngle = previousRobotPoseRef.current[joint];
-
-          if (currentAngle === undefined || previousAngle === undefined) {
-            return false;
-          }
-
-          return Math.abs(currentAngle - previousAngle) < 0.0001; // Compare with 4-decimal tolerance
+          if (currentAngle === undefined || previousAngle === undefined) return false;
+          return Math.abs(currentAngle - previousAngle) < 0.0001;
         });
-
-        setRobotMoving(!isSamePose); // If the pose is the same, the robot is not moving
+        setRobotMoving(!isSamePose);
       }
-      previousRobotPoseRef.current = jointPositions; // Update previous pose ref
-      currentRobotPoseRef.current = jointPositions; // Update current pose ref
-    };
-
-    jointStateListener.subscribe(updateRobotPose);
-
+      previousRobotPoseRef.current = jointPositions;
+      currentRobotPoseRef.current = jointPositions;
+    });
     return () => {
       console.log('Desuscribiéndose del tópico /joint_states...');
-      jointStateListener.unsubscribe();
+      try { unsubscribe && unsubscribe(); } catch (_) {}
     };
-  }, [connected, ros]);
+  }, [rosApi.connected]);
 
   const isPoseCurrent = (poseName) => {
     if (!currentRobotPoseRef.current) {
@@ -236,23 +218,11 @@ function Program({ poses }) {
     isRunAllInProgress = false;
     setControlsDisabled(false); // Re-enable buttons
 
-    if (!connected || !ros) {
+  if (!rosApi.connected) {
       console.warn('ROS is not connected. Cannot send stop command.');
       return;
     }
-
-    // Send a stop command to /trajectory_execution_event
-    const stopTopic = new ROSLIB.Topic({
-      ros,
-      name: '/trajectory_execution_event',
-      messageType: 'std_msgs/String',
-    });
-
-    const stopMessage = new ROSLIB.Message({
-      data: 'stop',
-    });
-
-    stopTopic.publish(stopMessage);
+  rosApi.publishStopEvent();
 
     console.log('Stop command sent to /trajectory_execution_event.');
   };
@@ -313,7 +283,7 @@ function Program({ poses }) {
     const movement = movements[step];
     const poseName = movement.pose;
 
-    if (!connected || !ros) {
+  if (!rosApi.connected) {
       console.warn('ROS is not connected.');
       return;
     }
@@ -326,19 +296,9 @@ function Program({ poses }) {
       return;
     }
 
-    const topic = new ROSLIB.Topic({
-      ros,
-      name: '/joint_group_position_controller/command',
-      messageType: 'std_msgs/Float64MultiArray',
-    });
-
-    const message = new ROSLIB.Message({
-      data: Object.values(pose.joints),
-    });
-
     setControlsDisabled(true); // Disable controls while executing
-
-    topic.publish(message);
+  const jointOrder = Object.keys(pose.joints);
+  rosApi.publishJointGroupCommand(jointOrder, pose.joints);
     console.log(`Executing movement: ${step}`, movement);
 
     // Activate the RadioButton of the next movement

@@ -1,18 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useImperativeHandle, forwardRef } from 'react';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import { useROS } from '../RosContext';
-import ROSLIB from 'roslib';
-import { useImperativeHandle, forwardRef } from 'react';
+import useRosApi from '../ros/useRosApi';
 
 function Poses({ onPreviewJointsChange, poses, setPoses }, ref) {
-  const { ros, connected } = useROS();
+  const rosApi = useRosApi();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [poseNameToDelete, setPoseNameToDelete] = useState(null);
+  const jointOrder = ['joint_1','joint_2','joint_3','joint_4','joint_5','joint_6','gripperbase_to_armgearright'];
 
   useEffect(() => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
@@ -48,25 +47,15 @@ function Poses({ onPreviewJointsChange, poses, setPoses }, ref) {
   };
 
   const publishPoseToController = (poseName) => {
-
-    if (!connected || !ros) {
+    if (!rosApi.connected) {
       console.warn('ROS is not connected.');
       return;
     }
-
-  const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
-  const pose = savedPoses.find(p => p.name === poseName);
-
-    const topic = new ROSLIB.Topic({
-      ros,
-      name: '/joint_group_position_controller/command',
-      messageType: 'std_msgs/Float64MultiArray',
-    });
-    const message = new ROSLIB.Message({
-      data: Object.values(pose.joints),
-    });
-
-    topic.publish(message);
+    const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
+    const pose = savedPoses.find(p => p.name === poseName);
+    if (!pose) return;
+    // Keep behavior: send joints as-is; consumers may handle gripper sign if needed
+    rosApi.publishJointGroupCommand(jointOrder, pose.joints);
   };
 
   const previewPoseOnGhost = (poseName) => {

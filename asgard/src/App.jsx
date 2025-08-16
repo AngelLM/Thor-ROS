@@ -4,7 +4,7 @@ import { RosProvider } from './RosContext';
 import Viewer3D from './components/Viewer3D';
 import FKControls from './components/FKControls';
 import IKControls from './components/IKControls';
-import ROSLIB from 'roslib';
+import useRosApi from './ros/useRosApi';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -24,7 +24,8 @@ import Button from '@mui/material/Button';
 import Poses from './components/Poses';
 import Program from './components/Program';
 
-function App() {
+function AppInner() {
+  const rosApi = useRosApi();
   const defaultSettings = {
     showRealRobot: true,
     showGhostRobot: true,
@@ -89,29 +90,22 @@ function App() {
 
   // Subscribe to /joint_states to obtain current joint positions
   useEffect(() => {
-    const ros = new ROSLIB.Ros({ url: 'ws://localhost:9090' });
-    const jointStateListener = new ROSLIB.Topic({
-      ros,
-      name: '/joint_states',
-      messageType: 'sensor_msgs/msg/JointState'
-    });
+    if (!rosApi.connected) return;
     let previousJoints = null;
-    jointStateListener.subscribe((msg) => {
+    const unsubscribe = rosApi.subscribeJointStates((msg) => {
       const joints = {};
       msg.name.forEach((name, i) => {
         joints[name] = parseFloat(msg.position[i].toFixed(4));
       });
-
       if (JSON.stringify(previousJoints) !== JSON.stringify(joints)) {
         setCurrentJoints(joints);
         previousJoints = joints;
       }
     });
     return () => {
-      jointStateListener.unsubscribe();
-      ros.close();
+      try { unsubscribe && unsubscribe(); } catch (_) {}
     };
-  }, []);
+  }, [rosApi.connected]);
 
   const openSavePoseDialog = () => {
     setIsDialogOpen(true);
@@ -189,7 +183,6 @@ function App() {
   }, [currentJoints, ghostJoints]);
 
   return (
-    <RosProvider>
       <div className="app-container" style={{ display: 'flex', height: '100vh' }}>
         {/* Left sidebar */}
         <div className="sidebar">
@@ -304,6 +297,7 @@ function App() {
               className="urdf-viewer"
               showFPS={showFPS}
               showGhostRobotCoordinates={showGhostRobotCoordinates}
+              rosApi={rosApi}
             />
           </div>
 
@@ -386,6 +380,13 @@ function App() {
           </DialogActions>
         </Dialog>
       </div>
+  );
+}
+
+function App() {
+  return (
+    <RosProvider>
+      <AppInner />
     </RosProvider>
   );
 }

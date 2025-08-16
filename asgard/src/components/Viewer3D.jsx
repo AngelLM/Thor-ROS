@@ -4,10 +4,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { ViewportGizmo } from "three-viewport-gizmo";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 import URDFLoader from 'urdf-loader';
-import ROSLIB from 'roslib';
-import { useROS } from '../RosContext';
+// All ROS communication is handled via the rosApi prop
 
-const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRobot = true, onGhostJointsChange, showFPS = true, showGhostRobotCoordinates = true }, ref) => {
+const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRobot = true, onGhostJointsChange, showFPS = true, showGhostRobotCoordinates = true, rosApi = null }, ref) => {
   const mountRef = useRef(null);
   const rendererRef = useRef(null);
   const cameraRef = useRef(null);
@@ -21,13 +20,12 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
   const orbitRef = useRef(null);
   const gridRef = useRef(null);
   const hemiRef = useRef(null);
-  const ikServiceRef = useRef(null);
-  const jointCmdTopicRef = useRef(null);
+  // No direct ROS service/topic refs here; use rosApi
   const lastEmittedGhostJointsRef = useRef(null);
   const isDraggingTargetRef = useRef(false);
   const [fps, setFps] = useState(0);
 
-  const { ros, connected } = useROS();
+  // No direct ROS context; rely on rosApi passed from parent
 
   const jointOrder = ['joint_1','joint_2','joint_3','joint_4','joint_5','joint_6','gripperbase_to_armgearright'];
 
@@ -124,47 +122,29 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
   };
 
   const computeIkAndApply = (poseMm) => new Promise((resolve) => {
-    if (!ros || !connected || !ikServiceRef.current) return resolve({ ok: false, error: 'ros_not_ready' });
-    const { x, y, z, qx, qy, qz, qw } = poseMm || {};
-    const pose = {
-      header: { frame_id: 'base_link' },
-      pose: {
-        position: { x: (x || 0) / 1000, y: (y || 0) / 1000, z: (z || 0) / 1000 },
-        orientation: { x: qx || 0, y: qy || 0, z: qz || 0, w: qw || 1 }
-      }
-    };
-    const current = collectGhostJoints();
-    const filteredNames = [];
-    const filteredPositions = [];
-    jointOrder.forEach(n => { if (current[n] !== undefined) { filteredNames.push(n); filteredPositions.push(current[n]); } });
-    const robotState = filteredNames.length ? { joint_state: { name: filteredNames, position: filteredPositions } } : {};
-    const req = {
-      ik_request: {
-        group_name: 'arm_group',
-        pose_stamped: pose,
-        ik_link_name: 'gripper_mid_point',
-        timeout: { sec: 0, nanosec: 0 },
-        constraints: {},
-        robot_state: robotState,
-        avoid_collisions: false
-      }
-    };
-    ikServiceRef.current.callService(req, (res) => {
-      if (res && res.solution && res.solution.joint_state && res.error_code && res.error_code.val === 1) {
-      const solved = {};
-      res.solution.joint_state.name.forEach((n, i) => { solved[n] = res.solution.joint_state.position[i]; });
-      // Apply
+    const applySolved = (solved) => {
       Object.keys(solved).forEach(jn => {
         if (ghostRef.current && ghostRef.current.joints && ghostRef.current.joints[jn] !== undefined) {
-        ghostRef.current.setJointValue(jn, solved[jn]);
+          ghostRef.current.setJointValue(jn, solved[jn]);
         }
       });
       emitGhostStateIfChanged();
-      resolve({ ok: true, joints: solved });
-      } else {
-      resolve({ ok: false, error: 'ik_unreachable', raw: res });
-      }
-    });
+    };
+
+    const seed = collectGhostJoints();
+    // Prefer external rosApi when available
+    if (rosApi && typeof rosApi.computeIK === 'function') {
+      rosApi.computeIK(poseMm, seed).then((res) => {
+        if (res?.ok && res.joints) {
+          applySolved(res.joints);
+          return resolve({ ok: true, joints: res.joints });
+        }
+        return resolve({ ok: false, error: res?.error || 'ik_unreachable', raw: res });
+      });
+      return;
+    }
+    // No fallback; ROS not available through API
+    resolve({ ok: false, error: 'ros_not_ready' });
   });
 
   // Imperative API
@@ -212,18 +192,18 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     },
     solveAndMoveToPose: (poseMm, opts = {}) => computeIkAndApply(poseMm, opts),
     publishGhostToController: () => {
-      if (!ros || !connected || !jointCmdTopicRef.current) return;
       const current = collectGhostJoints();
-      // Always send all joints, including gripper, and invert gripper sign
-      const data = jointOrder.map(n => {
-        if (n === 'gripperbase_to_armgearright') {
-          // Controller expects negative radians for gripper
-          return current[n] !== undefined ? -Math.abs(current[n]) : 0;
+      // Prefer centralized publisher when available
+      if (rosApi && typeof rosApi.publishJointGroupCommand === 'function') {
+        // Build a joints map with the expected sign for gripper
+        const toSend = { ...current };
+        if (toSend['gripperbase_to_armgearright'] !== undefined) {
+          toSend['gripperbase_to_armgearright'] = -Math.abs(toSend['gripperbase_to_armgearright']);
         }
-        return current[n] !== undefined ? current[n] : 0;
-      });
-      const msg = new ROSLIB.Message({ data });
-      jointCmdTopicRef.current.publish(msg);
+        rosApi.publishJointGroupCommand(jointOrder, toSend);
+        return;
+      }
+      // No-op if API not available
     },
     snapTargetToTCP: () => {
       const ee = getEndEffector();
@@ -262,7 +242,7 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
   ,
   // Allow external callers to copy the real robot pose into the ghost
   copyRealToGhost: () => copyRealToGhost(),
-  }), [connected]);
+  }), [rosApi?.connected]);
 
   // Init scene
   useEffect(() => {
@@ -393,18 +373,13 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     };
   }, []);
 
-  // Load URDF and ROS services
+  // Load URDF and subscribe to joint states via rosApi
   useEffect(() => {
-    if (!ros || !connected || !sceneRef.current || !cameraRef.current || !rendererRef.current) return;
+    if (!rosApi || !rosApi.connected) return;
+    if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return;
 
-    ikServiceRef.current = new ROSLIB.Service({ ros, name: '/compute_ik', serviceType: 'moveit_msgs/srv/GetPositionIK' });
-    jointCmdTopicRef.current = new ROSLIB.Topic({ ros, name: '/joint_group_position_controller/command', messageType: 'std_msgs/Float64MultiArray' });
-
-    const srv = new ROSLIB.Service({ ros, name: '/robot_state_publisher/get_parameters', serviceType: 'rcl_interfaces/srv/GetParameters' });
-    const req = new ROSLIB.ServiceRequest({ names: ['robot_description'] });
-
-    srv.callService(req, (result) => {
-      const urdfXml = result.values && result.values[0] ? result.values[0].string_value : null;
+    let unsubscribeJointStates = null;
+    const loadUrdf = (urdfXml) => {
       if (!urdfXml) return;
       const loader = new URDFLoader();
       loader.workingPath = '/thor_urdf';
@@ -499,9 +474,8 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
         window.addEventListener('keydown', onKeyDown);
       }
 
-      // Real robot joint_states subscription
-      const jointStateListener = new ROSLIB.Topic({ ros, name: '/joint_states', messageType: 'sensor_msgs/msg/JointState' });
-      jointStateListener.subscribe((message) => {
+      // Real robot joint_states subscription via rosApi
+      unsubscribeJointStates = rosApi.subscribeJointStates((message) => {
         if (!robotRef.current) return;
         for (let i = 0; i < message.name.length; i++) {
           const jointName = message.name[i];
@@ -509,8 +483,14 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
           robotRef.current.setJointValue(jointName, position);
         }
       });
-    });
-  }, [ros, connected]);
+    };
+    // Fetch URDF via rosApi
+    rosApi.getUrdfXml().then(loadUrdf);
+
+    return () => {
+      try { unsubscribeJointStates && unsubscribeJointStates(); } catch(_) {}
+    };
+  }, [rosApi?.connected]);
 
   // Apply preview joints -> ghost
   useEffect(() => {
