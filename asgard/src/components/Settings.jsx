@@ -2,13 +2,24 @@ import React, { useEffect } from 'react';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 
-export default function Settings({ showRealRobot, setShowRealRobot, showGhostRobot, setShowGhostRobot, showFPS, setShowFPS, showGhostRobotCoordinates, setShowGhostRobotCoordinates, showOverlay, setShowOverlay }) {
-  // If the parent 'Show Ghost Robot' is turned off, ensure the dependent gizmo flag is also off
+export default function Settings({
+  showRealRobot,
+  setShowRealRobot,
+  showGhostRobot,
+  setShowGhostRobot,
+  showFPS,
+  setShowFPS,
+  showTcpGizmo,
+  setShowTcpGizmo,
+  showRobotState,
+  setShowRobotState,
+}) {
+  // If the parent 'Show Ghost Robot' is off, also turn off the dependent TCP gizmo flag
   useEffect(() => {
-    if (!showGhostRobot && showGhostRobotCoordinates) {
-      setShowGhostRobotCoordinates(false);
+    if (!showGhostRobot && showTcpGizmo) {
+      setShowTcpGizmo(false);
     }
-  }, [showGhostRobot, showGhostRobotCoordinates, setShowGhostRobotCoordinates]);
+  }, [showGhostRobot, showTcpGizmo, setShowTcpGizmo]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -22,7 +33,7 @@ export default function Settings({ showRealRobot, setShowRealRobot, showGhostRob
       />
       <div style={{ marginLeft: '1rem' }}>
         <FormControlLabel
-          control={<Checkbox checked={showGhostRobotCoordinates} onChange={(e) => setShowGhostRobotCoordinates(e.target.checked)} disabled={!showGhostRobot} />}
+          control={<Checkbox checked={showTcpGizmo} onChange={(e) => setShowTcpGizmo(e.target.checked)} disabled={!showGhostRobot} />}
           label="Show TCP Gizmo"
         />
       </div>
@@ -31,7 +42,7 @@ export default function Settings({ showRealRobot, setShowRealRobot, showGhostRob
         label="Show FPS"
       />
       <FormControlLabel
-        control={<Checkbox checked={showOverlay} onChange={(e) => setShowOverlay(e.target.checked)} />}
+        control={<Checkbox checked={showRobotState} onChange={(e) => setShowRobotState(e.target.checked)} />}
         label="Show Robot State"
       />
     </div>

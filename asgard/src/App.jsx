@@ -247,14 +247,14 @@ function App() {
               <Settings
                 showRealRobot={showRealRobot}
                 setShowRealRobot={setShowRealRobot}
-                showFPS={showFPS} // pass showFPS state
-                setShowFPS={setShowFPS} // pass showFPS setter
+                showFPS={showFPS}
+                setShowFPS={setShowFPS}
                 showGhostRobot={showGhostRobot}
                 setShowGhostRobot={setShowGhostRobot}
-                showGhostRobotCoordinates={showGhostRobotCoordinates} // pass ghost robot coordinates flag
-                setShowGhostRobotCoordinates={setShowGhostRobotCoordinates} // pass ghost robot coordinates setter
-                showOverlay={showOverlay}
-                setShowOverlay={setShowOverlay}
+                showTcpGizmo={showGhostRobotCoordinates}
+                setShowTcpGizmo={setShowGhostRobotCoordinates}
+                showRobotState={showOverlay}
+                setShowRobotState={setShowOverlay}
               />
             </AccordionDetails>
           </Accordion>
