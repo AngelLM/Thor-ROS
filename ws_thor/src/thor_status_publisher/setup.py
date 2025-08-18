@@ -24,6 +24,7 @@ setup(
         'joint_goal_listener = thor_status_publisher.joint_goal_listener:main',
         'random_position_commander = thor_status_publisher.random_position_commander:main',
         'ik_goal_listener = thor_status_publisher.ik_goal_listener:main',
+        'cartesian_goal_listener = thor_status_publisher.cartesian_goal_listener:main',
         ],
     },
 )

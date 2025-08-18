@@ -3,6 +3,7 @@ import { useROS } from '../RosContext';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import * as THREE from 'three';
+import useRosApi from '../ros/useRosApi';
 
 export default function IKControls({
   ikPose: ikTargetPose,
@@ -14,11 +15,16 @@ export default function IKControls({
   active = true,
 }) {
   const { connected } = useROS();
+  const rosApi = useRosApi();
 
   // Main state: TCP position and orientation (source of truth)
   const [tcpPosition, setTcpPosition] = useState(new THREE.Vector3(200, 0, 300)); // in mm
   const [tcpQuaternion, setTcpQuaternion] = useState(new THREE.Quaternion(0, 0, 0, 1)); // identity
   const suppressNextSolveRef = useRef(false);
+
+  // State for cartesian movement
+  const [cartesianError, setCartesianError] = useState('');
+  const [isComputingCartesian, setIsComputingCartesian] = useState(false);
 
   // When the IK tab becomes active, sync with the ghost's current TCP
   useEffect(() => {
@@ -134,6 +140,73 @@ export default function IKControls({
   const publishGhostToController = () => {
     if (!urdfApi) return;
     urdfApi.publishGhostToController();
+  };
+
+  const executeCartesianMove = async () => {
+    if (!urdfApi || !rosApi.connected) return;
+    
+    setIsComputingCartesian(true);
+    setCartesianError('');
+
+    try {
+      // Get current TCP pose from ghost
+      const currentState = urdfApi.getGhostState && urdfApi.getGhostState();
+      if (!currentState || !currentState.tcp) {
+        setCartesianError('Could not get current TCP position');
+        setIsComputingCartesian(false);
+        return;
+      }
+
+      const startPose = {
+        x: currentState.tcp.x,
+        y: currentState.tcp.y,
+        z: currentState.tcp.z,
+        qx: currentState.tcp.qx,
+        qy: currentState.tcp.qy,
+        qz: currentState.tcp.qz,
+        qw: currentState.tcp.qw,
+      };
+
+      const endPose = {
+        x: tcpPosition.x,
+        y: tcpPosition.y,
+        z: tcpPosition.z,
+        qx: tcpQuaternion.x,
+        qy: tcpQuaternion.y,
+        qz: tcpQuaternion.z,
+        qw: tcpQuaternion.w,
+      };
+
+      // Get current gripper value
+      const currentGripperValue = ghostJoints && ghostJoints['gripperbase_to_armgearright'] 
+        ? ghostJoints['gripperbase_to_armgearright'] 
+        : 0;
+
+      // Send cartesian goal to ROS
+      const cartesianResult = await rosApi.publishCartesianGoal(startPose, endPose, {
+        gripperValue: currentGripperValue
+      });
+      
+      if (!cartesianResult.ok) {
+        if (cartesianResult.error === 'timeout') {
+          setCartesianError('Cartesian movement timeout');
+        } else {
+          setCartesianError(cartesianResult.message || 'No cartesian solution found');
+        }
+        setIsComputingCartesian(false);
+        return;
+      }
+
+      // Success
+      console.log('Cartesian movement completed successfully');
+      console.log('Waypoints:', cartesianResult.waypoints);
+
+    } catch (error) {
+      console.error('Cartesian move error:', error);
+      setCartesianError('Error during cartesian movement');
+    } finally {
+      setIsComputingCartesian(false);
+    }
   };
 
   const applyWorldDelta = (axis, increment) => {
@@ -532,15 +605,33 @@ export default function IKControls({
         </ButtonGroup>
       </div>
 
-      <Button
-        onClick={publishGhostToController}
-        disabled={!ghostJoints || Object.keys(ghostJoints).length === 0}
-        variant="contained"
-        color={(!ghostJoints || Object.keys(ghostJoints).length === 0) ? "secondary" : "primary"}
-        style={{ marginTop: '1rem', fontWeight: 'bold' }}
-      >
-        Move
-      </Button>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+        <Button
+          onClick={publishGhostToController}
+          disabled={!ghostJoints || Object.keys(ghostJoints).length === 0}
+          variant="contained"
+          color={(!ghostJoints || Object.keys(ghostJoints).length === 0) ? "secondary" : "primary"}
+          style={{ fontWeight: 'bold' }}
+        >
+          MOVE J
+        </Button>
+
+        <Button
+          onClick={executeCartesianMove}
+          disabled={!ghostJoints || Object.keys(ghostJoints).length === 0 || !connected || isComputingCartesian}
+          variant="contained"
+          color={(!ghostJoints || Object.keys(ghostJoints).length === 0 || !connected) ? "secondary" : "success"}
+          style={{ fontWeight: 'bold' }}
+        >
+          {isComputingCartesian ? 'COMPUTING...' : 'MOVE L'}
+        </Button>
+      </div>
+
+      {cartesianError && (
+        <div style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem', textAlign: 'center' }}>
+          {cartesianError}
+        </div>
+      )}
 
     </div>
   );

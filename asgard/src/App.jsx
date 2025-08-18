@@ -128,12 +128,23 @@ function AppInner() {
       return;
     }
 
+    // Get current TCP coordinates from the real robot
+    let currentTCP = null;
+    if (urdfApiRef.current && typeof urdfApiRef.current.getTCPFromJoints === 'function' && currentJoints) {
+      try {
+        currentTCP = urdfApiRef.current.getTCPFromJoints(currentJoints);
+        console.log('Current TCP coordinates obtained:', currentTCP);
+      } catch (error) {
+        console.error('Error getting TCP coordinates:', error);
+      }
+    }
+
     const poseData = {
       name: poseName,
       joints: Object.fromEntries(
         ['joint_1', 'joint_2', 'joint_3', 'joint_4', 'joint_5', 'joint_6', 'gripperbase_to_armgearright'].map(jointName => [jointName, currentJoints[jointName]])
       ),
-      gripperBase: initialIkPose
+      gripperBase: currentTCP
     };
 
     const updatedPoses = [...poses, poseData];

@@ -16,6 +16,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import ROSLIB from 'roslib';
 
 let isRunAllInProgress = false; // Global flag to track "Run All" execution state
 
@@ -188,22 +189,49 @@ function Program({ poses }) {
     setControlsDisabled(true); // Disable controls at the beginning
 
     for (let i = startIndex; i < movements.length; i++) {
-      executeMovement(i); // Use the executeMovement function to execute each movement
+      if (!isRunAllInProgress) {
+        console.log('Execution interrupted by Stop command.');
+        break; // Exit the main loop if Stop is pressed
+      }
+
+      setCurrentStep(i); // Highlight the current movement
       const newPointer = i + 1 >= movements.length ? 0 : i + 1;
       setPointerIndex(newPointer);
-      setCurrentStep(i); // Highlight the executed movement
 
-      // Wait until the robot reaches the target pose before continuing with a wait loop
-      while (!isPoseCurrent(movements[i].pose)) {
-        if (!isRunAllInProgress) {
-          console.log('Execution interrupted by Stop command.');
-          break; // Exit wait loop if Stop is pressed
+      console.log(`Executing movement ${i + 1}/${movements.length}: ${movements[i].pose} (${movements[i].type})`);
+      
+      // Execute the movement and wait for completion
+      const result = await executeMovement(i);
+      
+      if (!result.success) {
+        console.error(`Movement ${i + 1} failed:`, result.error);
+        alert(`Movement ${i + 1} failed: ${result.error}\nStopping program execution.`);
+        break; // Stop execution on error
+      }
+
+      console.log(`Movement ${i + 1} completed successfully:`, result.message);
+
+      // Add a small delay between movements to ensure robot stabilization
+      // This is especially important for cartesian movements that need accurate current position
+      if (i < movements.length - 1) { // Don't delay after the last movement
+        const currentMovementType = movements[i]?.type;
+        const nextMovementType = movements[i + 1]?.type;
+        
+        if (nextMovementType === 'L') {
+          console.log('Next movement is cartesian, adding stabilization delay...');
+          if (currentMovementType === 'J') {
+            // Extra delay when going from Joint to Cartesian movement
+            await new Promise(resolve => setTimeout(resolve, 1500)); // 2000ms after joint movement before cartesian
+          } else {
+            await new Promise(resolve => setTimeout(resolve, 200)); // 1000ms after cartesian before cartesian
+          }
+        } else {
+          await new Promise(resolve => setTimeout(resolve, 200)); // 200ms for joint movements
         }
-        console.log(`Waiting for robot to reach pose: ${movements[i].pose}`);
-        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       if (!isRunAllInProgress) {
+        console.log('Execution interrupted by Stop command.');
         break; // Exit the main loop if Stop is pressed
       }
     }
@@ -227,7 +255,7 @@ function Program({ poses }) {
     console.log('Stop command sent to /trajectory_execution_event.');
   };
 
-  const handleStepForward = () => {
+  const handleStepForward = async () => {
     const nextStep = pointerIndex === null ? 0 : pointerIndex;
 
     if (!movements[nextStep]?.pose) {
@@ -237,21 +265,29 @@ function Program({ poses }) {
 
     if (currentStep === movements.length - 1) {
       if (window.confirm('You have reached the last movement. Do you want to go to the first movement?')) {
-        executeMovement(0);
-        setCurrentStep(0); // Highlight the executed movement
-        setPointerIndex(1); // Pointer always points to the next movement
+        const result = await executeMovement(0);
+        if (result.success) {
+          setCurrentStep(0); // Highlight the executed movement
+          setPointerIndex(1); // Pointer always points to the next movement
+        } else {
+          alert(`Movement failed: ${result.error}`);
+        }
       }
       return;
     }
 
-    executeMovement(nextStep);
-
-    const newPointer = nextStep + 1 >= movements.length ? 0 : nextStep + 1;
-    setPointerIndex(newPointer);
-    setCurrentStep(nextStep); // Highlight the executed movement
+    const result = await executeMovement(nextStep);
+    
+    if (result.success) {
+      const newPointer = nextStep + 1 >= movements.length ? 0 : nextStep + 1;
+      setPointerIndex(newPointer);
+      setCurrentStep(nextStep); // Highlight the executed movement
+    } else {
+      alert(`Movement failed: ${result.error}`);
+    }
   };
 
-  const handleStepBackward = () => {
+  const handleStepBackward = async () => {
     const lastExecutedStep = currentStep;
     const prevStep = lastExecutedStep !== null ? lastExecutedStep - 1 : pointerIndex;
 
@@ -262,9 +298,13 @@ function Program({ poses }) {
       }
 
       if (window.confirm('You have reached the first movement. Do you want to go to the last movement?')) {
-        executeMovement(movements.length - 1);
-        setCurrentStep(movements.length - 1); // Highlight the executed movement
-        setPointerIndex(0); // Pointer always points to the next movement
+        const result = await executeMovement(movements.length - 1);
+        if (result.success) {
+          setCurrentStep(movements.length - 1); // Highlight the executed movement
+          setPointerIndex(0); // Pointer always points to the next movement
+        } else {
+          alert(`Movement failed: ${result.error}`);
+        }
       }
       return;
     }
@@ -274,18 +314,24 @@ function Program({ poses }) {
       return;
     }
 
-    executeMovement(prevStep);
-    setCurrentStep(prevStep); // Highlight the executed movement
-    setPointerIndex(prevStep + 1 >= movements.length ? 0 : prevStep + 1); // Pointer always points to the next movement
+    const result = await executeMovement(prevStep);
+    
+    if (result.success) {
+      setCurrentStep(prevStep); // Highlight the executed movement
+      setPointerIndex(prevStep + 1 >= movements.length ? 0 : prevStep + 1); // Pointer always points to the next movement
+    } else {
+      alert(`Movement failed: ${result.error}`);
+    }
   };
 
   const executeMovement = async (step) => {
     const movement = movements[step];
     const poseName = movement.pose;
+    const movementType = movement.type || 'J'; // Default to Joint movement if type is not specified
 
-  if (!rosApi.connected) {
+    if (!rosApi.connected) {
       console.warn('ROS is not connected.');
-      return;
+      return { success: false, error: 'ROS not connected' };
     }
 
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
@@ -293,22 +339,160 @@ function Program({ poses }) {
 
     if (!pose) {
       console.warn(`Pose ${poseName} not found.`);
-      return;
+      return { success: false, error: `Pose ${poseName} not found` };
     }
 
     setControlsDisabled(true); // Disable controls while executing
-  const jointOrder = Object.keys(pose.joints);
-  rosApi.publishJointGroupCommand(jointOrder, pose.joints);
-    console.log(`Executing movement: ${step}`, movement);
 
-    // Activate the RadioButton of the next movement
-    const nextStep = step + 1 >= movements.length ? 0 : step + 1;
-    setPointerIndex(nextStep);
+    try {
+      if (movementType === 'L') {
+        // Handle cartesian movement (Type: L)
+        const gripperValue = pose.joints['gripperbase_to_armgearright'] || 0;
+        
+        // Use the saved TCP coordinates from pose.gripperBase
+        if (!pose.gripperBase) {
+          console.error('No TCP coordinates available for cartesian movement');
+          // Fall back to joint movement
+          const jointOrder = Object.keys(pose.joints);
+          rosApi.publishJointGroupCommand(jointOrder, pose.joints);
+          console.log(`Executing movement: ${step}`, movement, '(fallback to joint)');
+          
+          // Wait for joint movement to complete
+          return await waitForMovementCompletion();
+        } else {
+          // Execute cartesian movement
+          console.log(`Executing cartesian movement: ${step}`, movement);
+          const result = await rosApi.publishCartesianGoal(
+            { x: 0, y: 0, z: 0, qx: 0, qy: 0, qz: 0, qw: 1 }, // Start pose (will be calculated from current position)
+            {
+              x: pose.gripperBase.x || pose.gripperBase.position?.x || 0,
+              y: pose.gripperBase.y || pose.gripperBase.position?.y || 0,
+              z: pose.gripperBase.z || pose.gripperBase.position?.z || 0,
+              qx: pose.gripperBase.qx || pose.gripperBase.orientation?.x || 0,
+              qy: pose.gripperBase.qy || pose.gripperBase.orientation?.y || 0,
+              qz: pose.gripperBase.qz || pose.gripperBase.orientation?.z || 0,
+              qw: pose.gripperBase.qw || pose.gripperBase.orientation?.w || 1
+            },
+            {
+              gripperValue: gripperValue,
+              maxStep: 0.005, // Reduced from 0.01 for smoother execution
+              jumpThreshold: 0.0,
+              avoidCollisions: false
+            }
+          );
 
-    if (isPoseCurrent(poseName) && !isRunAllInProgress) {
-      console.log('El robot ya está en la pose objetivo después de ejecutar el movimiento. Habilitando botones.');
-      setControlsDisabled(false);
+          if (!result.ok) {
+            console.error('Cartesian movement failed:', result.message || result.error);
+            // Fall back to joint movement
+            console.log('Falling back to joint movement...');
+            const jointOrder = Object.keys(pose.joints);
+            rosApi.publishJointGroupCommand(jointOrder, pose.joints);
+            
+            // Wait for fallback joint movement to complete
+            return await waitForMovementCompletion();
+          } else {
+            console.log('Cartesian movement completed successfully');
+            if (result.waypoints && result.waypoints.length > 0) {
+              console.log(`Generated ${result.waypoints.length} waypoints for the trajectory`);
+            }
+            return { success: true, message: 'Cartesian movement completed' };
+          }
+        }
+      } else {
+        // Handle joint movement (Type: J or default)
+        const jointOrder = Object.keys(pose.joints);
+        rosApi.publishJointGroupCommand(jointOrder, pose.joints);
+        console.log(`Executing joint movement: ${step}`, movement);
+        
+        // Wait for joint movement to complete
+        return await waitForMovementCompletion();
+      }
+    } catch (error) {
+      console.error('Error during movement execution:', error);
+      // Fall back to joint movement on error
+      const jointOrder = Object.keys(pose.joints);
+      rosApi.publishJointGroupCommand(jointOrder, pose.joints);
+      
+      // Wait for fallback joint movement to complete
+      return await waitForMovementCompletion();
     }
+  };
+
+  // Helper function to wait for ROS to complete the movement
+  const waitForMovementCompletion = async (timeoutMs = 30000) => {
+    return new Promise((resolve) => {
+      if (!rosApi.connected || !rosApi.ros) {
+        resolve({ success: false, error: 'ROS not connected' });
+        return;
+      }
+
+      const startTime = Date.now();
+      let executionSubscription = null;
+
+      // Subscribe to trajectory execution events
+      const executionTopic = new ROSLIB.Topic({
+        ros: rosApi.ros,
+        name: '/execute_trajectory/status',
+        messageType: 'action_msgs/msg/GoalStatusArray'
+      });
+
+      const checkTimeout = () => {
+        if (Date.now() - startTime > timeoutMs) {
+          if (executionSubscription) executionSubscription.unsubscribe();
+          resolve({ success: false, error: 'Movement timeout' });
+          return true;
+        }
+        return false;
+      };
+
+      const checkStop = () => {
+        if (!isRunAllInProgress) {
+          if (executionSubscription) executionSubscription.unsubscribe();
+          resolve({ success: false, error: 'Execution stopped by user' });
+          return true;
+        }
+        return false;
+      };
+
+      let hasReceivedGoal = false;
+
+      executionSubscription = executionTopic.subscribe((message) => {
+        try {
+          if (checkTimeout() || checkStop()) return;
+
+          if (message.status_list && message.status_list.length > 0) {
+            const latestStatus = message.status_list[message.status_list.length - 1];
+            
+            // Goal states: PENDING=0, ACTIVE=1, PREEMPTED=2, SUCCEEDED=3, ABORTED=4, REJECTED=5, PREEMPTING=6, RECALLING=7, RECALLED=8, LOST=9
+            if (latestStatus.status === 1) { // ACTIVE
+              hasReceivedGoal = true;
+            } else if (hasReceivedGoal && latestStatus.status === 3) { // SUCCEEDED
+              console.log('Movement completed successfully via ROS trajectory execution');
+              executionSubscription.unsubscribe();
+              resolve({ success: true, message: 'Movement completed by ROS' });
+            } else if (hasReceivedGoal && (latestStatus.status === 4 || latestStatus.status === 5)) { // ABORTED or REJECTED
+              console.log('Movement failed via ROS trajectory execution');
+              executionSubscription.unsubscribe();
+              resolve({ success: false, error: 'Movement aborted or rejected by ROS' });
+            }
+          }
+        } catch (error) {
+          console.error('Error processing trajectory status:', error);
+        }
+      });
+
+      // Set a timeout as fallback
+      setTimeout(() => {
+        if (checkTimeout()) return;
+        
+        // If no trajectory execution detected, assume simple joint command completed quickly
+        if (!hasReceivedGoal) {
+          console.log('No trajectory execution detected, assuming joint command completed');
+          if (executionSubscription) executionSubscription.unsubscribe();
+          resolve({ success: true, message: 'Joint command assumed completed' });
+        }
+      }, 2000); // Wait 2 seconds for trajectory execution to start
+    });
   };
 
   const openSelectionDialog = (index) => {
