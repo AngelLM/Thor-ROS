@@ -16,7 +16,6 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import ROSLIB from 'roslib';
 
 let isRunAllInProgress = false; // Global flag to track "Run All" execution state
 
@@ -358,7 +357,7 @@ function Program({ poses }) {
           console.log(`Executing movement: ${step}`, movement, '(fallback to joint)');
           
           // Wait for joint movement to complete
-          return await waitForMovementCompletion();
+          return await rosApi.waitForMovementCompletion(30000, () => !isRunAllInProgress);
         } else {
           // Execute cartesian movement
           console.log(`Executing cartesian movement: ${step}`, movement);
@@ -389,7 +388,7 @@ function Program({ poses }) {
             rosApi.publishJointGroupCommand(jointOrder, pose.joints);
             
             // Wait for fallback joint movement to complete
-            return await waitForMovementCompletion();
+            return await rosApi.waitForMovementCompletion(30000, () => !isRunAllInProgress);
           } else {
             console.log('Cartesian movement completed successfully');
             if (result.waypoints && result.waypoints.length > 0) {
@@ -405,7 +404,7 @@ function Program({ poses }) {
         console.log(`Executing joint movement: ${step}`, movement);
         
         // Wait for joint movement to complete
-        return await waitForMovementCompletion();
+        return await rosApi.waitForMovementCompletion(30000, () => !isRunAllInProgress);
       }
     } catch (error) {
       console.error('Error during movement execution:', error);
@@ -414,85 +413,8 @@ function Program({ poses }) {
       rosApi.publishJointGroupCommand(jointOrder, pose.joints);
       
       // Wait for fallback joint movement to complete
-      return await waitForMovementCompletion();
+      return await rosApi.waitForMovementCompletion(30000, () => !isRunAllInProgress);
     }
-  };
-
-  // Helper function to wait for ROS to complete the movement
-  const waitForMovementCompletion = async (timeoutMs = 30000) => {
-    return new Promise((resolve) => {
-      if (!rosApi.connected || !rosApi.ros) {
-        resolve({ success: false, error: 'ROS not connected' });
-        return;
-      }
-
-      const startTime = Date.now();
-      let executionSubscription = null;
-
-      // Subscribe to trajectory execution events
-      const executionTopic = new ROSLIB.Topic({
-        ros: rosApi.ros,
-        name: '/execute_trajectory/status',
-        messageType: 'action_msgs/msg/GoalStatusArray'
-      });
-
-      const checkTimeout = () => {
-        if (Date.now() - startTime > timeoutMs) {
-          if (executionSubscription) executionSubscription.unsubscribe();
-          resolve({ success: false, error: 'Movement timeout' });
-          return true;
-        }
-        return false;
-      };
-
-      const checkStop = () => {
-        if (!isRunAllInProgress) {
-          if (executionSubscription) executionSubscription.unsubscribe();
-          resolve({ success: false, error: 'Execution stopped by user' });
-          return true;
-        }
-        return false;
-      };
-
-      let hasReceivedGoal = false;
-
-      executionSubscription = executionTopic.subscribe((message) => {
-        try {
-          if (checkTimeout() || checkStop()) return;
-
-          if (message.status_list && message.status_list.length > 0) {
-            const latestStatus = message.status_list[message.status_list.length - 1];
-            
-            // Goal states: PENDING=0, ACTIVE=1, PREEMPTED=2, SUCCEEDED=3, ABORTED=4, REJECTED=5, PREEMPTING=6, RECALLING=7, RECALLED=8, LOST=9
-            if (latestStatus.status === 1) { // ACTIVE
-              hasReceivedGoal = true;
-            } else if (hasReceivedGoal && latestStatus.status === 3) { // SUCCEEDED
-              console.log('Movement completed successfully via ROS trajectory execution');
-              executionSubscription.unsubscribe();
-              resolve({ success: true, message: 'Movement completed by ROS' });
-            } else if (hasReceivedGoal && (latestStatus.status === 4 || latestStatus.status === 5)) { // ABORTED or REJECTED
-              console.log('Movement failed via ROS trajectory execution');
-              executionSubscription.unsubscribe();
-              resolve({ success: false, error: 'Movement aborted or rejected by ROS' });
-            }
-          }
-        } catch (error) {
-          console.error('Error processing trajectory status:', error);
-        }
-      });
-
-      // Set a timeout as fallback
-      setTimeout(() => {
-        if (checkTimeout()) return;
-        
-        // If no trajectory execution detected, assume simple joint command completed quickly
-        if (!hasReceivedGoal) {
-          console.log('No trajectory execution detected, assuming joint command completed');
-          if (executionSubscription) executionSubscription.unsubscribe();
-          resolve({ success: true, message: 'Joint command assumed completed' });
-        }
-      }, 2000); // Wait 2 seconds for trajectory execution to start
-    });
   };
 
   const openSelectionDialog = (index) => {
