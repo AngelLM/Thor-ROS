@@ -39,6 +39,12 @@ export default function IKControls({
   }, [active, urdfApi]);
   
   const [gripperPercent, setGripperPercent] = useState(0);
+  const updateGripperPercent = (value) => {
+    console.warn('Gripper control changed, new percent:', value);
+    setGripperPercent(value);
+  // We rely on the preview->Viewer3D effect to emit the ghost state back to
+  // the app; avoid forcing the ghost here to keep single source-of-truth.
+  };
   // use a ref for the continuous-move interval id to avoid re-renders
   const continuousMoveIntervalRef = useRef(null);
   // keep a ref to the latest ghostJoints so we can update gripper only when user changes it
@@ -177,10 +183,21 @@ export default function IKControls({
         qw: tcpQuaternion.w,
       };
 
-      // Get current gripper value
-      const currentGripperValue = ghostJoints && ghostJoints['gripperbase_to_armgearright'] 
-        ? ghostJoints['gripperbase_to_armgearright'] 
-        : 0;
+      // Compute gripper value from local gripperPercent to avoid race with ghostJoints updates
+      let gripperRadians;
+      if (gripperPercent === 0) {
+        gripperRadians = 0;
+      } else if (gripperPercent === 100) {
+        gripperRadians = -89.9 * Math.PI / 180;
+      } else {
+        gripperRadians = -89.9 * (gripperPercent / 100) * Math.PI / 180;
+      }
+
+      // Use the locally computed value to ensure we send what the user selected
+      const currentGripperValue = gripperRadians;
+
+      // Warn the gripper value (percent and radians) that will be sent with the cartesian goal
+      console.warn('MOVE L - gripper percent:', gripperPercent, '-> radians:', currentGripperValue);
 
       // Send cartesian goal to ROS
       const cartesianResult = await rosApi.publishCartesianGoal(startPose, endPose, {
@@ -596,7 +613,7 @@ export default function IKControls({
             <Button
               key={percentage}
               variant={gripperPercent === percentage ? "contained" : "outlined"} // Highlight selected button
-              onClick={() => setGripperPercent(percentage)} // Update selected state
+              onClick={() => updateGripperPercent(percentage)} // Update selected state
               style={{ backgroundColor: gripperPercent === percentage ? '#ccccff' : 'white', color: 'black', border: '1px solid #9999cc' }}
             >
               {percentage}%

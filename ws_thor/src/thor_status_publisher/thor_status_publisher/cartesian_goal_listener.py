@@ -2,8 +2,8 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Pose, PoseStamped
 from moveit_msgs.srv import GetCartesianPath
-from moveit_msgs.action import ExecuteTrajectory
-from moveit_msgs.msg import RobotState, RobotTrajectory
+from moveit_msgs.action import ExecuteTrajectory, MoveGroup
+from moveit_msgs.msg import RobotState, RobotTrajectory, MotionPlanRequest, Constraints, JointConstraint
 from thor_msgs.msg import CartesianGoal
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
@@ -38,9 +38,11 @@ class CartesianGoalListener(Node):
         
         # Action clients
         self.execute_trajectory_client = ActionClient(self, ExecuteTrajectory, '/execute_trajectory')
+        self.move_group_client = ActionClient(self, MoveGroup, 'move_action')
         
         # State variables
         self.current_joint_state = None
+        self.current_cartesian_goal = None  # Para almacenar el goal actual
         
         self.get_logger().info('Nodo cartesian_goal_listener iniciado.')
 
@@ -51,6 +53,9 @@ class CartesianGoalListener(Node):
     def cartesian_goal_callback(self, msg):
         """Callback principal para procesar goals cartesianos"""
         self.get_logger().info('Recibido CartesianGoal')
+        
+        # Almacenar el goal actual para usarlo después
+        self.current_cartesian_goal = msg
         
         # Publicar status de inicio
         status_msg = String()
@@ -116,7 +121,7 @@ class CartesianGoalListener(Node):
             
             self.get_logger().info(f'Respuesta recibida. Fracción: {response.fraction}')
             
-            if response.fraction > 0.8:  # Umbral de éxito
+            if response.fraction > 0.8:  # Umbral de éxito para ejecutar trayectoria
                 self.get_logger().info('Trayectoria cartesiana calculada exitosamente')
                 
                 # Extraer waypoints de la trayectoria
@@ -144,7 +149,9 @@ class CartesianGoalListener(Node):
                 self.execute_trajectory(response.solution, goal)
                 
             else:
-                self.get_logger().warn(f'Trayectoria cartesiana fallida. Fracción: {response.fraction}')
+                # Fracción insuficiente: tratar como error de planificación y no ejecutar
+                # ni la trayectoria cartesiana ni el movimiento del gripper.
+                self.get_logger().error(f'No cartesian solution found. Fraction: {response.fraction}')
                 self.publish_error_status(f'No cartesian solution found. Fraction: {response.fraction}')
                 
         except Exception as e:
@@ -233,13 +240,86 @@ class CartesianGoalListener(Node):
             self.get_logger().info('Trayectoria cartesiana ejecutada exitosamente')
             status_msg = String()
             status_msg.data = json.dumps({
-                'status': 'completed',
-                'message': 'Cartesian trajectory executed successfully'
+                'status': 'cartesian_completed',
+                'message': 'Cartesian trajectory executed successfully, moving gripper...'
             })
             self.status_pub.publish(status_msg)
+            
+            # Ahora ejecutar el movimiento del gripper
+            self.execute_gripper_movement()
         else:
             self.get_logger().error(f'Error en ejecución: {result.error_code.val}')
             self.publish_error_status(f'Trajectory execution failed. Error code: {result.error_code.val}')
+
+    def execute_gripper_movement(self):
+        """Ejecuta el movimiento del gripper como un movimiento de joint independiente"""
+        if self.current_cartesian_goal is None:
+            self.get_logger().error('No hay goal cartesiano disponible para el gripper')
+            self.publish_error_status('No cartesian goal available for gripper movement')
+            return
+            
+        self.get_logger().info(f'Ejecutando movimiento del gripper a posición: {self.current_cartesian_goal.gripperbase_to_armgearright}')
+        
+        # Crear constraints para el gripper
+        gripper_constraints = Constraints()
+        jc = JointConstraint()
+        jc.joint_name = 'gripperbase_to_armgearright'
+        jc.position = self.current_cartesian_goal.gripperbase_to_armgearright
+        jc.weight = 1.0
+        gripper_constraints.joint_constraints.append(jc)
+
+        # Crear la solicitud de planificación de movimiento del gripper_group
+        gripper_request = MotionPlanRequest()
+        gripper_request.group_name = 'gripper_group'
+        gripper_request.goal_constraints.append(gripper_constraints)
+
+        gripper_goal_msg = MoveGroup.Goal()
+        gripper_goal_msg.request = gripper_request
+        gripper_goal_msg.planning_options.plan_only = False
+        gripper_goal_msg.planning_options.look_around = False
+        gripper_goal_msg.planning_options.replan = True
+
+        # Esperar que el action server esté disponible
+        if not self.move_group_client.wait_for_server(timeout_sec=5.0):
+            self.get_logger().error('Action server move_action no disponible para gripper')
+            self.publish_error_status('MoveGroup action server not available for gripper movement')
+            return
+
+        # Enviar el goal para el gripper
+        future = self.move_group_client.send_goal_async(gripper_goal_msg)
+        future.add_done_callback(self.gripper_goal_response_callback)
+        self.get_logger().info('Solicitud de gripper_group enviada a MoveIt2.')
+
+    def gripper_goal_response_callback(self, future):
+        """Callback para la respuesta del goal del gripper"""
+        goal_handle = future.result()
+        
+        if not goal_handle.accepted:
+            self.get_logger().error('Goal del gripper rechazado')
+            self.publish_error_status('Gripper movement goal rejected')
+            return
+        
+        self.get_logger().info('Goal del gripper aceptado')
+        
+        # Esperar resultado
+        get_result_future = goal_handle.get_result_async()
+        get_result_future.add_done_callback(self.gripper_result_callback)
+
+    def gripper_result_callback(self, future):
+        """Callback para el resultado del movimiento del gripper"""
+        result = future.result().result
+        
+        if result.error_code.val == 1:  # SUCCESS
+            self.get_logger().info('Movimiento del gripper ejecutado exitosamente')
+            status_msg = String()
+            status_msg.data = json.dumps({
+                'status': 'completed',
+                'message': 'Cartesian trajectory and gripper movement completed successfully'
+            })
+            self.status_pub.publish(status_msg)
+        else:
+            self.get_logger().error(f'Error en movimiento del gripper: {result.error_code.val}')
+            self.publish_error_status(f'Gripper movement failed. Error code: {result.error_code.val}')
 
     def publish_error_status(self, error_message):
         """Publica un mensaje de error en el topic de status"""

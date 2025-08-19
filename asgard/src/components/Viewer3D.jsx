@@ -502,7 +502,11 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
       jointOrder.forEach(j => {
         if (previewJoints[j] !== undefined) ghostRef.current.setJointValue(j, previewJoints[j]);
       });
-      // Do NOT emit back to parent here to avoid feedback loops
+  // After applying preview joints to the ghost model, emit the new ghost
+  // state back to the parent so `ghostJoints` stays in sync with the visual
+  // model. This avoids race conditions where UI changes (eg gripper) are
+  // applied as preview but never reflected in the app-level ghost state.
+  try { emitGhostStateIfChanged(); } catch (e) {}
     }
   }, [previewJoints]);
 
