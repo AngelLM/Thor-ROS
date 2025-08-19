@@ -53,6 +53,18 @@ function AppInner() {
   const posesRef = useRef(null); // Reference to the Poses component
   const urdfApiRef = useRef(null);
 
+  // When the program panel opens/closes, force the 3D viewer to resize so it adapts to the new sidebar width
+  useEffect(() => {
+    try {
+      if (urdfApiRef.current && typeof urdfApiRef.current.forceResize === 'function') {
+        // small timeout to let CSS transition complete
+        setTimeout(() => {
+          try { urdfApiRef.current.forceResize(); } catch (e) {}
+        }, 260);
+      }
+    } catch (e) {}
+  }, [activeTab]);
+
   const [showOverlay, setShowOverlay] = useState(false);
   const [overlayRealTCP, setOverlayRealTCP] = useState(null);
   const [overlayGhostTCP, setOverlayGhostTCP] = useState(null);
@@ -195,8 +207,8 @@ function AppInner() {
 
   return (
       <div className="app-container" style={{ display: 'flex', height: '100vh' }}>
-        {/* Left sidebar */}
-        <div className="sidebar">
+  {/* Left sidebar */}
+  <div className={`sidebar ${activeTab === 'program' ? 'program-open' : ''}`}>
           <div style={{ textAlign: 'center', padding: '0.5rem' }}>
             <img src="/images/thor_logo.png" alt="Thor Logo" style={{ maxWidth: '80%', height: 'auto' }} />
           </div>

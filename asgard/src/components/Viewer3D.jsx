@@ -230,6 +230,21 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
       sphereRef.current.updateMatrixWorld(true);
     }
     ,
+    // Force the renderer/camera to resize based on mount dimensions (useful when sidebar width changes)
+    forceResize: () => {
+      try {
+        if (!mountRef.current || !rendererRef.current || !cameraRef.current) return;
+        const width = mountRef.current.offsetWidth;
+        const height = mountRef.current.offsetHeight;
+        rendererRef.current.setSize(width, height);
+        cameraRef.current.aspect = width / height;
+        cameraRef.current.updateProjectionMatrix();
+        if (gizmoRef.current && typeof gizmoRef.current.update === 'function') gizmoRef.current.update();
+      } catch (e) {
+        console.error('forceResize failed', e);
+      }
+    }
+    ,
     // Toggle TransformControls space between local and world
     toggleTCPGizmoFrame: () => {
       const t = translateCtrlRef.current;
