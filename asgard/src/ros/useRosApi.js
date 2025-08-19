@@ -279,6 +279,7 @@ export function useRosApi() {
       const checkTimeout = () => {
         if (Date.now() - startTime > timeoutMs) {
           if (executionSubscription) executionSubscription.unsubscribe();
+          console.error('[useRosApi] waitForMovementCompletion: timeout after', timeoutMs, 'ms');
           resolve({ success: false, error: 'Movement timeout' });
           return true;
         }
@@ -288,6 +289,7 @@ export function useRosApi() {
       const checkStop = () => {
         if (shouldStopCallback && shouldStopCallback()) {
           if (executionSubscription) executionSubscription.unsubscribe();
+          console.warn('[useRosApi] waitForMovementCompletion: stopped by user via shouldStopCallback');
           resolve({ success: false, error: 'Execution stopped by user' });
           return true;
         }
@@ -302,16 +304,24 @@ export function useRosApi() {
 
           if (message.status_list && message.status_list.length > 0) {
             const latestStatus = message.status_list[message.status_list.length - 1];
+            console.log('[useRosApi] trajectory status update:', latestStatus);
             
             // Goal states: PENDING=0, ACTIVE=1, PREEMPTED=2, SUCCEEDED=3, ABORTED=4, REJECTED=5, PREEMPTING=6, RECALLING=7, RECALLED=8, LOST=9
-            if (latestStatus.status === 1) { // ACTIVE
+            // ACTIVE
+            if (latestStatus.status === 1) {
               hasReceivedGoal = true;
-            } else if (hasReceivedGoal && latestStatus.status === 3) { // SUCCEEDED
-              console.log('Movement completed successfully via ROS trajectory execution');
+            }
+
+            // Treat SUCCEEDED as terminal success even if we didn't observe ACTIVE
+            if (latestStatus.status === 3) { // SUCCEEDED
+              console.log('[useRosApi] Movement completed successfully via ROS trajectory execution (SUCCEEDED)');
               executionSubscription.unsubscribe();
               resolve({ success: true, message: 'Movement completed by ROS' });
-            } else if (hasReceivedGoal && (latestStatus.status === 4 || latestStatus.status === 5)) { // ABORTED or REJECTED
-              console.log('Movement failed via ROS trajectory execution');
+            }
+
+            // Treat ABORTED or REJECTED as terminal failure
+            if (latestStatus.status === 4 || latestStatus.status === 5) { // ABORTED or REJECTED
+              console.warn('[useRosApi] Movement failed via ROS trajectory execution (ABORTED/REJECTED)');
               executionSubscription.unsubscribe();
               resolve({ success: false, error: 'Movement aborted or rejected by ROS' });
             }

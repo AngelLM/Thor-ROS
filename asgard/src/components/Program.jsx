@@ -255,7 +255,8 @@ function Program({ poses }) {
   };
 
   const handleStepForward = async () => {
-    const nextStep = pointerIndex === null ? 0 : pointerIndex;
+  const nextStep = pointerIndex === null ? 0 : pointerIndex;
+  console.log('[Program] Step FW requested, pointerIndex=', pointerIndex, 'nextStep=', nextStep);
 
     if (!movements[nextStep]?.pose) {
       alert('The selected movement does not have a defined pose. Please select a pose before proceeding.');
@@ -289,6 +290,7 @@ function Program({ poses }) {
   const handleStepBackward = async () => {
     const lastExecutedStep = currentStep;
     const prevStep = lastExecutedStep !== null ? lastExecutedStep - 1 : pointerIndex;
+  console.log('[Program] Step BW requested, pointerIndex=', pointerIndex, 'prevStep=', prevStep);
 
     if (prevStep < 0) {
       if (!movements[movements.length - 1]?.pose) {
@@ -341,10 +343,10 @@ function Program({ poses }) {
       return { success: false, error: `Pose ${poseName} not found` };
     }
 
-    setControlsDisabled(true); // Disable controls while executing
+  setControlsDisabled(true); // Disable controls while executing
 
-    try {
-      if (movementType === 'L') {
+  try {
+  if (movementType === 'L') {
         // Handle cartesian movement (Type: L)
         const gripperValue = pose.joints['gripperbase_to_armgearright'] || 0;
         
@@ -357,7 +359,7 @@ function Program({ poses }) {
           console.log(`Executing movement: ${step}`, movement, '(fallback to joint)');
           
           // Wait for joint movement to complete
-          return await rosApi.waitForMovementCompletion(30000, () => !isRunAllInProgress);
+          return await rosApi.waitForMovementCompletion(30000, isRunAllInProgress ? () => !isRunAllInProgress : () => false);
         } else {
           // Execute cartesian movement
           console.log(`Executing cartesian movement: ${step}`, movement);
@@ -387,8 +389,9 @@ function Program({ poses }) {
             const jointOrder = Object.keys(pose.joints);
             rosApi.publishJointGroupCommand(jointOrder, pose.joints);
             
-            // Wait for fallback joint movement to complete
-            return await rosApi.waitForMovementCompletion(30000, () => !isRunAllInProgress);
+              // Wait for fallback joint movement to complete
+              console.log('[Program] waiting for fallback joint movement, isRunAllInProgress=', isRunAllInProgress);
+              return await rosApi.waitForMovementCompletion(30000, isRunAllInProgress ? () => !isRunAllInProgress : () => false);
           } else {
             console.log('Cartesian movement completed successfully');
             if (result.waypoints && result.waypoints.length > 0) {
@@ -403,8 +406,9 @@ function Program({ poses }) {
         rosApi.publishJointGroupCommand(jointOrder, pose.joints);
         console.log(`Executing joint movement: ${step}`, movement);
         
-        // Wait for joint movement to complete
-        return await rosApi.waitForMovementCompletion(30000, () => !isRunAllInProgress);
+            // Wait for joint movement to complete
+            console.log('[Program] waiting for joint movement, isRunAllInProgress=', isRunAllInProgress);
+            return await rosApi.waitForMovementCompletion(30000, isRunAllInProgress ? () => !isRunAllInProgress : () => false);
       }
     } catch (error) {
       console.error('Error during movement execution:', error);
@@ -413,7 +417,15 @@ function Program({ poses }) {
       rosApi.publishJointGroupCommand(jointOrder, pose.joints);
       
       // Wait for fallback joint movement to complete
-      return await rosApi.waitForMovementCompletion(30000, () => !isRunAllInProgress);
+      console.log('[Program] waiting for fallback joint movement after exception, isRunAllInProgress=', isRunAllInProgress);
+      return await rosApi.waitForMovementCompletion(30000, isRunAllInProgress ? () => !isRunAllInProgress : () => false);
+    }
+    finally {
+      // Ensure controls are re-enabled after this single-step execution finishes
+      // Run All manages controlsDisabled itself; only re-enable if Run All is not in progress.
+      if (!isRunAllInProgress) {
+        setControlsDisabled(false);
+      }
     }
   };
 
