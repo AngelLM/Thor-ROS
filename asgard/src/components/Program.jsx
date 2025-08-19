@@ -43,6 +43,23 @@ function Program({ poses }) {
     setMovements(savedProgram);
   }, []);
 
+  // Listen for program import events (dispatched by Settings)
+  useEffect(() => {
+    const handler = (e) => {
+      try {
+        const imported = e.detail || JSON.parse(localStorage.getItem('program') || '[]');
+        if (!Array.isArray(imported)) return;
+        const normalized = imported.map(m => ({ type: m.type || 'J', pose: m.pose || '', speed: m.speed ?? 100 }));
+        setMovements(normalized);
+        saveProgramToLocalStorage(normalized);
+      } catch (err) {
+        console.error('Error handling imported program', err);
+      }
+    };
+    window.addEventListener('programImported', handler);
+    return () => window.removeEventListener('programImported', handler);
+  }, []);
+
   useEffect(() => {
     if (!robotMoving && !isRunAllInProgress) {
       setControlsDisabled(false); // Re-enable controls when robot stops moving
