@@ -122,15 +122,15 @@ function Program({ poses }) {
   };
 
   const handleAddMovement = () => {
-    const updatedMovements = [...movements, { pose: '', type: 'J' }]; // Default type set to 'J'
+  const updatedMovements = [...movements, { pose: '', type: 'J', speed: 100 }]; // Default type set to 'J' and speed 100
     setMovements(updatedMovements);
     saveProgramToLocalStorage(updatedMovements);
   };
 
   const handleAddMovementBelow = (index) => {
     const updatedMovements = [
-      ...movements.slice(0, index + 1),
-      { pose: '', type: 'J' }, // Default type set to 'J'
+  ...movements.slice(0, index + 1),
+  { pose: '', type: 'J', speed: 100 }, // Default type set to 'J' and speed 100
       ...movements.slice(index + 1)
     ];
     setMovements(updatedMovements);
@@ -451,9 +451,9 @@ function Program({ poses }) {
 
     const updatedMovements = movements.map(movement => {
       if (!poseNames.includes(movement.pose)) {
-        return { ...movement, pose: '' }; // Reset pose if it no longer exists
+        return { ...movement, pose: '', speed: movement.speed ?? 100 }; // Reset pose if it no longer exists
       }
-      return movement;
+      return { ...movement, speed: movement.speed ?? 100 };
     });
     setMovements(updatedMovements);
     saveProgramToLocalStorage(updatedMovements);
@@ -631,6 +631,16 @@ function Program({ poses }) {
                     <MenuItem value="L">L</MenuItem>
                   </Select>
                 </FormControl>
+                <TextField
+                  className="speed-input"
+                  label={movement.type === 'L' ? 'Speed (mm/s)' : 'Speed (°/s)'}
+                  variant="outlined"
+                  type="number"
+                  value={movement.speed ?? 100}
+                  onChange={(e) => handleChangeMovement(index, 'speed', Number(e.target.value))}
+                  style={{ marginLeft: '0.5rem', width: '105px', minWidth: '105px' }}
+                  InputProps={{ inputProps: { min: 1, max: 1000 } }}
+                />
               </div>
             ))}
           </div>

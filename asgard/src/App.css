@@ -76,6 +76,16 @@ html, body, #root {
   transition: width 220ms ease, min-width 220ms ease, max-width 220ms ease;
 }
 
+/* sidebar split: top fixed (logo), bottom scrollable (content) */
+.sidebar-top {
+  flex: 0 0 auto;
+}
+.sidebar-bottom {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 140px); /* leave space for top area and FABs */
+}
+
 .tabs {
   display: flex;
   margin-bottom: 1rem;
@@ -177,7 +187,28 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   align-items: center; /* Centrar los movimientos horizontalmente */
-  max-height: 300px;
+  max-height: 60vh; /* increased and responsive */
   overflow-y: auto;
   padding-top: 0.5em;
+}
+
+/* Speed input sizing and always-show spinners */
+.speed-input {
+  min-width: 120px;
+  box-sizing: border-box;
+}
+
+/* Webkit browsers: show increment/decrement buttons */
+.speed-input input[type=number]::-webkit-outer-spin-button,
+.speed-input input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: inner-spin-button;
+  appearance: inner-spin-button;
+  opacity: 1;
+}
+
+/* Firefox: ensure spin buttons are visible and declare standard appearance */
+.speed-input input[type=number] {
+  appearance: textfield;
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
 }

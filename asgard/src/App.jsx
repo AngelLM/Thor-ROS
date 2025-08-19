@@ -209,11 +209,15 @@ function AppInner() {
       <div className="app-container" style={{ display: 'flex', height: '100vh' }}>
   {/* Left sidebar */}
   <div className={`sidebar ${activeTab === 'program' ? 'program-open' : ''}`}>
-          <div style={{ textAlign: 'center', padding: '0.5rem' }}>
-            <img src="/images/thor_logo.png" alt="Thor Logo" style={{ maxWidth: '80%', height: 'auto' }} />
-          </div>
-          {/* Accordions */}
-          <Accordion
+    <div className="sidebar-top">
+      <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+        <img src="/images/thor_logo.png" alt="Thor Logo" style={{ width: '300px', height: 'auto' }} />
+      </div>
+    </div>
+    {/* Bottom: accordions (scrollable) */}
+    <div className="sidebar-bottom">
+      {/* Accordions */}
+      <Accordion
             expanded={activeTab === 'forward'}
             onChange={() => setActiveTab(activeTab === 'forward' ? '' : 'forward')}
             className="accordion forward-kinematics"
@@ -306,7 +310,8 @@ function AppInner() {
               <Program poses={poses} />
             </AccordionDetails>
           </Accordion>
-        </div>
+    </div>
+  </div>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0 }}>
           <div style={{ flex: '1 1 auto', minHeight: 0, overflow: 'hidden' }}>
