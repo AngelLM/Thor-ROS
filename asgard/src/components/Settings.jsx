@@ -155,7 +155,15 @@ export default function Settings({
                   const text = evt.target.result;
                   const parsed = JSON.parse(text);
                   if (!Array.isArray(parsed)) {
-                    alert('Invalid program file: expected a JSON array');
+                    showSnackbar('Invalid program file: expected a JSON array', 'error');
+                    return;
+                  }
+                  // Validar estructura de cada movimiento
+                  const isValidMovement = (m) => {
+                    return m && typeof m.type === 'string' && typeof m.pose === 'string';
+                  };
+                  if (!parsed.every(isValidMovement)) {
+                    showSnackbar('Invalid program file: each item must have "type" (string) and "pose" (string)', 'error');
                     return;
                   }
                   // check existing
@@ -247,7 +255,14 @@ export default function Settings({
                     const text = evt.target.result;
                     const parsed = JSON.parse(text);
                     if (!Array.isArray(parsed)) {
-                      showSnackbar('Invalid poses file: expected a JSON array', 'error');
+                      return;
+                    }
+                    // Validar estructura de cada pose
+                    const isValidPose = (pose) => {
+                      return pose && typeof pose.name === 'string' && pose.name.length > 0 && typeof pose.joints === 'object' && pose.joints !== null;
+                    };
+                    if (!parsed.every(isValidPose)) {
+                      showSnackbar('Invalid poses file: each item must have "name" (string) and "joints" (object)', 'error');
                       return;
                     }
                     // check existing poses
