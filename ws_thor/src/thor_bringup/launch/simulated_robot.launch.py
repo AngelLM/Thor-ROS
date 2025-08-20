@@ -89,6 +89,14 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}]
     )
 
+    cartesian_goal_listener = Node(
+        package="thor_status_publisher",
+        executable="cartesian_goal_listener",
+        name="cartesian_goal_listener",
+        output="screen",
+        parameters=[{"use_sim_time": True}]
+    )
+
     return LaunchDescription([
         gazebo,
         controller,
@@ -98,5 +106,6 @@ def generate_launch_description():
         rosapi,
         status_publisher,
         joint_goal_listener,
-        ik_goal_listener
+        ik_goal_listener,
+        cartesian_goal_listener
     ])
