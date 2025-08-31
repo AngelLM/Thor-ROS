@@ -308,7 +308,7 @@
         <origin xyz="0 0 0.099" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
         <limit lower="-2.967" upper="2.967" 
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="0.58"/>
     </joint>
 
     <joint name="joint_2" type="revolute">
@@ -317,7 +317,7 @@
         <origin xyz="0 0 0.103" rpy="0 0 0"/>
         <axis xyz="1 0 0"/>
         <limit lower="-${PI / 2}" upper="${PI / 2}"
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="0.23"/>
     </joint>
 
     <joint name="joint_3" type="revolute">
@@ -326,7 +326,7 @@
         <origin xyz="0 0 0.16" rpy="0 0 0"/>
         <axis xyz="1 0 0"/>
         <limit lower="-${PI / 2}" upper="${PI / 2}"
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="0.23"/>
     </joint>
 
     <joint name="joint_4" type="revolute">
@@ -335,7 +335,7 @@
         <origin xyz="0 0 0.0895" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
         <limit lower="-2.967" upper="2.967"
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="0.58"/>
     </joint>
 
     <joint name="joint_5" type="revolute">
@@ -344,7 +344,7 @@
         <origin xyz="0 0 0.1045" rpy="0 0 0"/>
         <axis xyz="1 0 0"/>
         <limit lower="-${PI / 2}" upper="${PI / 2}"
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="1.45"/>
       </joint>
 
     <joint name="joint_6" type="revolute">
@@ -353,7 +353,7 @@
         <origin xyz="0 0 0.0135" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
         <limit lower="-2.967" upper="2.967"
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="1.45"/>
     </joint>
 
     <joint name ="link6_to_gripperbase" type="fixed">
