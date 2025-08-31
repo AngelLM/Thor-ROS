@@ -495,7 +495,7 @@ function Program({ poses }) {
   }, [isRunAllInProgress]);
 
   return (
-    <div style={{ padding: '0.25rem' }}>
+    <div>
     <Dialog open={selectionDialogOpen} onClose={() => handleSelectionDialogClose(false)}>
         <DialogTitle>Caution!</DialogTitle>
         <DialogContent>
@@ -567,7 +567,7 @@ function Program({ poses }) {
                   display: 'flex',
                   alignItems: 'center',
                   marginBottom: '1rem',
-                  marginLeft: '0.3rem',
+                  marginLeft: '0.5rem',
                   marginRight: '0.3rem',
                   backgroundColor: currentStep === index ? 'lightyellow' : 'transparent',
                 }}
@@ -650,13 +650,19 @@ function Program({ poses }) {
                 </FormControl>
                 <TextField
                   className="speed-input"
-                  label={movement.type === 'L' ? 'Speed (mm/s)' : 'Speed (°/s)'}
+                  label="Speed (%)"
                   variant="outlined"
                   type="number"
                   value={movement.speed ?? 100}
-                  onChange={(e) => handleChangeMovement(index, 'speed', Number(e.target.value))}
-                  style={{ marginLeft: '0.5rem', width: '105px', minWidth: '105px' }}
-                  InputProps={{ inputProps: { min: 1, max: 1000 } }}
+                  onChange={(e) => {
+                    let val = parseInt(e.target.value, 10);
+                    if (isNaN(val)) val = 100;
+                    if (val < 1) val = 1;
+                    if (val > 100) val = 100;
+                    handleChangeMovement(index, 'speed', val);
+                  }}
+                  style={{ marginLeft: '0.5rem', width: '85px'}}
+                  InputProps={{ inputProps: { min: 1, max: 100, step: 1 } }}
                 />
               </div>
             ))}

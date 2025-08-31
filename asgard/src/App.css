@@ -70,9 +70,8 @@ html, body, #root {
 
 /* When Program menu is opened, expand the sidebar width smoothly */
 .sidebar.program-open {
-  min-width: 650px; /* Increase minimum width */
+  min-width: 540px; /* Increase minimum width */
   width: 60vw;      /* Increase relative width */
-  max-width: 820px; /* Clip to a reasonable maximum */
   transition: width 220ms ease, min-width 220ms ease, max-width 220ms ease;
 }
 
