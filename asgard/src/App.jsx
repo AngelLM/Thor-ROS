@@ -208,7 +208,8 @@ function AppInner() {
   return (
       <div className="app-container" style={{ display: 'flex', height: '100vh' }}>
   {/* Left sidebar */}
-  <div className={`sidebar ${activeTab === 'program' ? 'program-open' : ''}`}>
+  {/* <div className={`sidebar ${activeTab === 'program' ? 'program-open' : ''}`}> */}
+  <div className={'sidebar'}>
     <div className="sidebar-top">
       <div style={{ textAlign: 'center', padding: '0.5rem' }}>
         <img src="/images/thor_logo.png" alt="Thor Logo" style={{ width: '300px', height: 'auto' }} />

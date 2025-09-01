@@ -648,6 +648,7 @@ function Program({ poses }) {
                     <MenuItem value="L">L</MenuItem>
                   </Select>
                 </FormControl>
+                {/*
                 <TextField
                   className="speed-input"
                   label="Speed (%)"
@@ -664,6 +665,7 @@ function Program({ poses }) {
                   style={{ marginLeft: '0.5rem', width: '85px'}}
                   InputProps={{ inputProps: { min: 1, max: 100, step: 1 } }}
                 />
+                */}
               </div>
             ))}
           </div>
