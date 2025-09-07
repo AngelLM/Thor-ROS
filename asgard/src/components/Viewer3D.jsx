@@ -394,6 +394,8 @@ const Viewer3D = forwardRef(({ previewJoints, showRealRobot = true, showGhostRob
     if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return;
 
     let unsubscribeJointStates = null;
+    
+    // Load URDF and add to scene
     const loadUrdf = (urdfXml) => {
       if (!urdfXml) return;
       const loader = new URDFLoader();

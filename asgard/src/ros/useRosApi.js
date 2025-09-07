@@ -167,12 +167,14 @@ export function useRosApi() {
         messageType: 'thor_msgs/CartesianGoal',
       });
 
+      // Status and waypoints topics
       const statusTopic = new ROSLIB.Topic({
         ros,
         name: '/cartesian_goal_status',
         messageType: 'std_msgs/String',
       });
 
+      // Waypoints topic
       const waypointsTopic = new ROSLIB.Topic({
         ros,
         name: '/cartesian_waypoints',
@@ -183,6 +185,7 @@ export function useRosApi() {
       let waypointsSubscription = null;
       let timeoutId = null;
 
+      // Cleanup subscriptions and timeout
       const cleanup = () => {
         if (statusSubscription) statusSubscription.unsubscribe();
         if (waypointsSubscription) waypointsSubscription.unsubscribe();
@@ -276,6 +279,7 @@ export function useRosApi() {
         messageType: 'action_msgs/msg/GoalStatusArray'
       });
 
+      // Helper functions to check timeout and stop conditions
       const checkTimeout = () => {
         if (Date.now() - startTime > timeoutMs) {
           if (executionSubscription) executionSubscription.unsubscribe();
@@ -286,6 +290,7 @@ export function useRosApi() {
         return false;
       };
 
+      // Check for user-initiated stop
       const checkStop = () => {
         if (shouldStopCallback && shouldStopCallback()) {
           if (executionSubscription) executionSubscription.unsubscribe();
@@ -298,6 +303,7 @@ export function useRosApi() {
 
       let hasReceivedGoal = false;
 
+      // Subscribe to execution status
       executionSubscription = executionTopic.subscribe((message) => {
         try {
           if (checkTimeout() || checkStop()) return;

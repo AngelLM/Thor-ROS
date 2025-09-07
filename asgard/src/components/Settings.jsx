@@ -23,6 +23,8 @@ export default function Settings({
   showRobotState,
   setShowRobotState,
 }) {
+
+  // Ensure TCP gizmo is off if ghost robot is off
   useEffect(() => {
     if (!showGhostRobot && showTcpGizmo) setShowTcpGizmo(false);
   }, [showGhostRobot, showTcpGizmo, setShowTcpGizmo]);
@@ -39,6 +41,7 @@ export default function Settings({
   const [snackbarMsg, setSnackbarMsg] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('info');
 
+  // Show a snackbar message
   const showSnackbar = (msg, severity = 'info') => {
     setSnackbarMsg(msg);
     setSnackbarSeverity(severity);
@@ -83,6 +86,7 @@ export default function Settings({
     }
   };
 
+  // Confirm import and overwrite existing program
   const handleImportConfirm = () => {
     if (!importCandidate) {
       setImportDialogOpen(false);
@@ -101,6 +105,7 @@ export default function Settings({
     setImportDialogOpen(false);
   };
 
+  // Cancel import
   const handleImportCancel = () => {
     setImportCandidate(null);
     setImportFileName('');
@@ -108,6 +113,7 @@ export default function Settings({
     showSnackbar('Import cancelled', 'info');
   };
 
+  // Confirm import and overwrite existing poses
   const handleImportPosesConfirm = () => {
     if (!importPosesCandidate) { setImportPosesDialogOpen(false); return; }
     try {
@@ -123,6 +129,7 @@ export default function Settings({
     setImportPosesDialogOpen(false);
   };
 
+  /// Cancel import
   const handleImportPosesCancel = () => {
     setImportPosesCandidate(null);
     setImportPosesFileName('');
@@ -130,11 +137,12 @@ export default function Settings({
     showSnackbar('Import cancelled', 'info');
   };
 
-  // Validation helpers
+  // Validate pose
   const isValidPose = (pose) => {
     return pose && typeof pose.name === 'string' && pose.name.length > 0 && typeof pose.joints === 'object' && pose.joints !== null;
   };
 
+  // Validate movement
   const isValidMovement = (m) => {
     return m && typeof m.type === 'string' && typeof m.pose === 'string';
   };

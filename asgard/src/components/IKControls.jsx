@@ -17,7 +17,7 @@ export default function IKControls({
   const { connected } = useROS();
   const rosApi = useRosApi();
 
-  // Main state: TCP position and orientation (source of truth)
+  // Main state: TCP position and orientation
   const [tcpPosition, setTcpPosition] = useState(new THREE.Vector3(200, 0, 300)); // in mm
   const [tcpQuaternion, setTcpQuaternion] = useState(new THREE.Quaternion(0, 0, 0, 1)); // identity
   const suppressNextSolveRef = useRef(false);
@@ -39,16 +39,17 @@ export default function IKControls({
   }, [active, urdfApi]);
   
   const [gripperPercent, setGripperPercent] = useState(0);
+
+  // Update gripper percent state
   const updateGripperPercent = (value) => {
     console.warn('Gripper control changed, new percent:', value);
     setGripperPercent(value);
-  // We rely on the preview->Viewer3D effect to emit the ghost state back to
-  // the app; avoid forcing the ghost here to keep single source-of-truth.
   };
-  // use a ref for the continuous-move interval id to avoid re-renders
+  
   const continuousMoveIntervalRef = useRef(null);
-  // keep a ref to the latest ghostJoints so we can update gripper only when user changes it
   const ghostJointsRef = useRef(null);
+
+  // keep a ref to the latest ghostJoints so we can update gripper only when user changes it
   useEffect(() => { ghostJointsRef.current = ghostJoints; }, [ghostJoints]);
 
   // Initialize only when `ikPose` changes
@@ -143,11 +144,13 @@ export default function IKControls({
     }
   }, [ghostJoints, active, urdfApi]);
 
+  // Publish the ghost to the robot controller
   const publishGhostToController = () => {
     if (!urdfApi) return;
     urdfApi.publishGhostToController();
   };
 
+  // Execute cartesian move to the current TCP position
   const executeCartesianMove = async () => {
     if (!urdfApi || !rosApi.connected) return;
     
@@ -226,6 +229,7 @@ export default function IKControls({
     }
   };
 
+  // Apply delta in world/global coordinates
   const applyWorldDelta = (axis, increment) => {
     if (axis === 'x' || axis === 'y' || axis === 'z') {
       // Linear global movement (no transform)
@@ -251,6 +255,7 @@ export default function IKControls({
     }
   };
 
+  // Apply delta in TCP local coordinates
   const applyTcpDelta = (axis, increment) => {
     if (axis === 'x' || axis === 'y' || axis === 'z') {
       // Linear movement: transform delta by current quaternion (local coordinates)
@@ -281,12 +286,14 @@ export default function IKControls({
     }
   };
 
+  // Start continuous movement in the given axis and direction
   const startContinuousMove = (axis, increment, frameType = 'tcp') => {
     const moveFunction = frameType === 'world' ? applyWorldDelta : applyTcpDelta;
     const intervalId = setInterval(() => moveFunction(axis, increment), 100); // Runs every 100ms
     continuousMoveIntervalRef.current = intervalId;
   };
 
+  // Stop continuous movement
   const stopContinuousMove = () => {
     if (continuousMoveIntervalRef.current) {
       clearInterval(continuousMoveIntervalRef.current);
@@ -313,6 +320,7 @@ export default function IKControls({
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: '0', marginBottom: '1rem' }}>
        <h3 style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '1.5rem' }}>World Frame</h3>
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
+
         {/* X group */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}>
           <label style={{ marginBottom: '4px' }}><strong>X</strong></label>
@@ -337,6 +345,7 @@ export default function IKControls({
             </Button>
           </ButtonGroup>
         </div>
+
         {/* Y group */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}>
           <label style={{ marginBottom: '4px' }}><strong>Y</strong></label>
@@ -361,6 +370,7 @@ export default function IKControls({
             </Button>
           </ButtonGroup>
         </div>
+
         {/* Z group */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <label style={{ marginBottom: '4px' }}><strong>Z</strong></label>
@@ -386,6 +396,8 @@ export default function IKControls({
           </ButtonGroup>
         </div>
       </div>
+
+      {/* Buttons for TCP coordinate adjustments */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for Roll, Pitch, Yaw Buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '8px' }}> {/* Roll group */}
           <label style={{ marginBottom: '4px' }}><strong>Roll</strong></label>
@@ -457,8 +469,8 @@ export default function IKControls({
           </ButtonGroup>
         </div>
       </div>
-      
-      {/* Added buttons for TCP coordinate adjustments */}
+
+      {/* Buttons for TCP coordinate adjustments */}        
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}> {/* TCP Buttons */}
         <h3 style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '1.5rem' }}>TCP Frame</h3>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}> {/* Row for X, Y, Z */}

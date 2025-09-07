@@ -24,7 +24,7 @@ function FKControls({ initialJoints, urdfApi, active = true }) {
     }, {})
   );
 
-  // Initialize the sliders ONLY when `initialJoints` changes (no extra logic)
+  // Initialize joint values from initialJoints prop (in radians), converting to degrees
   useEffect(() => {
     if (initialJoints) {
       setJointValuesDeg(prev => {
@@ -39,7 +39,7 @@ function FKControls({ initialJoints, urdfApi, active = true }) {
         });
         return newValuesDeg;
       });
-    suppressSyncRef.current = true; // Don't push back to the ghost for this programmatic sync
+    suppressSyncRef.current = true;
     }
   }, [initialJoints]);
 
@@ -58,10 +58,12 @@ function FKControls({ initialJoints, urdfApi, active = true }) {
     }
   }, [jointValuesDeg, urdfApi, active]);
 
+  // Handle slider change
   const handleJointSliderChange = (name, value) => {
     setJointValuesDeg(prev => ({ ...prev, [name]: parseFloat(value.toFixed(1)) }));
   };
 
+  // Ensure input is numeric and within bounds
   const handleJointInputChange = (name, value, min, max) => {
     let valueNum = parseFloat(value);
     if (isNaN(valueNum)) valueNum = 0;
@@ -71,6 +73,7 @@ function FKControls({ initialJoints, urdfApi, active = true }) {
     setJointValuesDeg(prev => ({ ...prev, [name]: valueNum }));
   };
 
+  // Publish the ghost to the robot controller
   const publishGhostToController = () => {
     if (!connected || !urdfApi) return;
     urdfApi.publishGhostToController();

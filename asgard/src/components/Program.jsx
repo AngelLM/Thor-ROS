@@ -33,11 +33,13 @@ function Program({ poses }) {
   const rosApi = useRosApi();
   const [runAllDialogOpen, setRunAllDialogOpen] = useState(false);
 
+  // Load saved poses from localStorage on mount
   useEffect(() => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     setPoseNames(savedPoses.map(pose => pose.name));
   }, []);
 
+  // Load saved program from localStorage on mount
   useEffect(() => {
     const savedProgram = JSON.parse(localStorage.getItem('program')) || [];
     setMovements(savedProgram);
@@ -60,21 +62,24 @@ function Program({ poses }) {
     return () => window.removeEventListener('programImported', handler);
   }, []);
 
+  // Monitor robotMoving state to disable/enable controls
   useEffect(() => {
     if (!robotMoving && !isRunAllInProgress) {
-      setControlsDisabled(false); // Re-enable controls when robot stops moving
+      setControlsDisabled(false);
     }
   }, [robotMoving]);
 
+  // Auto-select first movement if none selected
   useEffect(() => {
     if (movements.length > 0 && pointerIndex === null) {
-      setPointerIndex(0); // Select the first Radio Button by default
+      setPointerIndex(0);
     }
   }, [movements]);
 
+  // Subscribe to /joint_states to monitor robot movement
   useEffect(() => {
     if (!rosApi.connected) {
-      console.warn('ROS no está conectado.');
+      console.warn('ROS is not connected.');
       return;
     }
 
@@ -97,14 +102,14 @@ function Program({ poses }) {
       currentRobotPoseRef.current = jointPositions;
     });
     return () => {
-      console.log('Desuscribiéndose del tópico /joint_states...');
+      console.log('Unsubscribing from /joint_states...');
       try { unsubscribe && unsubscribe(); } catch (_) {}
     };
   }, [rosApi.connected]);
 
   const isPoseCurrent = (poseName) => {
     if (!currentRobotPoseRef.current) {
-      console.warn('No se ha recibido la posición actual del robot.');
+      console.warn('Current robot position has not been received yet.');
       return false;
     }
 
@@ -112,7 +117,7 @@ function Program({ poses }) {
     const targetPose = savedPoses.find(p => p.name === poseName);
 
     if (!targetPose) {
-      console.warn(`La pose objetivo ${poseName} no se encuentra en las poses guardadas.`);
+      console.warn(`The target pose ${poseName} is not found in the saved poses.`);
       return false;
     }
 

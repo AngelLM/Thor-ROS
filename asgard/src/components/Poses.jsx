@@ -13,31 +13,37 @@ function Poses({ onPreviewJointsChange, poses, setPoses }, ref) {
   const [poseNameToDelete, setPoseNameToDelete] = useState(null);
   const jointOrder = ['joint_1','joint_2','joint_3','joint_4','joint_5','joint_6','gripperbase_to_armgearright'];
 
+  // Load saved poses from localStorage on mount
   useEffect(() => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     setPoses(savedPoses);
 
   }, [setPoses]);
 
+  // Function to refresh poses from localStorage
   const refreshSavedPoses = () => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     setPoses(savedPoses);
   };
 
+  // Expose refresh function to parent via ref
   useImperativeHandle(ref, () => ({
     updatePoses: refreshSavedPoses
   }));
 
+  // Handle delete dialog
   const openDeleteDialog = (poseName) => {
     setPoseNameToDelete(poseName);
     setIsDeleteDialogOpen(true);
   };
 
+  // Close delete dialog without deleting
   const closeDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
     setPoseNameToDelete(null);
   };
 
+  // Confirm deletion of the pose
   const confirmDeletePose = () => {
     const updatedPoses = poses.filter(pose => pose.name !== poseNameToDelete);
     localStorage.setItem('savedPoses', JSON.stringify(updatedPoses));
@@ -46,6 +52,7 @@ function Poses({ onPreviewJointsChange, poses, setPoses }, ref) {
     setPoseNameToDelete(null);
   };
 
+  // Publish the selected pose to the robot controller
   const publishPoseToController = (poseName) => {
     if (!rosApi.connected) {
       console.warn('ROS is not connected.');
@@ -58,6 +65,7 @@ function Poses({ onPreviewJointsChange, poses, setPoses }, ref) {
     rosApi.publishJointGroupCommand(jointOrder, pose.joints);
   };
 
+  // Preview the selected pose on the ghost model
   const previewPoseOnGhost = (poseName) => {
     const savedPoses = JSON.parse(localStorage.getItem('savedPoses')) || [];
     const pose = savedPoses.find(p => p.name === poseName);

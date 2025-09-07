@@ -71,6 +71,8 @@ function AppInner() {
 
   const jointOrder = ['joint_1','joint_2','joint_3','joint_4','joint_5','joint_6'];
   const radToDeg = (r) => (r * 180 / Math.PI);
+
+  // Formatters for overlay display
   const formatArmJoints = (joints) => {
     if (!joints) return 'N/A';
     try {
@@ -82,18 +84,24 @@ function AppInner() {
       return vals.join(', ');
     } catch (e) { return 'N/A'; }
   };
+
+  // Gripper is special: invert sign and show as absolute value
   const formatGripper = (joints) => {
     if (!joints) return 'N/A';
     const g = joints['gripperbase_to_armgearright'];
     if (g === undefined || g === null) return 'N/A';
     return `${Math.round(Math.abs(radToDeg(g)))}\u00b0`;
   };
+
+  // Position and orientation formatting
   const formatPosition = (tcp) => {
     if (!tcp) return 'N/A';
     const { x, y, z } = tcp;
     const factor = (Math.abs(x) < 10 && Math.abs(y) < 10 && Math.abs(z) < 10) ? 1000 : 1;
     return `${(x*factor).toFixed(1)}mm, ${(y*factor).toFixed(1)}mm, ${(z*factor).toFixed(1)}mm`;
   };
+
+  // Orientation as quaternion
   const formatOrientation = (tcp) => {
     if (!tcp) return 'N/A';
     const { qx, qy, qz, qw } = tcp;
@@ -119,14 +127,17 @@ function AppInner() {
     };
   }, [rosApi.connected]);
 
+  // Open the "Save Pose" dialog
   const openSavePoseDialog = () => {
     setIsDialogOpen(true);
   };
 
+  // Close the "Save Pose" dialog
   const handleDialogClose = () => {
     setIsDialogOpen(false);
   };
 
+  // Save the new pose
   const handleSavePose = () => {
     if (poseName.trim() === '') {
       alert('Pose name is required!');
@@ -174,6 +185,7 @@ function AppInner() {
   // Determine which preview joints to show (FK vs IK)
   const effectivePreviewJoints = activeTab === 'forward' ? fkJoints : ikPreviewJoints;
 
+  // Memoized callback to pass to Poses for previewing joints
   const memoizedOnPreviewJointsChange = React.useCallback((joints) => setIkPreviewJoints(joints), []);
 
   // Keep overlay TCP values in sync. Try to use urdfApi methods when available.
