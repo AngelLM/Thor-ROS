@@ -19,6 +19,7 @@
         <joint name="joint_5"/>
         <joint name="joint_6"/>
         <joint name="link6_to_gripperbase"/>
+        <joint name="gripperbase_to_midpoint"/>
     </group>
     <group name="gripper_group">
         <joint name="gripperbase_to_armgearright"/>

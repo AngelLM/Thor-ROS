@@ -193,6 +193,11 @@
             </geometry>
         </collision>
     </link>
+
+    <link name="gripper_mid_point">
+        <xacro:default_inertial mass="1.0"/>
+    </link>
+
     <link name="gripper_arm_gear_right">
         <xacro:default_inertial mass="1.0"/>
         <visual>
@@ -208,6 +213,7 @@
             </geometry>
         </collision>
     </link>
+
     <link name="gripper_arm_gear_left">
         <xacro:default_inertial mass="1.0"/>
         <visual>
@@ -223,6 +229,7 @@
             </geometry>
         </collision>
     </link>
+
     <link name="gripper_arm_simple_right">
         <xacro:default_inertial mass="1.0"/>
         <visual>
@@ -238,6 +245,7 @@
             </geometry>
         </collision>
     </link>
+
     <link name="gripper_arm_simple_left">
         <xacro:default_inertial mass="1.0"/>
         <visual>
@@ -253,6 +261,7 @@
             </geometry>
         </collision>
     </link>
+
     <link name="gripper_finger_right">
         <xacro:default_inertial mass="1.0"/>
         <visual>
@@ -268,6 +277,7 @@
             </geometry>
         </collision>
     </link>
+
     <link name="gripper_finger_left">
         <xacro:default_inertial mass="1.0"/>
         <visual>
@@ -285,7 +295,6 @@
     </link>
 
 
-    
     <!-- Joints -->  
     <joint name="virtual_joint" type="fixed">
         <parent link="world"/>
@@ -299,9 +308,8 @@
         <origin xyz="0 0 0.099" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
         <limit lower="-2.967" upper="2.967" 
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="0.58"/>
     </joint>
-
 
     <joint name="joint_2" type="revolute">
         <parent link="link_1"/>
@@ -309,7 +317,7 @@
         <origin xyz="0 0 0.103" rpy="0 0 0"/>
         <axis xyz="1 0 0"/>
         <limit lower="-${PI / 2}" upper="${PI / 2}"
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="0.23"/>
     </joint>
 
     <joint name="joint_3" type="revolute">
@@ -318,7 +326,7 @@
         <origin xyz="0 0 0.16" rpy="0 0 0"/>
         <axis xyz="1 0 0"/>
         <limit lower="-${PI / 2}" upper="${PI / 2}"
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="0.23"/>
     </joint>
 
     <joint name="joint_4" type="revolute">
@@ -327,7 +335,7 @@
         <origin xyz="0 0 0.0895" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
         <limit lower="-2.967" upper="2.967"
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="0.58"/>
     </joint>
 
     <joint name="joint_5" type="revolute">
@@ -336,7 +344,7 @@
         <origin xyz="0 0 0.1045" rpy="0 0 0"/>
         <axis xyz="1 0 0"/>
         <limit lower="-${PI / 2}" upper="${PI / 2}"
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="1.45"/>
       </joint>
 
     <joint name="joint_6" type="revolute">
@@ -345,13 +353,19 @@
         <origin xyz="0 0 0.0135" rpy="0 0 0"/>
         <axis xyz="0 0 1"/>
         <limit lower="-2.967" upper="2.967"
-               effort="${effort}" velocity="${velocity}"/>
+               effort="${effort}" velocity="1.45"/>
     </joint>
 
     <joint name ="link6_to_gripperbase" type="fixed">
         <parent link="link_6"/>
         <child link = "gripper_base"/>
         <origin xyz="0 0 0.043"/>
+    </joint>
+
+    <joint name="gripperbase_to_midpoint" type="fixed">
+        <parent link="gripper_base"/>
+        <child link="gripper_mid_point"/>
+        <origin xyz="0 0 0.075" rpy="0 0 0"/>
     </joint>
 
     <joint name="gripperbase_to_armgearright" type="revolute">

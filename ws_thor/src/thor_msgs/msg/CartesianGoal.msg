@@ -1,0 +1,6 @@
+geometry_msgs/Pose start_pose
+geometry_msgs/Pose end_pose
+float64 gripperbase_to_armgearright
+float64 max_step
+float64 jump_threshold
+bool avoid_collisions
